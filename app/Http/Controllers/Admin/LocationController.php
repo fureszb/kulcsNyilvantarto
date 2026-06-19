@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Location;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class LocationController extends Controller
 {
@@ -23,12 +24,29 @@ class LocationController extends Controller
     {
         $validated = $request->validate([
             'name'               => 'required|string|max:255',
+            'icon'               => 'nullable|string|max:20',
+            'logo'               => 'nullable|image|max:1024',
             'responsible_person' => 'nullable|string|max:255',
             'email'              => 'nullable|email|max:255',
             'is_active'          => 'boolean',
         ]);
 
-        Location::create($validated + ['is_active' => $request->boolean('is_active', true)]);
+        $logoPath = null;
+        if ($request->hasFile('logo')) {
+            $slug = app('tenant')->slug;
+            $logoPath = $request->file('logo')->store("logos/{$slug}", 'public');
+        }
+
+        $icon = $logoPath ? null : ($request->input('icon') ?: null);
+
+        Location::create([
+            'name'               => $validated['name'],
+            'icon'               => $icon,
+            'logo_path'          => $logoPath,
+            'responsible_person' => $validated['responsible_person'] ?? null,
+            'email'              => $validated['email'] ?? null,
+            'is_active'          => $request->boolean('is_active', true),
+        ]);
 
         return redirect()->route('admin.locations.index')->with('success', 'Helyszín sikeresen létrehozva!');
     }
@@ -48,11 +66,37 @@ class LocationController extends Controller
     {
         $validated = $request->validate([
             'name'               => 'required|string|max:255',
+            'icon'               => 'nullable|string|max:20',
+            'logo'               => 'nullable|image|max:1024',
+            'remove_logo'        => 'boolean',
             'responsible_person' => 'nullable|string|max:255',
             'email'              => 'nullable|email|max:255',
         ]);
 
-        $location->update($validated + ['is_active' => $request->boolean('is_active', false)]);
+        $logoPath = $location->logo_path;
+
+        if ($request->boolean('remove_logo') || $request->hasFile('logo')) {
+            if ($location->logo_path) {
+                Storage::disk('public')->delete($location->logo_path);
+            }
+            $logoPath = null;
+        }
+
+        if ($request->hasFile('logo')) {
+            $slug = app('tenant')->slug;
+            $logoPath = $request->file('logo')->store("logos/{$slug}", 'public');
+        }
+
+        $icon = $logoPath ? null : ($request->input('icon') ?: null);
+
+        $location->update([
+            'name'               => $validated['name'],
+            'icon'               => $icon,
+            'logo_path'          => $logoPath,
+            'responsible_person' => $validated['responsible_person'] ?? null,
+            'email'              => $validated['email'] ?? null,
+            'is_active'          => $request->boolean('is_active', false),
+        ]);
 
         return redirect()->route('admin.locations.index')->with('success', 'Helyszín frissítve!');
     }
@@ -61,6 +105,10 @@ class LocationController extends Controller
     {
         if ($location->checks()->exists()) {
             return back()->with('error', 'Nem törölhető: ellenőrzési előzmények tartoznak hozzá!');
+        }
+
+        if ($location->logo_path) {
+            Storage::disk('public')->delete($location->logo_path);
         }
 
         $location->delete();

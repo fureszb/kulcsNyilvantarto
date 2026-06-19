@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Item extends Model
 {
+    protected $connection = 'tenant';
+
     protected $fillable = ['location_id', 'name', 'type', 'sort_order', 'is_active'];
 
     protected $casts = ['is_active' => 'boolean'];

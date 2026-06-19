@@ -2,9 +2,16 @@
 @section('title', 'Helyszín választó')
 
 @section('content')
-<div class="mb-8">
-    <h1 class="text-3xl font-extrabold text-slate-900">Kulcs & Kártya Ellenőrzés</h1>
-    <p class="text-slate-500 mt-1">Válasszon helyszínt az ellenőrzés megkezdéséhez</p>
+<div class="w-full bg-white border border-slate-200 rounded-2xl px-8 py-6 mb-8 flex items-center justify-between gap-6 shadow-sm">
+    <div>
+        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Kulcs & Kártya Ellenőrzés</h1>
+        <p class="text-slate-500 mt-1 text-sm">Válasszon helyszínt az ellenőrzés megkezdéséhez</p>
+    </div>
+    <div class="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+        </svg>
+    </div>
 </div>
 
 @if($locations->isEmpty())
@@ -21,13 +28,19 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         @foreach($locations as $location)
         <a href="{{ route('check.show', $location) }}"
-           class="card group hover:shadow-md hover:border-blue-300 transition-all duration-200 cursor-pointer">
+           class="card group hover:shadow-lg hover:border-blue-300 hover:-translate-y-1 transition-all duration-200 cursor-pointer">
             <div class="p-6">
                 <div class="flex items-start justify-between mb-4">
-                    <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                        <svg class="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        </svg>
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors overflow-hidden shrink-0">
+                        @if($location->logo_path)
+                            <img src="{{ Storage::url($location->logo_path) }}" class="w-full h-full object-contain p-1">
+                        @elseif($location->icon)
+                            <span class="text-2xl leading-none">{{ $location->icon }}</span>
+                        @else
+                            <svg class="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            </svg>
+                        @endif
                     </div>
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
                         {{ $location->items_count }} tétel

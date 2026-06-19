@@ -14,12 +14,22 @@
         <form method="POST" action="{{ route('admin.settings.update') }}" class="space-y-5">
             @csrf
             <div>
-                <label class="form-label" for="global_email">Globális értesítési email</label>
+                <label class="form-label" for="global_email">Kulcsnyilvántartó – értesítési email</label>
                 <input type="email" id="global_email" name="global_email" class="form-input @error('global_email') border-red-400 @enderror"
                        value="{{ old('global_email', $globalEmail) }}"
                        placeholder="iroda@pelda.hu">
                 <p class="text-xs text-slate-400 mt-1.5">Minden ellenőrzés után erre az email-re is megy értesítés (a helyszín email-je mellett).</p>
                 @error('global_email')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label class="form-label" for="training_notification_email">Oktatások – felelős email</label>
+                <input type="email" id="training_notification_email" name="training_notification_email"
+                       class="form-input @error('training_notification_email') border-red-400 @enderror"
+                       value="{{ old('training_notification_email', $trainingNotificationEmail) }}"
+                       placeholder="oktatas@pelda.hu">
+                <p class="text-xs text-slate-400 mt-1.5">Minden elvégzett oktatás eredménye automatikusan erre a címre kerül elküldésre.</p>
+                @error('training_notification_email')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
 
             <div class="border-t border-slate-100 pt-5">

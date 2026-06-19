@@ -9,7 +9,7 @@
     </a>
 
     <div class="card p-6">
-        <form method="POST" action="{{ route('admin.locations.store') }}" class="space-y-4">
+        <form method="POST" action="{{ route('admin.locations.store') }}" enctype="multipart/form-data" class="space-y-4">
             @csrf
             <div>
                 <label class="form-label" for="name">Helyszín neve <span class="text-red-500">*</span></label>
@@ -17,6 +17,40 @@
                        value="{{ old('name') }}" placeholder="pl. Főépület, Raktár B" required autofocus>
                 @error('name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
+
+            {{-- Ikon szekció --}}
+            <div>
+                <label class="form-label">Ikon <span class="text-xs text-slate-400">(opcionális)</span></label>
+                <div class="flex gap-2 mb-3">
+                    <button type="button" id="tab-emoji"
+                            onclick="iconTab('emoji')"
+                            class="px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors bg-blue-50 border-blue-300 text-blue-700">
+                        Emoji
+                    </button>
+                    <button type="button" id="tab-logo"
+                            onclick="iconTab('logo')"
+                            class="px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors border-slate-200 text-slate-500 hover:bg-slate-50">
+                        Logó feltöltése
+                    </button>
+                </div>
+
+                <div id="panel-emoji">
+                    <input type="text" name="icon" id="icon"
+                           class="form-input text-xl w-32"
+                           value="{{ old('icon') }}"
+                           placeholder="🏢"
+                           maxlength="10">
+                    <p class="text-xs text-slate-400 mt-1">Illesszen be egy emojit a billentyűzetről (Win+. vagy ⌘+Ctrl+Space)</p>
+                </div>
+
+                <div id="panel-logo" style="display:none">
+                    <input type="file" name="logo" id="logo" accept="image/*"
+                           class="block w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    @error('logo')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    <p class="text-xs text-slate-400 mt-1">Max. 1 MB, PNG/JPG/SVG/WebP</p>
+                </div>
+            </div>
+
             <div>
                 <label class="form-label" for="responsible_person">Felelős személy</label>
                 <input type="text" id="responsible_person" name="responsible_person" class="form-input"
@@ -41,4 +75,20 @@
         </form>
     </div>
 </div>
+
+<script>
+function iconTab(tab) {
+    const isEmoji = tab === 'emoji';
+    document.getElementById('panel-emoji').style.display = isEmoji ? '' : 'none';
+    document.getElementById('panel-logo').style.display  = isEmoji ? 'none' : '';
+    document.getElementById('tab-emoji').className = isEmoji
+        ? 'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors bg-blue-50 border-blue-300 text-blue-700'
+        : 'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors border-slate-200 text-slate-500 hover:bg-slate-50';
+    document.getElementById('tab-logo').className = isEmoji
+        ? 'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors border-slate-200 text-slate-500 hover:bg-slate-50'
+        : 'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors bg-blue-50 border-blue-300 text-blue-700';
+    if (isEmoji) document.getElementById('logo').value = '';
+    else document.getElementById('icon').value = '';
+}
+</script>
 @endsection

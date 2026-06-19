@@ -11,18 +11,21 @@ class SettingController extends Controller
 {
     public function edit()
     {
-        $globalEmail = Setting::get('global_email', '');
-        return view('admin.settings', compact('globalEmail'));
+        $globalEmail            = Setting::get('global_email', '');
+        $trainingNotificationEmail = Setting::get('training_notification_email', '');
+        return view('admin.settings', compact('globalEmail', 'trainingNotificationEmail'));
     }
 
     public function update(Request $request)
     {
         $request->validate([
-            'global_email'    => 'nullable|email|max:255',
-            'new_password'    => 'nullable|string|min:6|confirmed',
+            'global_email'               => 'nullable|email|max:255',
+            'training_notification_email'=> 'nullable|email|max:255',
+            'new_password'               => 'nullable|string|min:6|confirmed',
         ]);
 
         Setting::set('global_email', $request->input('global_email', ''));
+        Setting::set('training_notification_email', $request->input('training_notification_email', ''));
 
         if ($request->filled('new_password')) {
             Setting::set('admin_password_hash', Hash::make($request->new_password));

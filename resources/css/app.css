@@ -21,6 +21,7 @@
     }
     .card {
         @apply bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden;
+        border-width: 1.5px;
     }
     .form-input {
         @apply w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition;

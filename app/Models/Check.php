@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Check extends Model
 {
+    protected $connection = 'tenant';
+
     protected $fillable = ['location_id', 'checked_by', 'extra_email', 'notes'];
 
     public function location(): BelongsTo

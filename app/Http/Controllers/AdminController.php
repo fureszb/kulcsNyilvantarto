@@ -12,7 +12,8 @@ class AdminController extends Controller
 {
     public function login()
     {
-        if (session('admin_authenticated')) {
+        $tenant = app('tenant');
+        if (session('admin_' . $tenant->slug)) {
             return redirect()->route('admin.dashboard');
         }
         return view('admin.login');
@@ -22,17 +23,19 @@ class AdminController extends Controller
     {
         $request->validate(['password' => 'required|string']);
 
-        $storedHash = Setting::get('admin_password_hash');
+        $tenant      = app('tenant');
+        $sessionKey  = 'admin_' . $tenant->slug;
+        $storedHash  = Setting::get('admin_password_hash');
 
         if (!$storedHash) {
-            // First run: any password sets it
             Setting::set('admin_password_hash', Hash::make($request->password));
-            session(['admin_authenticated' => true]);
-            return redirect()->route('admin.dashboard')->with('success', 'Admin jelszó beállítva és bejelentkezve!');
+            session([$sessionKey => true]);
+            return redirect()->route('admin.dashboard')
+                ->with('success', 'Admin jelszó beállítva és bejelentkezve!');
         }
 
         if (Hash::check($request->password, $storedHash)) {
-            session(['admin_authenticated' => true]);
+            session([$sessionKey => true]);
             return redirect()->route('admin.dashboard');
         }
 
@@ -41,17 +44,25 @@ class AdminController extends Controller
 
     public function logout(Request $request)
     {
-        $request->session()->forget('admin_authenticated');
+        $tenant = app('tenant');
+        $request->session()->forget('admin_' . $tenant->slug);
         return redirect()->route('admin.login');
     }
 
     public function dashboard()
     {
         $stats = [
-            'locations' => Location::count(),
+            'locations'    => Location::count(),
             'checks_today' => Check::whereDate('created_at', today())->count(),
             'checks_total' => Check::count(),
         ];
-        return view('admin.dashboard', compact('stats'));
+
+        $recentChecks = Check::with('location')
+            ->withCount(['checkItems', 'checkItems as checked_count' => fn($q) => $q->where('is_checked', true)])
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        return view('admin.dashboard', compact('stats', 'recentChecks'));
     }
 }

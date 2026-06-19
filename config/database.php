@@ -44,6 +44,13 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
+        'tenant' => [
+            'driver' => 'sqlite',
+            'database' => '',
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),

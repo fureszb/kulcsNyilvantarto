@@ -46,5 +46,37 @@
             </a>
         </div>
     </div>
+
+    <div class="card overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="font-bold text-slate-700">Legutóbbi ellenőrzések</h2>
+            <a href="{{ route('history.index') }}" class="text-xs font-semibold text-blue-600 hover:text-blue-700">Összes →</a>
+        </div>
+        @if($recentChecks->isEmpty())
+            <div class="p-8 text-center text-sm text-slate-400">Még nincs ellenőrzés rögzítve.</div>
+        @else
+            <div class="divide-y divide-slate-50">
+                @foreach($recentChecks as $rc)
+                @php $rcTotal = $rc->check_items_count; $rcChecked = $rc->checked_count; $rcDone = $rcTotal > 0 && $rcChecked === $rcTotal; @endphp
+                <div class="px-5 py-3 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 {{ $rcDone ? 'bg-green-50' : 'bg-amber-50' }}">
+                        @if($rcDone)
+                            <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        @else
+                            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01"/></svg>
+                        @endif
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-slate-800 truncate">{{ $rc->location->name ?? '–' }}</p>
+                        <p class="text-xs text-slate-400">{{ $rc->checked_by }} · {{ $rc->created_at->format('m.d H:i') }}</p>
+                    </div>
+                    <span class="text-xs font-bold {{ $rcDone ? 'text-green-600' : 'text-amber-600' }} shrink-0">
+                        {{ $rcChecked }}/{{ $rcTotal }}
+                    </span>
+                </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
 </div>
 @endsection

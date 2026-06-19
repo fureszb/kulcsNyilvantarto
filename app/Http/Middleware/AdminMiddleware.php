@@ -10,7 +10,10 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!session('admin_authenticated')) {
+        $tenant = app()->bound('tenant') ? app('tenant') : null;
+        $sessionKey = $tenant ? 'admin_' . $tenant->slug : 'admin_authenticated';
+
+        if (!session($sessionKey)) {
             return redirect()->route('admin.login');
         }
 

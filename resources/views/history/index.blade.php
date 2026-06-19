@@ -46,7 +46,8 @@
                 <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Helyszín</th>
                 <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Ellenőrző</th>
                 <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Dátum</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Megvolt</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Állapot</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Megjegyzés</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
@@ -57,23 +58,38 @@
                     <span class="font-semibold text-slate-800">{{ $check->location->name ?? '–' }}</span>
                 </td>
                 <td class="px-5 py-3.5 text-slate-700">{{ $check->checked_by }}</td>
-                <td class="px-5 py-3.5 text-slate-500">{{ $check->created_at->format('Y.m.d H:i') }}</td>
+                <td class="px-5 py-3.5 text-slate-500 whitespace-nowrap">{{ $check->created_at->format('Y.m.d H:i') }}</td>
                 <td class="px-5 py-3.5">
-                    @php $total = $check->check_items_count; $checked = $check->checked_count; @endphp
-                    <div class="flex items-center gap-2">
-                        <div class="w-20 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                            <div class="h-full rounded-full {{ $checked === $total ? 'bg-green-500' : 'bg-blue-500' }}"
-                                 style="width: {{ $total > 0 ? round(($checked / $total) * 100) : 0 }}%"></div>
-                        </div>
-                        <span class="text-xs font-semibold {{ $checked === $total ? 'text-green-700' : 'text-slate-600' }}">
-                            {{ $checked }}/{{ $total }}
-                        </span>
+                    @php $total = $check->check_items_count; $checked = $check->checked_count; $complete = $total > 0 && $checked === $total; @endphp
+                    <div class="flex items-center gap-2.5">
+                        @if($complete)
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                Teljes
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                Hiányos
+                            </span>
+                        @endif
+                        <span class="text-xs text-slate-400">{{ $checked }}/{{ $total }}</span>
                     </div>
+                </td>
+                <td class="px-5 py-3.5">
+                    @if($check->notes)
+                        <span title="{{ $check->notes }}" class="inline-flex items-center gap-1 text-xs text-slate-500 cursor-help border-b border-dashed border-slate-300 max-w-32 truncate">
+                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+                            {{ Str::limit($check->notes, 30) }}
+                        </span>
+                    @else
+                        <span class="text-slate-300">—</span>
+                    @endif
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="5" class="px-5 py-12 text-center text-slate-400">
+                <td colspan="6" class="px-5 py-12 text-center text-slate-400">
                     Nincsenek ellenőrzési bejegyzések.
                 </td>
             </tr>

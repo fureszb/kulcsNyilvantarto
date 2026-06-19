@@ -11,8 +11,30 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin'       => \App\Http\Middleware\AdminMiddleware::class,
+            'tenant'      => \App\Http\Middleware\TenantMiddleware::class,
+            'super-admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+        ]);
+
+        // TenantMiddleware-nek a SubstituteBindings előtt kell futnia,
+        // különben a route model binding ({location} → Location::find())
+        // üres tenant connection-t talál.
+        $middleware->priority([
+            \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            \Illuminate\Routing\Middleware\ThrottleRequests::class,
+            \Illuminate\Routing\Middleware\ThrottleRequestsWithRedis::class,
+            \Illuminate\Contracts\Session\Middleware\AuthenticatesSessions::class,
+            \App\Http\Middleware\TenantMiddleware::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Illuminate\Auth\Middleware\Authorize::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
