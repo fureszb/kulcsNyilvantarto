@@ -17,6 +17,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantUserAuthController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\SuperAdmin;
+use App\Http\Controllers\SuperAdmin\TenantUserController as SuperAdminUserController;
 use Illuminate\Support\Facades\Route;
 
 // Root → super admin
@@ -34,6 +35,11 @@ Route::prefix('super-admin')->name('super-admin.')->group(function () {
         Route::post('/tenants',                  [SuperAdmin\TenantController::class, 'store'])->name('tenants.store');
         Route::patch('/tenants/{tenant}/toggle', [SuperAdmin\TenantController::class, 'toggle'])->name('tenants.toggle');
         Route::delete('/tenants/{tenant}',       [SuperAdmin\TenantController::class, 'destroy'])->name('tenants.destroy');
+
+        Route::get('/tenants/{tenant}/users',                    [SuperAdminUserController::class, 'index'])->name('tenants.users.index');
+        Route::post('/tenants/{tenant}/users',                   [SuperAdminUserController::class, 'store'])->name('tenants.users.store');
+        Route::patch('/tenants/{tenant}/users/{userId}/toggle',  [SuperAdminUserController::class, 'toggle'])->name('tenants.users.toggle');
+        Route::delete('/tenants/{tenant}/users/{userId}',        [SuperAdminUserController::class, 'destroy'])->name('tenants.users.destroy');
     });
 });
 

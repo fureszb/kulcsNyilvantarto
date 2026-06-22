@@ -76,6 +76,10 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end gap-2">
+                            <a href="{{ route('super-admin.tenants.users.index', $tenant) }}"
+                               class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+                                Felhasználók
+                            </a>
                             <form method="POST" action="{{ route('super-admin.tenants.toggle', $tenant) }}">
                                 @csrf @method('PATCH')
                                 <button type="submit"
