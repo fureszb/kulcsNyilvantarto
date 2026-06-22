@@ -18,8 +18,11 @@ class CheckController extends Controller
             abort(404);
         }
 
-        $items = $location->items;
-        return view('check.show', compact('location', 'items'));
+        $items           = $location->items;
+        $groups          = $location->groups()->with('items')->get();
+        $ungroupedItems  = $location->items()->whereNull('group_id')->get();
+
+        return view('check.show', compact('location', 'items', 'groups', 'ungroupedItems'));
     }
 
     public function store(Request $request, Location $location)

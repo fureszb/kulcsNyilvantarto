@@ -145,9 +145,16 @@
                                           x-text="r.attempts + '×'"></span>
                                 </td>
                                 <td class="px-5 py-3.5 text-center">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 bg-green-500 rounded-full">
-                                        <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                                    </span>
+                                    <template x-if="r.correct !== false">
+                                        <span class="inline-flex items-center justify-center w-6 h-6 bg-green-500 rounded-full">
+                                            <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        </span>
+                                    </template>
+                                    <template x-if="r.correct === false">
+                                        <span class="inline-flex items-center justify-center w-6 h-6 bg-red-500 rounded-full">
+                                            <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                                        </span>
+                                    </template>
                                 </td>
                             </tr>
                         </template>
@@ -296,38 +303,23 @@
                                 <div class="flex flex-col gap-4">
                                     <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Írja be a választ:</p>
                                     <div class="flex flex-col gap-3">
-                                        <template x-if="!isCorrect">
-                                            <div>
-                                                <div class="flex gap-2">
-                                                    <input type="text" x-model="textInput"
-                                                           @keydown.enter.prevent="checkText()"
-                                                           :disabled="isCorrect"
-                                                           class="form-input flex-1 font-mono"
-                                                           placeholder="Írja be a válaszát...">
-                                                    <button @click="checkText()"
-                                                            :disabled="!textInput.trim()"
-                                                            class="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-bold rounded-xl transition-colors shrink-0">
-                                                        Ellenőrzés
-                                                    </button>
-                                                </div>
-                                                <template x-if="textError">
-                                                    <div class="mt-2">
-                                                        <p class="text-sm text-red-600 font-medium" x-text="textError"></p>
-                                                        <template x-if="textWrongAttempts.length > 0">
-                                                            <div class="mt-1 flex flex-wrap gap-1">
-                                                                <template x-for="w in textWrongAttempts" :key="w">
-                                                                    <span class="inline-block bg-red-50 border border-red-200 text-red-700 text-xs font-mono px-2 py-0.5 rounded line-through" x-text="w"></span>
-                                                                </template>
-                                                            </div>
-                                                        </template>
-                                                    </div>
-                                                </template>
-                                            </div>
+                                        <input type="text" x-model="textInput"
+                                               @keydown.enter.prevent="!textSubmitted && textInput.trim() ? submitText() : null"
+                                               :disabled="textSubmitted"
+                                               class="form-input font-mono"
+                                               placeholder="Írja be a válaszát...">
+                                        <template x-if="!textSubmitted">
+                                            <button @click="submitText()"
+                                                    :disabled="!textInput.trim()"
+                                                    class="w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors">
+                                                Tovább
+                                            </button>
                                         </template>
-                                        <template x-if="isCorrect">
-                                            <div class="flex items-center gap-3 p-4 bg-green-50 border-2 border-green-300 rounded-xl">
-                                                <svg class="w-6 h-6 text-green-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                                                <span class="font-semibold text-green-800 font-mono" x-text="textInput"></span>
+                                        <template x-if="textSubmitted">
+                                            <div class="flex items-center gap-3 p-4 bg-slate-50 border-2 border-slate-200 rounded-xl">
+                                                <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                <span class="font-semibold text-slate-700 font-mono" x-text="textInput"></span>
+                                                <span class="text-xs text-slate-400 ml-auto">Rögzítve</span>
                                             </div>
                                         </template>
                                     </div>
@@ -335,7 +327,7 @@
                             </template>
 
                             {{-- Tovább gomb (közös) --}}
-                            <template x-if="isCorrect">
+                            <template x-if="isCorrect || (step.question_type === 'text' && textSubmitted)">
                                 <button @click="next()"
                                         class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
                                     <span x-text="currentStep < steps.length - 1 ? 'Következő lépés' : 'Befejezés és kiértékelés'"></span>
@@ -373,6 +365,8 @@ function trainingPlayer(stepsData, submitUrl, csrfToken) {
         textInput:        '',
         textError:        '',
         textWrongAttempts:[],
+        textSubmitted:    false,
+        textCorrect:      false,
 
         // participant
         participantName:  '',
@@ -389,7 +383,7 @@ function trainingPlayer(stepsData, submitUrl, csrfToken) {
         },
 
         get firstTryCount() {
-            return this.results.filter(r => r.attempts === 1).length;
+            return this.results.filter(r => r.attempts === 1 && r.correct !== false).length;
         },
 
         startTraining() {
@@ -447,32 +441,21 @@ function trainingPlayer(stepsData, submitUrl, csrfToken) {
         },
 
         // ── Text ───────────────────────────────────────────────────────────────
-        checkText() {
-            if (this.isCorrect || !this.textInput.trim()) return;
+        submitText() {
+            if (this.textSubmitted || !this.textInput.trim()) return;
             const step       = this.steps[this.currentStep];
             const acceptable = step.answers.map(a => a.text.trim().toLowerCase());
-            const input      = this.textInput.trim().toLowerCase();
-
-            if (acceptable.includes(input)) {
-                this.isCorrect = true;
-                this.textError  = '';
-                this.$nextTick(() => {
-                    const vid = document.querySelector('[x-ref="reveal"]');
-                    if (vid) vid.play().catch(() => {});
-                });
-            } else {
-                this.attemptsPerStep[this.currentStep]++;
-                this.textWrongAttempts = [...this.textWrongAttempts, this.textInput.trim()];
-                this.textError         = 'Helytelen válasz – próbálja újra!';
-                this.textInput         = '';
-            }
+            this.textCorrect  = acceptable.includes(this.textInput.trim().toLowerCase());
+            this.textSubmitted = true;
         },
 
         // ── Navigation ─────────────────────────────────────────────────────────
         next() {
+            const step = this.steps[this.currentStep];
             this.results.push({
-                question: this.steps[this.currentStep].question,
+                question: step.question,
                 attempts: this.attemptsPerStep[this.currentStep] + 1,
+                correct:  step.question_type === 'text' ? this.textCorrect : true,
             });
 
             if (this.currentStep < this.steps.length - 1) {
@@ -492,6 +475,8 @@ function trainingPlayer(stepsData, submitUrl, csrfToken) {
             this.textInput        = '';
             this.textError        = '';
             this.textWrongAttempts= [];
+            this.textSubmitted    = false;
+            this.textCorrect      = false;
         },
 
         async submitResult() {

@@ -32,15 +32,31 @@
         </div>
 
         <div style="background:white;border-radius:1.25rem;box-shadow:0 25px 50px rgba(0,0,0,.4);padding:1.75rem;">
+            @if($errors->any())
+                <div style="margin-bottom:1rem;padding:0.75rem;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:0.5rem;font-size:0.875rem;">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('super-admin.authenticate') }}">
                 @csrf
                 <div style="margin-bottom:1.25rem;">
                     <label style="display:block;font-size:0.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">
-                        Admin jelszó
+                        Email cím
                     </label>
-                    <input type="password" name="password" autofocus
+                    <input type="email" name="email" value="{{ old('email') }}" autofocus
+                           style="width:100%;box-sizing:border-box;border-radius:0.5rem;border:2px solid {{ $errors->has('email') ? '#f87171' : '#e2e8f0' }};padding:0.75rem 1rem;font-size:0.875rem;color:#0f172a;outline:none;transition:border-color .15s;"
+                           placeholder="admin@example.com" autocomplete="email"
+                           onfocus="this.style.borderColor='#6366f1'"
+                           onblur="this.style.borderColor='{{ $errors->has('email') ? '#f87171' : '#e2e8f0' }}'">
+                </div>
+                <div style="margin-bottom:1.25rem;">
+                    <label style="display:block;font-size:0.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">
+                        Jelszó
+                    </label>
+                    <input type="password" name="password"
                            style="width:100%;box-sizing:border-box;border-radius:0.5rem;border:2px solid {{ $errors->has('password') ? '#f87171' : '#e2e8f0' }};padding:0.75rem 1rem;font-size:0.875rem;color:#0f172a;outline:none;transition:border-color .15s;"
-                           placeholder="••••••••"
+                           placeholder="••••••••" autocomplete="current-password"
                            onfocus="this.style.borderColor='#6366f1'"
                            onblur="this.style.borderColor='{{ $errors->has('password') ? '#f87171' : '#e2e8f0' }}'">
                     @error('password')

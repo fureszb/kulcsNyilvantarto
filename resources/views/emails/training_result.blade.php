@@ -95,11 +95,12 @@
                   @endif
                 </td>
                 <td align="center" style="padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
+                  @php $correct = $r['correct'] ?? true; @endphp
                   <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
                     <tr>
                       <td width="24" height="24" align="center" valign="middle"
-                          style="background-color:#16a34a;border-radius:50%;width:24px;height:24px;">
-                        <span style="font-size:13px;font-weight:900;color:#ffffff;line-height:1;">✓</span>
+                          style="background-color:{{ $correct ? '#16a34a' : '#dc2626' }};border-radius:50%;width:24px;height:24px;">
+                        <span style="font-size:13px;font-weight:900;color:#ffffff;line-height:1;">{{ $correct ? '✓' : '✗' }}</span>
                       </td>
                     </tr>
                   </table>

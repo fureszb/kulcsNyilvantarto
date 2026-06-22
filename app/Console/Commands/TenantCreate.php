@@ -3,9 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Models\Tenant;
+use App\Models\TenantUser;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class TenantCreate extends Command
 {
@@ -45,6 +47,24 @@ class TenantCreate extends Command
             '--path'     => 'database/migrations/tenant',
             '--force'    => true,
         ], $this->output);
+
+        // Első admin felhasználó létrehozása
+        $adminName  = $this->ask('Admin neve');
+        $adminEmail = $this->ask('Admin email');
+        $adminPass  = $this->secret('Admin jelszó (min. 8 karakter)');
+
+        if (strlen((string) $adminPass) >= 8) {
+            TenantUser::create([
+                'name'      => $adminName,
+                'email'     => $adminEmail,
+                'password'  => Hash::make($adminPass),
+                'role'      => 'admin',
+                'is_active' => true,
+            ]);
+            $this->line("Admin létrehozva: {$adminName} <{$adminEmail}>");
+        } else {
+            $this->warn('Jelszó kihagyva (túl rövid). Adj hozzá admin felhasználót manuálisan.');
+        }
 
         DB::setDefaultConnection($prev);
         DB::purge('tenant');

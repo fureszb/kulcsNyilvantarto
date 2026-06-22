@@ -59,7 +59,7 @@ class TrainingController extends Controller
         ]);
 
         $results     = $request->input('results');
-        $firstTry    = collect($results)->where('attempts', 1)->count();
+        $firstTry    = collect($results)->filter(fn($r) => ($r['attempts'] ?? 1) === 1 && ($r['correct'] ?? true) !== false)->count();
         $total       = count($results);
         $completedAt = now();
         $tenantName  = app()->bound('tenant') ? app('tenant')->name : config('app.name');

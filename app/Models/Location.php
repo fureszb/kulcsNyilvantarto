@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\ItemGroup;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -21,6 +22,11 @@ class Location extends Model
     public function allItems(): HasMany
     {
         return $this->hasMany(Item::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function groups(): HasMany
+    {
+        return $this->hasMany(ItemGroup::class)->orderBy('sort_order')->orderBy('name');
     }
 
     public function checks(): HasMany

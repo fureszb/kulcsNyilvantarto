@@ -39,6 +39,8 @@
                     </svg>
                     <span class="hidden sm:inline">Előzmények</span>
                 </a>
+
+                @if(auth('tenant')->check() && auth('tenant')->user()->isAdmin())
                 <a href="{{ route('admin.dashboard') }}"
                    class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                           {{ request()->routeIs('admin.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/10' }}">
@@ -47,6 +49,29 @@
                     </svg>
                     <span class="hidden sm:inline">Admin</span>
                 </a>
+                @endif
+
+                @auth('tenant')
+                <div class="flex items-center gap-2 pl-2 ml-1 border-l border-white/10">
+                    <a href="{{ route('profile.edit') }}"
+                       class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:text-white hover:bg-white/10">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        <span class="hidden sm:inline">{{ auth('tenant')->user()->name }}</span>
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit"
+                                class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:text-white hover:bg-white/10">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                            <span class="hidden sm:inline">Kilépés</span>
+                        </button>
+                    </form>
+                </div>
+                @endauth
             </nav>
         </div>
     </div>

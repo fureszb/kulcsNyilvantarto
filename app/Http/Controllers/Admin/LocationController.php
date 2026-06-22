@@ -53,8 +53,9 @@ class LocationController extends Controller
 
     public function show(Location $location)
     {
-        $items = $location->allItems()->get();
-        return view('admin.locations.show', compact('location', 'items'));
+        $items  = $location->allItems()->get();
+        $groups = $location->groups()->with('allItems')->get();
+        return view('admin.locations.show', compact('location', 'items', 'groups'));
     }
 
     public function edit(Location $location)

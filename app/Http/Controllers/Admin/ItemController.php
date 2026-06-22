@@ -15,6 +15,7 @@ class ItemController extends Controller
             'name'       => 'required|string|max:255',
             'type'       => 'required|in:key,card',
             'sort_order' => 'integer|min:0|max:9999',
+            'group_id'   => 'nullable|integer',
         ]);
 
         $location->allItems()->create($validated + ['sort_order' => $request->input('sort_order', 0)]);
@@ -28,6 +29,7 @@ class ItemController extends Controller
             'name'       => 'required|string|max:255',
             'type'       => 'required|in:key,card',
             'sort_order' => 'integer|min:0|max:9999',
+            'group_id'   => 'nullable|integer',
         ]);
 
         $item->update($validated + ['is_active' => $request->boolean('is_active', false)]);

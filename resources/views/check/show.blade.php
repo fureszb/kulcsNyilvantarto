@@ -11,7 +11,18 @@
         if (i >= 0) { this.sel.splice(i, 1); } else { this.sel.push(id); }
         updateProgress(this.sel.length, this.T);
     },
-    has(id) { return this.sel.includes(id); }
+    has(id) { return this.sel.includes(id); },
+    toggleGroup(ids) {
+        const allChecked = ids.every(id => this.sel.includes(id));
+        if (allChecked) {
+            this.sel = this.sel.filter(id => !ids.includes(id));
+        } else {
+            ids.forEach(id => { if (!this.sel.includes(id)) this.sel.push(id); });
+        }
+        updateProgress(this.sel.length, this.T);
+    },
+    groupAllChecked(ids) { return ids.length > 0 && ids.every(id => this.sel.includes(id)); },
+    groupSomeChecked(ids) { return ids.some(id => this.sel.includes(id)) && !ids.every(id => this.sel.includes(id)); }
 }" x-init="@foreach($items as $item){{ old('items.'.$item->id) ? 'sel.push('.$item->id.');' : '' }}@endforeach updateProgress(sel.length, T)">
 
     {{-- Breadcrumb --}}
@@ -41,7 +52,7 @@
             {{-- Left: items --}}
             <div class="lg:col-span-2 space-y-4">
 
-                {{-- Progress card – plain HTML, JavaScript frissíti --}}
+                {{-- Progress card --}}
                 @if(!$items->isEmpty())
                 <div id="prog-card" class="bg-white rounded-2xl border-2 border-slate-200 p-5" style="transition: border-color .3s">
                     <div class="flex items-center justify-between mb-2.5">
@@ -63,13 +74,101 @@
                         <h2 class="font-bold text-slate-700">Kulcsok és kártyák</h2>
                         <span class="text-xs text-slate-400 font-medium">{{ $items->count() }} tétel</span>
                     </div>
+
                     @if($items->isEmpty())
                         <div class="p-10 text-center text-slate-400 text-sm">
                             Ehhez a helyszínhez még nincs tétel felvéve.
                         </div>
                     @else
                         <div>
-                            @foreach($items as $item)
+                            {{-- ── Csoportok ──────────────────────────────────────────────── --}}
+                            @foreach($groups as $group)
+                                @php $groupIds = $group->items->pluck('id')->toArray(); @endphp
+                                @if(count($groupIds) > 0)
+                                <div x-data="{ open: true }" class="border-b border-slate-100 last:border-0">
+
+                                    {{-- Csoport fejléc --}}
+                                    <div class="flex items-center gap-3 px-6 py-3 bg-slate-50 cursor-pointer select-none"
+                                         @click="open = !open">
+
+                                        {{-- Select-all checkbox --}}
+                                        <div @click.stop="toggleGroup({{ json_encode($groupIds) }})"
+                                             class="w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200 cursor-pointer"
+                                             :class="{
+                                                 'bg-blue-600 border-blue-600': groupAllChecked({{ json_encode($groupIds) }}),
+                                                 'bg-blue-200 border-blue-400': groupSomeChecked({{ json_encode($groupIds) }}),
+                                                 'border-slate-300 bg-white': !groupAllChecked({{ json_encode($groupIds) }}) && !groupSomeChecked({{ json_encode($groupIds) }})
+                                             }">
+                                            <template x-if="groupAllChecked({{ json_encode($groupIds) }})">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </template>
+                                            <template x-if="groupSomeChecked({{ json_encode($groupIds) }})">
+                                                <svg class="w-3 h-3" fill="none" stroke="#3b82f6" stroke-width="3" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
+                                                </svg>
+                                            </template>
+                                        </div>
+
+                                        <span class="font-semibold text-slate-700 flex-1 text-sm">{{ $group->name }}</span>
+                                        <span class="text-xs text-slate-400 font-medium">{{ count($groupIds) }} tétel</span>
+
+                                        {{-- Expand/collapse nyíl --}}
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0"
+                                             :class="open ? 'rotate-180' : ''"
+                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </div>
+
+                                    {{-- Csoport tételei --}}
+                                    <div x-show="open" x-cloak>
+                                        @foreach($group->items as $item)
+                                        <div @click="toggle({{ $item->id }})"
+                                             class="flex items-center gap-3 py-4 cursor-pointer border-b border-slate-50 last:border-0 transition-colors duration-150" style="padding-left:10px;padding-right:10px"
+                                             :class="has({{ $item->id }}) ? 'bg-green-50' : 'hover:bg-slate-50'">
+
+                                            <input type="checkbox"
+                                                   name="items[{{ $item->id }}]"
+                                                   value="1"
+                                                   class="hidden"
+                                                   :checked="has({{ $item->id }})">
+
+                                            <div class="w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200"
+                                                 :class="has({{ $item->id }}) ? 'bg-blue-600 border-blue-600' : 'border-slate-300 bg-white'">
+                                                <svg x-show="has({{ $item->id }})" class="w-3.5 h-3.5" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </div>
+
+                                            <div class="flex-1 flex items-center gap-3">
+                                                <span class="text-xl leading-none">{{ $item->type === 'card' ? '💳' : '🔑' }}</span>
+                                                <div>
+                                                    <div class="font-semibold text-slate-800 text-sm">{{ $item->name }}</div>
+                                                    <span class="inline-block mt-0.5 text-xs font-bold px-2 py-0.5 rounded-full {{ $item->type === 'card' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700' }}">
+                                                        {{ $item->type === 'card' ? 'Kártya' : 'Kulcs' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="shrink-0">
+                                                <svg x-show="has({{ $item->id }})" class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <svg x-show="!has({{ $item->id }})" class="w-5 h-5 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <circle cx="12" cy="12" r="9" stroke-width="1.5"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @endif
+                            @endforeach
+
+                            {{-- ── Csoporton kívüli tételek ────────────────────────────────── --}}
+                            @foreach($ungroupedItems as $item)
                             <div @click="toggle({{ $item->id }})"
                                  class="flex items-center gap-4 px-6 py-4 cursor-pointer border-b border-slate-50 last:border-0 transition-colors duration-150"
                                  :class="has({{ $item->id }}) ? 'bg-green-50' : 'hover:bg-slate-50'">

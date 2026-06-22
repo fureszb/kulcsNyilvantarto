@@ -14,9 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
 
         $middleware->alias([
-            'admin'       => \App\Http\Middleware\AdminMiddleware::class,
-            'tenant'      => \App\Http\Middleware\TenantMiddleware::class,
-            'super-admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+            'admin'        => \App\Http\Middleware\AdminMiddleware::class,
+            'tenant'       => \App\Http\Middleware\TenantMiddleware::class,
+            'super-admin'  => \App\Http\Middleware\SuperAdminMiddleware::class,
+            'tenant-user'  => \App\Http\Middleware\TenantUserMiddleware::class,
         ]);
 
         // TenantMiddleware-nek a SubstituteBindings előtt kell futnia,
