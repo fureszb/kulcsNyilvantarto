@@ -21,7 +21,8 @@
     </div>
 @else
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <table class="w-full text-sm">
+        <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[560px]">
             <thead>
                 <tr class="border-b border-slate-100 bg-slate-50">
                     <th class="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Oktatás neve</th>
@@ -75,6 +76,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 @endif
 @endsection

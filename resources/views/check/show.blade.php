@@ -85,7 +85,7 @@
                             @foreach($groups as $group)
                                 @php $groupIds = $group->items->pluck('id')->toArray(); @endphp
                                 @if(count($groupIds) > 0)
-                                <div x-data="{ open: true }" class="border-b border-slate-100 last:border-0">
+                                <div x-data="{ open: false }" class="border-b border-slate-100 last:border-0">
 
                                     {{-- Csoport fejléc --}}
                                     <div class="flex items-center gap-3 px-6 py-3 bg-slate-50 cursor-pointer select-none"
@@ -143,7 +143,13 @@
                                             </div>
 
                                             <div class="flex-1 flex items-center gap-3">
-                                                <span class="text-xl leading-none">{{ $item->type === 'card' ? '💳' : '🔑' }}</span>
+                                                <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 {{ $item->type === 'card' ? 'bg-purple-50 border border-purple-100' : 'bg-blue-50 border border-blue-100' }}">
+                                                    @if($item->type === 'card')
+                                                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                                    @else
+                                                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                                                    @endif
+                                                </div>
                                                 <div>
                                                     <div class="font-semibold text-slate-800 text-sm">{{ $item->name }}</div>
                                                     <span class="inline-block mt-0.5 text-xs font-bold px-2 py-0.5 rounded-full {{ $item->type === 'card' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700' }}">
@@ -187,7 +193,13 @@
                                 </div>
 
                                 <div class="flex-1 flex items-center gap-3">
-                                    <span class="text-xl leading-none">{{ $item->type === 'card' ? '💳' : '🔑' }}</span>
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 {{ $item->type === 'card' ? 'bg-purple-50 border border-purple-100' : 'bg-blue-50 border border-blue-100' }}">
+                                        @if($item->type === 'card')
+                                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                        @else
+                                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                                        @endif
+                                    </div>
                                     <div>
                                         <div class="font-semibold text-slate-800 text-sm">{{ $item->name }}</div>
                                         <span class="inline-block mt-0.5 text-xs font-bold px-2 py-0.5 rounded-full {{ $item->type === 'card' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700' }}">
@@ -213,24 +225,6 @@
 
             {{-- Right sidebar --}}
             <div class="space-y-4">
-
-                <div class="bg-white rounded-2xl border-2 border-slate-200 p-5">
-                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
-                        Ellenőrző személy
-                    </h3>
-                    <label class="text-xs font-semibold text-slate-600 mb-1.5 block" for="checked_by">Név <span class="text-red-500">*</span></label>
-                    <input type="text" id="checked_by" name="checked_by"
-                           class="w-full rounded-lg border-2 border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-0 transition @error('checked_by') border-red-400 @enderror"
-                           placeholder="Teljes neve..."
-                           value="{{ old('checked_by') }}"
-                           required>
-                    @error('checked_by')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
 
                 <div class="bg-white rounded-2xl border-2 border-slate-200 p-5">
                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">

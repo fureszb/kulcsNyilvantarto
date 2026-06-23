@@ -28,7 +28,6 @@ class CheckController extends Controller
     public function store(Request $request, Location $location)
     {
         $validated = $request->validate([
-            'checked_by'  => 'required|string|max:255',
             'extra_email' => 'nullable|email|max:255',
             'notes'       => 'nullable|string|max:1000',
             'items'       => 'nullable|array',
@@ -37,7 +36,7 @@ class CheckController extends Controller
 
         $check = Check::create([
             'location_id' => $location->id,
-            'checked_by'  => $validated['checked_by'],
+            'checked_by'  => auth('tenant')->user()->name,
             'extra_email' => $validated['extra_email'] ?? null,
             'notes'       => $validated['notes'] ?? null,
         ]);
@@ -50,7 +49,7 @@ class CheckController extends Controller
             ]);
         }
 
-        $check->load('checkItems.item', 'location');
+        $check->load('checkItems.item', 'location.groups');
 
         $recipients = [];
         $fixEmail = Setting::get('global_email');

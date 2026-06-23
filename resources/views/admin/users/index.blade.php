@@ -6,7 +6,8 @@
 
 @section('content')
 <div class="card overflow-hidden">
-    <table class="w-full text-sm">
+    <div class="overflow-x-auto">
+    <table class="w-full text-sm min-w-[480px]">
         <thead>
             <tr class="bg-slate-50 border-b border-slate-100">
                 <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Név</th>
@@ -57,5 +58,6 @@
             @endforelse
         </tbody>
     </table>
+    </div>
 </div>
 @endsection

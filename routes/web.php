@@ -13,6 +13,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CheckController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantUserAuthController;
 use App\Http\Controllers\TrainingController;
@@ -20,8 +21,8 @@ use App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\SuperAdmin\TenantUserController as SuperAdminUserController;
 use Illuminate\Support\Facades\Route;
 
-// Root → super admin
-Route::get('/', fn() => redirect()->route('super-admin.login'));
+// Root → szervezetválasztó landing
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 // ─── Super Admin ───────────────────────────────────────────────────────────────
 Route::prefix('super-admin')->name('super-admin.')->group(function () {
@@ -63,10 +64,6 @@ Route::prefix('{tenant}')
             Route::get('/check/{location}', [CheckController::class, 'show'])->name('check.show');
             Route::post('/check/{location}',[CheckController::class, 'store'])->name('check.store');
 
-            // Előzmények
-            Route::get('/history',        [HistoryController::class, 'index'])->name('history.index');
-            Route::get('/history/export', [HistoryController::class, 'export'])->name('history.export');
-
             // Oktatások
             Route::get('/training',                    [TrainingController::class, 'index'])->name('training.index');
             Route::get('/training/{training}',         [TrainingController::class, 'show'])->name('training.show');
@@ -75,6 +72,12 @@ Route::prefix('{tenant}')
             // Profil
             Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        });
+
+        // Előzmények – csak admin middleware-rel, de /history URL-en
+        Route::middleware('admin')->group(function () {
+            Route::get('/history',        [HistoryController::class, 'index'])->name('history.index');
+            Route::get('/history/export', [HistoryController::class, 'export'])->name('history.export');
         });
 
         // ── Admin ──────────────────────────────────────────────────────────────

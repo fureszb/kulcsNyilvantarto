@@ -8,12 +8,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full bg-slate-100 antialiased" x-data>
+<body class="h-full bg-slate-100 antialiased" x-data="{ sidebarOpen: false }">
 
 <div class="flex h-screen overflow-hidden">
 
+    {{-- Mobile overlay --}}
+    <div x-show="sidebarOpen"
+         x-transition:enter="transition-opacity ease-linear duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="sidebarOpen = false"
+         class="fixed inset-0 bg-black/50 z-20 lg:hidden"
+         style="display: none;"></div>
+
     {{-- Sidebar --}}
-    <aside class="w-64 bg-slate-900 flex flex-col shrink-0">
+    <aside class="fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 flex flex-col shrink-0
+                  transition-transform duration-200 ease-in-out
+                  lg:relative lg:inset-auto lg:z-auto"
+           :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
 
         {{-- Brand --}}
         <div class="px-5 py-5 border-b border-white/10">
@@ -33,7 +48,7 @@
         </div>
 
         {{-- Nav --}}
-        <nav class="flex-1 px-3 py-4 space-y-0.5">
+        <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
             @php
                 $navItems = [
                     ['route' => 'admin.dashboard',        'label' => 'Áttekintés',    'icon' => 'M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2zm10 0a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1h-4a1 1 0 01-1-1v-5z'],
@@ -47,19 +62,30 @@
             @foreach($navItems as $item)
                 @php $active = request()->routeIs($item['route'] . '*'); @endphp
                 <a href="{{ route($item['route']) }}"
+                   @click="sidebarOpen = false"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
                           {{ $active
                              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
                              : 'text-slate-400 hover:text-white hover:bg-white/10' }}">
-                    <svg class="w-4.5 h-4.5 shrink-0 w-[1.125rem] h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="shrink-0 w-[1.125rem] h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
                     </svg>
                     {{ $item['label'] }}
                 </a>
             @endforeach
 
-            <div class="pt-3 mt-3 border-t border-white/10">
+            <div class="pt-3 mt-3 border-t border-white/10 space-y-0.5">
+                <a href="{{ route('home') }}"
+                   @click="sidebarOpen = false"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                          {{ request()->routeIs('home') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:text-white hover:bg-white/10' }}">
+                    <svg class="w-[1.125rem] h-[1.125rem] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    Kezdőlap
+                </a>
                 <a href="{{ route('history.index') }}"
+                   @click="sidebarOpen = false"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
                           {{ request()->routeIs('history.*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:text-white hover:bg-white/10' }}">
                     <svg class="w-[1.125rem] h-[1.125rem] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,6 +100,7 @@
         <div class="px-3 py-4 border-t border-white/10 space-y-1">
             @auth('tenant')
             <a href="{{ route('admin.profile.edit') }}"
+               @click="sidebarOpen = false"
                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-all">
                 <svg class="w-[1.125rem] h-[1.125rem] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -95,17 +122,24 @@
     </aside>
 
     {{-- Main --}}
-    <div class="flex-1 flex flex-col overflow-auto">
+    <div class="flex-1 flex flex-col overflow-auto min-w-0">
 
         {{-- Top bar --}}
-        <header class="bg-white border-b border-slate-200 px-8 py-0 flex items-center justify-between shrink-0 h-16">
-            <h1 class="text-lg font-bold text-slate-800">@yield('title', 'Admin')</h1>
-            <div class="flex items-center gap-3">
+        <header class="bg-white border-b border-slate-200 px-4 sm:px-8 py-0 flex items-center shrink-0 h-16 gap-3">
+            {{-- Hamburger (mobile only) --}}
+            <button @click="sidebarOpen = !sidebarOpen"
+                    class="lg:hidden p-2 -ml-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <h1 class="text-lg font-bold text-slate-800 flex-1 truncate">@yield('title', 'Admin')</h1>
+            <div class="flex items-center gap-2 shrink-0">
                 @yield('header-actions')
             </div>
         </header>
 
-        <main class="flex-1 px-8 py-6">
+        <main class="flex-1 px-4 sm:px-8 py-6 overflow-x-hidden">
             @if(session('success'))
                 <div class="mb-6 flex items-start gap-3 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl"
                      x-data x-init="setTimeout(() => $el.remove(), 4000)">
@@ -133,6 +167,27 @@
 
             @yield('content')
         </main>
+
+        <footer class="shrink-0 bg-white border-t border-slate-200 px-4 sm:px-8 py-5 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                </div>
+                <div class="leading-tight">
+                    <span class="text-sm font-semibold text-slate-800 block">{{ app()->bound('tenant') ? app('tenant')->name : 'Kulcs & Kártya Nyilvántartó' }}</span>
+                    <span class="text-xs text-slate-400">&copy; {{ now()->year }}</span>
+                </div>
+            </div>
+            <a href="mailto:supportitsecurity@gmail.com"
+               class="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                supportitsecurity@gmail.com
+            </a>
+        </footer>
     </div>
 </div>
 

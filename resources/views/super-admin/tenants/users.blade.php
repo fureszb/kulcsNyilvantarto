@@ -28,7 +28,8 @@
             </div>
         @else
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <table class="w-full text-sm">
+                <div class="overflow-x-auto">
+                <table class="w-full text-sm min-w-[480px]">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50">
                             <th class="px-5 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Név / Email</th>
@@ -88,6 +89,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
         @endif
     </div>

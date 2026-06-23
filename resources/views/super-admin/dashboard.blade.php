@@ -2,7 +2,7 @@
 @section('title', 'Cégek')
 
 @section('content')
-<div class="flex items-center justify-between mb-8">
+<div class="flex flex-wrap items-center justify-between gap-4 mb-8">
     <div>
         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Cégek</h1>
         <p class="text-slate-500 mt-0.5 text-sm">{{ $tenants->count() }} regisztrált cég</p>
@@ -28,7 +28,8 @@
     </div>
 @else
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <table class="w-full text-sm">
+        <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[640px]">
             <thead>
                 <tr class="border-b border-slate-100 bg-slate-50">
                     <th class="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Cég neve</th>
@@ -104,6 +105,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 @endif
 @endsection

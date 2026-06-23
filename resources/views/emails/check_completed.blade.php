@@ -119,6 +119,12 @@
             </table>
 
             {{-- Items table --}}
+            @php
+                $groupsById   = $check->location->groups->keyBy('id');
+                $byGroup      = $check->checkItems->groupBy(fn($ci) => $ci->item->group_id ?? '__none__');
+                $groupedKeys  = $byGroup->keys()->filter(fn($k) => $k !== '__none__');
+                $ungrouped    = $byGroup->get('__none__', collect());
+            @endphp
             <p style="margin:0 0 10px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;">Tételek részletezése</p>
             <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
               <thead>
@@ -129,19 +135,55 @@
                 </tr>
               </thead>
               <tbody>
-                @foreach($check->checkItems as $ci)
-                <tr style="background-color:{{ $loop->even ? '#f8fafc' : '#ffffff' }};">
-                  <td style="padding:11px 16px;font-size:13px;font-weight:600;color:#1e293b;{{ !$loop->last ? 'border-bottom:1px solid #f1f5f9;' : '' }}">{{ $ci->item->name }}</td>
-                  <td style="padding:11px 16px;font-size:13px;color:#64748b;{{ !$loop->last ? 'border-bottom:1px solid #f1f5f9;' : '' }}">{{ $ci->item->type === 'card' ? '💳 Kártya' : '🔑 Kulcs' }}</td>
-                  <td style="padding:11px 16px;text-align:center;{{ !$loop->last ? 'border-bottom:1px solid #f1f5f9;' : '' }}">
-                    @if($ci->is_checked)
-                      <span style="display:inline-block;background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;padding:3px 12px;border-radius:999px;">Megvolt</span>
-                    @else
-                      <span style="display:inline-block;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:700;padding:3px 12px;border-radius:999px;">Hiányzik</span>
-                    @endif
-                  </td>
-                </tr>
+
+                {{-- Csoportos tételek --}}
+                @foreach($groupedKeys as $groupId)
+                  @php $groupItems = $byGroup->get($groupId); $groupName = $groupsById->get($groupId)?->name ?? 'Csoport'; @endphp
+                  {{-- Csoport fejléc sor --}}
+                  <tr style="background-color:#1e293b;">
+                    <td colspan="3" style="padding:8px 16px;">
+                      <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;">{{ $groupName }}</span>
+                    </td>
+                  </tr>
+                  @foreach($groupItems as $ci)
+                  <tr style="background-color:{{ $loop->even ? '#f8fafc' : '#ffffff' }};">
+                    <td style="padding:11px 16px 11px 24px;font-size:13px;font-weight:600;color:#1e293b;border-bottom:1px solid #f1f5f9;">{{ $ci->item->name }}</td>
+                    <td style="padding:11px 16px;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;">{{ $ci->item->type === 'card' ? 'Kártya' : 'Kulcs' }}</td>
+                    <td style="padding:11px 16px;text-align:center;border-bottom:1px solid #f1f5f9;">
+                      @if($ci->is_checked)
+                        <span style="display:inline-block;background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;padding:3px 12px;border-radius:999px;">Megvolt</span>
+                      @else
+                        <span style="display:inline-block;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:700;padding:3px 12px;border-radius:999px;">Hiányzik</span>
+                      @endif
+                    </td>
+                  </tr>
+                  @endforeach
                 @endforeach
+
+                {{-- Csoportosítatlan tételek --}}
+                @if($ungrouped->isNotEmpty())
+                  @if($groupedKeys->isNotEmpty())
+                  <tr style="background-color:#1e293b;">
+                    <td colspan="3" style="padding:8px 16px;">
+                      <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;">Egyéb tételek</span>
+                    </td>
+                  </tr>
+                  @endif
+                  @foreach($ungrouped as $ci)
+                  <tr style="background-color:{{ $loop->even ? '#f8fafc' : '#ffffff' }};">
+                    <td style="padding:11px 16px 11px 24px;font-size:13px;font-weight:600;color:#1e293b;{{ !$loop->last ? 'border-bottom:1px solid #f1f5f9;' : '' }}">{{ $ci->item->name }}</td>
+                    <td style="padding:11px 16px;font-size:13px;color:#64748b;{{ !$loop->last ? 'border-bottom:1px solid #f1f5f9;' : '' }}">{{ $ci->item->type === 'card' ? 'Kártya' : 'Kulcs' }}</td>
+                    <td style="padding:11px 16px;text-align:center;{{ !$loop->last ? 'border-bottom:1px solid #f1f5f9;' : '' }}">
+                      @if($ci->is_checked)
+                        <span style="display:inline-block;background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;padding:3px 12px;border-radius:999px;">Megvolt</span>
+                      @else
+                        <span style="display:inline-block;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:700;padding:3px 12px;border-radius:999px;">Hiányzik</span>
+                      @endif
+                    </td>
+                  </tr>
+                  @endforeach
+                @endif
+
               </tbody>
             </table>
 
