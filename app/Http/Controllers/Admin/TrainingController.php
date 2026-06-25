@@ -29,8 +29,9 @@ class TrainingController extends Controller
         ]);
 
         $training = Training::create($validated + [
-            'is_active'  => $request->boolean('is_active', true),
-            'sort_order' => $validated['sort_order'] ?? 0,
+            'is_active'             => $request->boolean('is_active', true),
+            'is_location_knowledge' => $request->boolean('is_location_knowledge', false),
+            'sort_order'            => $validated['sort_order'] ?? 0,
         ]);
 
         return redirect()->route('admin.trainings.steps.index', $training)
@@ -51,8 +52,9 @@ class TrainingController extends Controller
         ]);
 
         $training->update($validated + [
-            'is_active'  => $request->boolean('is_active', false),
-            'sort_order' => $validated['sort_order'] ?? 0,
+            'is_active'             => $request->boolean('is_active', false),
+            'is_location_knowledge' => $request->boolean('is_location_knowledge', false),
+            'sort_order'            => $validated['sort_order'] ?? 0,
         ]);
 
         return redirect()->route('admin.trainings.index')->with('success', 'Oktatás frissítve!');
@@ -60,7 +62,7 @@ class TrainingController extends Controller
 
     public function destroy(Training $training)
     {
-        // Töröljük a feltöltött médiafájlokat
+        $training->load('steps');
         foreach ($training->steps as $step) {
             if ($step->media_path) Storage::disk('public')->delete($step->media_path);
             if ($step->reveal_media_path) Storage::disk('public')->delete($step->reveal_media_path);

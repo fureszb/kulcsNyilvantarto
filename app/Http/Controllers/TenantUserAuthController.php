@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,7 +12,10 @@ class TenantUserAuthController extends Controller
     {
         $tenant = app()->bound('tenant') ? app('tenant') : null;
         if (Auth::guard('tenant')->check() && session('auth_tenant') === optional($tenant)->slug) {
-            return redirect()->route('home');
+            $user = Auth::guard('tenant')->user();
+            return $user->isPropertyManager()
+                ? redirect()->route('pm.dashboard')
+                : redirect()->route('home');
         }
         return view('auth.login');
     }
@@ -35,6 +39,15 @@ class TenantUserAuthController extends Controller
 
             $request->session()->regenerate();
             session(['auth_tenant' => optional($tenant)->slug]);
+
+            ActivityLog::record('user.login', $user, "{$user->name} bejelentkezett");
+
+            if ($user->isPropertyManager()) {
+                session(['pm_welcome' => $user->name]);
+                return redirect()->route('pm.dashboard');
+            }
+
+            session(['user_welcome' => $user->name]);
             return redirect()->intended(route('home'));
         }
 
@@ -43,6 +56,10 @@ class TenantUserAuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user = Auth::guard('tenant')->user();
+        if ($user) {
+            ActivityLog::record('user.logout', $user, "{$user->name} kijelentkezett");
+        }
         Auth::guard('tenant')->logout();
         $request->session()->forget('auth_tenant');
         $request->session()->regenerateToken();

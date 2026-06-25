@@ -32,6 +32,14 @@
                        {{ old('is_active', true) ? 'checked' : '' }}>
                 <label for="is_active" class="text-sm font-medium text-slate-700">Aktív (megjelenik a dolgozóknak)</label>
             </div>
+            <div class="flex items-center gap-3">
+                <input type="checkbox" id="is_location_knowledge" name="is_location_knowledge" value="1"
+                       class="w-4 h-4 rounded border-slate-300 text-blue-600"
+                       {{ old('is_location_knowledge') ? 'checked' : '' }}>
+                <label for="is_location_knowledge" class="text-sm font-medium text-slate-700">
+                    Helyismereti oktatás/vizsga <span class="text-xs text-slate-400">(H – beleszámít a PM helyismeret %-ba)</span>
+                </label>
+            </div>
             <div class="flex gap-3 pt-2">
                 <button type="submit" class="btn-primary">Létrehozás és lépések felvétele →</button>
                 <a href="{{ route('admin.trainings.index') }}" class="btn-secondary">Mégse</a>

@@ -36,7 +36,7 @@ class TenantUserController extends Controller
             'name'                  => 'required|string|max:255',
             'email'                 => ['required', 'email', 'max:255', Rule::unique(TenantUser::class)],
             'password'              => 'required|string|min:8|confirmed',
-            'role'                  => 'required|in:admin,user',
+            'role'                  => 'required|in:admin,user,property_manager',
         ], [
             'email.unique'          => 'Ez az email cím már foglalt ennél a cégnél.',
             'password.min'          => 'A jelszó legalább 8 karakter legyen.',
@@ -52,6 +52,39 @@ class TenantUserController extends Controller
         ]);
 
         return back()->with('success', "{$request->name} sikeresen létrehozva.");
+    }
+
+    public function update(Request $request, Tenant $tenant, int $userId)
+    {
+        $this->bootTenant($tenant);
+        $user = TenantUser::findOrFail($userId);
+
+        $request->validate([
+            'name'           => 'required|string|max:255',
+            'email'          => ['required', 'email', 'max:255', Rule::unique(TenantUser::class)->ignore($user->id)],
+            'role'           => 'required|in:admin,user,property_manager',
+            'employed_since' => 'nullable|date',
+            'password'       => 'nullable|string|min:8|confirmed',
+        ], [
+            'email.unique'       => 'Ez az email cím már foglalt ennél a cégnél.',
+            'password.min'       => 'A jelszó legalább 8 karakter legyen.',
+            'password.confirmed' => 'A két jelszó nem egyezik.',
+        ]);
+
+        $data = [
+            'name'           => $request->name,
+            'email'          => $request->email,
+            'role'           => $request->role,
+            'employed_since' => $request->employed_since ?: null,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $user->update($data);
+
+        return back()->with('success', "{$user->fresh()->name} adatai frissítve.");
     }
 
     public function toggle(Tenant $tenant, int $userId)

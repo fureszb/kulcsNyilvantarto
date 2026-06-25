@@ -11,6 +11,8 @@ class TrainingResult extends Model
 
     protected $fillable = [
         'training_id',
+        'user_id',
+        'mode',
         'name',
         'email',
         'results',
@@ -27,5 +29,15 @@ class TrainingResult extends Model
     public function training(): BelongsTo
     {
         return $this->belongsTo(Training::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(TenantUser::class, 'user_id');
+    }
+
+    public function scorePercent(): int
+    {
+        return $this->total_steps > 0 ? (int) round($this->first_try_count / $this->total_steps * 100) : 0;
     }
 }

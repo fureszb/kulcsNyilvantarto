@@ -5,16 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\TenantUser;
 
 class Check extends Model
 {
     protected $connection = 'tenant';
 
-    protected $fillable = ['location_id', 'checked_by', 'extra_email', 'notes'];
+    protected $fillable = ['location_id', 'user_id', 'checked_by', 'extra_email', 'notes'];
 
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(TenantUser::class, 'user_id');
     }
 
     public function checkItems(): HasMany

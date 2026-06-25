@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="hu" class="h-full bg-slate-100">
+<html lang="hu" class="h-full overflow-x-hidden bg-slate-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +8,43 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full flex flex-col" x-data="{ mobileMenuOpen: false }">
+<body class="min-h-full overflow-x-hidden flex flex-col" x-data="{ mobileMenuOpen: false }">
+
+<div id="page-loader" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0f172a;transition:opacity 0.25s ease;">
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:40px 40px;"></div>
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:20px;">
+        <div style="position:relative;width:64px;height:64px;">
+            <div style="position:absolute;inset:-6px;border-radius:50%;border:2px solid transparent;border-top-color:#6366f1;border-right-color:rgba(99,102,241,0.3);animation:ldr-spin 0.9s linear infinite;"></div>
+            <div style="position:absolute;inset:6px;border-radius:12px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);display:flex;align-items:center;justify-content:center;">
+                <svg style="width:22px;height:22px;" fill="none" stroke="#818cf8" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+            </div>
+        </div>
+        <div style="width:120px;height:2px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;">
+            <div style="height:100%;width:100%;background:linear-gradient(90deg,#6366f1,#818cf8);border-radius:2px;animation:ldr-bar 0.5s cubic-bezier(.16,1,.3,1) forwards;transform-origin:left;"></div>
+        </div>
+    </div>
+    <style>
+        @keyframes ldr-spin { to { transform:rotate(360deg); } }
+        @keyframes ldr-bar  { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+    </style>
+</div>
+<script>
+(function() {
+    var loader = document.getElementById('page-loader');
+    var start  = Date.now(), MIN = 480;
+    function hide() {
+        var wait = Math.max(0, MIN - (Date.now() - start));
+        setTimeout(function() {
+            loader.style.opacity = '0';
+            loader.style.pointerEvents = 'none';
+            setTimeout(function() { loader.remove(); }, 260);
+        }, wait);
+    }
+    document.addEventListener('DOMContentLoaded', hide);
+})();
+</script>
 
     <header class="bg-slate-900 border-b border-white/5 shadow-xl sticky top-0 z-30">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
@@ -111,7 +147,7 @@
         @endif
     </header>
 
-    <main class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8">
+    <main class="flex-1 max-w-6xl mx-auto w-full overflow-x-hidden px-4 sm:px-6 py-6 sm:py-8">
         @if(session('success'))
             <div class="mb-6 bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
                 <svg class="w-4 h-4 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">

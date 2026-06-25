@@ -32,8 +32,9 @@
                 <div>
                     <label class="form-label" for="role">Szerepkör <span class="text-red-500">*</span></label>
                     <select id="role" name="role" class="form-input">
-                        <option value="user"  {{ old('role', $user?->role) === 'user'  ? 'selected' : '' }}>Felhasználó</option>
-                        <option value="admin" {{ old('role', $user?->role) === 'admin' ? 'selected' : '' }}>Admin</option>
+                        <option value="user"             {{ old('role', $user?->role) === 'user'             ? 'selected' : '' }}>Felhasználó (worker)</option>
+                        <option value="property_manager" {{ old('role', $user?->role) === 'property_manager' ? 'selected' : '' }}>Property Manager</option>
+                        <option value="admin"            {{ old('role', $user?->role) === 'admin'            ? 'selected' : '' }}>Admin</option>
                     </select>
                 </div>
                 <div>
@@ -49,6 +50,13 @@
                     <label class="form-label" for="password_confirmation">Jelszó megerősítése</label>
                     <input type="password" id="password_confirmation" name="password_confirmation"
                            class="form-input" autocomplete="new-password">
+                </div>
+                <div>
+                    <label class="form-label" for="employed_since">Belépés dátuma (mióta dolgozik)</label>
+                    <input type="date" id="employed_since" name="employed_since"
+                           value="{{ old('employed_since', $user?->employed_since?->format('Y-m-d')) }}"
+                           class="form-input">
+                    @error('employed_since')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div class="flex items-center gap-2 pt-1">
                     <input type="checkbox" name="is_active" value="1" id="is_active"

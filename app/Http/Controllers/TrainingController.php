@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Mail\TrainingResultMail;
+use App\Models\ActivityLog;
 use App\Models\Setting;
 use App\Models\Training;
 use App\Models\TrainingResult;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
@@ -48,6 +50,28 @@ class TrainingController extends Controller
         return view('training.show', compact('training', 'stepsData'));
     }
 
+    public function exam(Training $training)
+    {
+        if (!$training->is_active) abort(404);
+
+        $steps = $training->steps()->with('answers')->get();
+
+        $stepsData = $steps->map(function ($step) {
+            return [
+                'id'            => $step->id,
+                'question'      => $step->question,
+                'question_type' => $step->question_type ?? 'radio',
+                'answers'       => $step->answers->map(fn($a) => [
+                    'id'         => $a->id,
+                    'text'       => $a->text,
+                    'is_correct' => $a->is_correct,
+                ])->values(),
+            ];
+        })->values();
+
+        return view('training.exam', compact('training', 'stepsData'));
+    }
+
     public function sendResult(Request $request, Training $training)
     {
         $request->validate([
@@ -64,8 +88,14 @@ class TrainingController extends Controller
         $completedAt = now();
         $tenantName  = app()->bound('tenant') ? app('tenant')->name : config('app.name');
 
+        $routeName   = $request->route()->getName();
+        $mode        = str_contains($routeName, 'exam') ? 'exam' : 'training';
+        $authUser    = Auth::guard('tenant')->user();
+
         TrainingResult::create([
             'training_id'     => $training->id,
+            'user_id'         => $authUser?->id,
+            'mode'            => $mode,
             'name'            => $request->input('name'),
             'email'           => $request->input('email'),
             'results'         => $results,
@@ -74,13 +104,23 @@ class TrainingController extends Controller
             'completed_at'    => $completedAt,
         ]);
 
+        $scoreLabel = "{$firstTry}/{$total} ({$this->pct($firstTry, $total)}%)";
+        $eventType  = $mode === 'exam' ? 'exam.completed' : 'training.completed';
+        $label      = $mode === 'exam' ? 'Vizsga' : 'Oktatás';
+        ActivityLog::record($eventType, $authUser, "{$label} elvégezve: {$training->title} – {$scoreLabel}", [
+            'training_id' => $training->id,
+            'mode'        => $mode,
+            'score'       => $firstTry,
+            'total'       => $total,
+        ]);
+
         $mailable = new TrainingResultMail(
-            training:      $training,
-            results:       $results,
-            firstTryCount: $firstTry,
-            totalSteps:    $total,
-            tenantName:    $tenantName,
-            completedAt:   $completedAt->format('Y.m.d H:i'),
+            training:        $training,
+            results:         $results,
+            firstTryCount:   $firstTry,
+            totalSteps:      $total,
+            tenantName:      $tenantName,
+            completedAt:     $completedAt->format('Y.m.d H:i'),
             participantName: $request->input('name'),
         );
 
@@ -88,8 +128,7 @@ class TrainingController extends Controller
             Mail::to($request->input('email'))->send($mailable);
         }
 
-        $notifEmail = Setting::get('training_notification_email')
-                   ?: Setting::get('global_email');
+        $notifEmail = Setting::get('training_notification_email');
         if ($notifEmail) {
             Mail::to($notifEmail)->send($mailable);
         }
@@ -98,5 +137,10 @@ class TrainingController extends Controller
             'ok'          => true,
             'completedAt' => $completedAt->format('Y.m.d H:i'),
         ]);
+    }
+
+    private function pct(int $n, int $total): int
+    {
+        return $total > 0 ? (int) round($n / $total * 100) : 0;
     }
 }

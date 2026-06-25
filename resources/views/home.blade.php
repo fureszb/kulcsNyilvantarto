@@ -40,7 +40,7 @@
 @else
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         @foreach($locations as $location)
-        <a href="{{ route('check.show', $location) }}"
+        <a href="{{ route('keys.show', $location) }}"
            class="group relative overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm
                   hover:shadow-lg hover:shadow-blue-100/80 hover:border-blue-200
                   motion-safe:hover:-translate-y-1 transition-all duration-300 cursor-pointer">
@@ -84,7 +84,7 @@
                     </p>
                 @endif
                 <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <span class="text-sm font-semibold text-blue-600 group-hover:text-blue-700 transition-colors">Ellenőrzés indítása</span>
+                    <span class="text-sm font-semibold text-blue-600 group-hover:text-blue-700 transition-colors">Megnyitás</span>
                     <div class="w-7 h-7 rounded-full bg-blue-50 group-hover:bg-blue-600 border border-blue-100 group-hover:border-blue-600
                                 flex items-center justify-center transition-all duration-300">
                         <svg class="w-3.5 h-3.5 text-blue-500 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -278,7 +278,7 @@
                     </span>
                 </button>
 
-                <a href="{{ route('home') }}"
+                <a href="{{ route('keys.show', $location) }}"
                    class="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all duration-150">
                     ← Vissza
                 </a>

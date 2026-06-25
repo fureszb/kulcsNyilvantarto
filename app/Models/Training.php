@@ -9,9 +9,12 @@ class Training extends Model
 {
     protected $connection = 'tenant';
 
-    protected $fillable = ['title', 'description', 'is_active', 'sort_order'];
+    protected $fillable = ['title', 'description', 'is_active', 'sort_order', 'is_location_knowledge'];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = [
+        'is_active'             => 'boolean',
+        'is_location_knowledge' => 'boolean',
+    ];
 
     public function steps(): HasMany
     {

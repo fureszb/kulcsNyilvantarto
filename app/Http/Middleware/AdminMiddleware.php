@@ -22,8 +22,15 @@ class AdminMiddleware
             return redirect()->route('admin.login');
         }
 
-        if (!Auth::guard('tenant')->user()->isAdmin()) {
+        $user = Auth::guard('tenant')->user();
+
+        if (!$user->isAdmin()) {
             abort(403, 'Nincs admin jogosultsága.');
+        }
+
+        if (!$user->is_active) {
+            Auth::guard('tenant')->logout();
+            return redirect()->route('admin.login')->with('error', 'Fiókja inaktív.');
         }
 
         return $next($request);

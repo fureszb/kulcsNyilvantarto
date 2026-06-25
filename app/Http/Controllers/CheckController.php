@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Mail\CheckCompletedMail;
+use App\Models\ActivityLog;
 use App\Models\Check;
 use App\Models\CheckItem;
 use App\Models\Location;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
 class CheckController extends Controller
@@ -36,6 +38,7 @@ class CheckController extends Controller
 
         $check = Check::create([
             'location_id' => $location->id,
+            'user_id'     => auth('tenant')->id(),
             'checked_by'  => auth('tenant')->user()->name,
             'extra_email' => $validated['extra_email'] ?? null,
             'notes'       => $validated['notes'] ?? null,
@@ -71,6 +74,87 @@ class CheckController extends Controller
             }
         }
 
-        return redirect()->route('home')->with('success', "Az ellenőrzés sikeresen rögzítve és elküldve! ({$location->name})");
+        $checkedCount = $check->checkItems->where('is_checked', true)->count();
+        $totalCount   = $check->checkItems->count();
+        ActivityLog::record('check.completed', Auth::guard('tenant')->user(),
+            "Ellenőrzés: {$location->name} – {$checkedCount}/{$totalCount} tétel", [
+                'check_id'    => $check->id,
+                'location_id' => $location->id,
+                'checked'     => $checkedCount,
+                'total'       => $totalCount,
+            ]);
+
+        return redirect()->route('checks.show', $check)
+            ->with('success', "Ellenőrzés rögzítve! ({$location->name})");
+    }
+
+    public function showResult(Check $check)
+    {
+        $authUser = Auth::guard('tenant')->user();
+
+        abort_if(
+            !$authUser->isAdmin()
+                && !$authUser->isPropertyManager()
+                && $authUser->id !== $check->user_id,
+            403
+        );
+
+        $check->load(['checkItems.item.group', 'location']);
+
+        $groupedCheckItems   = $check->checkItems
+            ->filter(fn($ci) => $ci->item->group_id !== null)
+            ->groupBy(fn($ci) => $ci->item->group->name ?? 'Egyéb');
+        $ungroupedCheckItems = $check->checkItems
+            ->filter(fn($ci) => $ci->item->group_id === null);
+
+        return view('checks.show', compact('check', 'groupedCheckItems', 'ungroupedCheckItems'));
+    }
+
+    public function editResult(Check $check)
+    {
+        $authUser = Auth::guard('tenant')->user();
+        abort_if(
+            !$authUser->isAdmin() && ($authUser->isPropertyManager() || $authUser->id !== $check->user_id),
+            403
+        );
+
+        $check->load(['checkItems.item.group', 'location']);
+
+        $groupedCheckItems   = $check->checkItems
+            ->filter(fn($ci) => $ci->item->group_id !== null)
+            ->groupBy(fn($ci) => $ci->item->group->name ?? 'Egyéb');
+        $ungroupedCheckItems = $check->checkItems
+            ->filter(fn($ci) => $ci->item->group_id === null);
+
+        return view('checks.edit', compact('check', 'groupedCheckItems', 'ungroupedCheckItems'));
+    }
+
+    public function updateResult(Request $request, Check $check)
+    {
+        $authUser = Auth::guard('tenant')->user();
+        abort_if(
+            !$authUser->isAdmin() && ($authUser->isPropertyManager() || $authUser->id !== $check->user_id),
+            403
+        );
+
+        $validated = $request->validate([
+            'notes'       => 'nullable|string|max:1000',
+            'extra_email' => 'nullable|email|max:255',
+            'items'       => 'nullable|array',
+        ]);
+
+        $check->update([
+            'notes'       => $validated['notes'] ?? null,
+            'extra_email' => $validated['extra_email'] ?? null,
+        ]);
+
+        foreach ($check->checkItems as $checkItem) {
+            $checkItem->update([
+                'is_checked' => isset($validated['items'][$checkItem->item_id]),
+            ]);
+        }
+
+        return redirect()->route('checks.show', $check)
+            ->with('success', 'Az ellenőrzés sikeresen módosítva.');
     }
 }

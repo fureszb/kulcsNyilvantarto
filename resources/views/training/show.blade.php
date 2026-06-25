@@ -2,7 +2,7 @@
 @section('title', $training->title)
 
 @section('content')
-<div x-data="trainingPlayer({{ $stepsData->toJson() }}, '{{ route('training.result', $training) }}', '{{ csrf_token() }}')">
+<div x-data="trainingPlayer({{ $stepsData->toJson() }}, '{{ route('training.result', $training) }}', '{{ csrf_token() }}', {{ json_encode(auth('tenant')->user()->name) }}, {{ json_encode(auth('tenant')->user()->email ?? '') }})">
 
     {{-- Fejléc hero --}}
     <div class="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
@@ -50,36 +50,21 @@
             </div>
             <h2 class="text-xl font-extrabold text-slate-900 mb-1">Oktatás megkezdése</h2>
             @if($training->description)
-                <p class="text-sm text-slate-500 mb-6 leading-relaxed">{{ $training->description }}</p>
+                <p class="text-sm text-slate-500 mb-5 leading-relaxed">{{ $training->description }}</p>
             @else
-                <p class="text-sm text-slate-400 mb-6">{{ $stepsData->count() }} kérdéses oktatás. Az eredményt emailben is elküldjük.</p>
+                <p class="text-sm text-slate-400 mb-5">{{ $stepsData->count() }} kérdéses oktatás. Az eredményt emailben is elküldjük.</p>
             @endif
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Teljes neve <span class="text-red-500">*</span></label>
-                    <input type="text" x-model="participantName" @keydown.enter.prevent="startTraining()"
-                           class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400
-                                  focus:border-indigo-400 focus:bg-white focus:outline-none transition"
-                           placeholder="Pl. Kovács János" autofocus>
-                    <p x-show="nameError" class="text-red-500 text-xs mt-1">Adja meg a nevét a folytatáshoz.</p>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">
-                        Email-cím <span class="text-xs text-slate-400 font-normal">(opcionális – az eredményt ide is elküldjük)</span>
-                    </label>
-                    <input type="email" x-model="participantEmail" @keydown.enter.prevent="startTraining()"
-                           class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400
-                                  focus:border-indigo-400 focus:bg-white focus:outline-none transition"
-                           placeholder="nev@pelda.hu">
-                </div>
-                <div class="pt-1">
-                    <button @click="startTraining()"
-                            class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer">
-                        Oktatás megkezdése
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </button>
-                </div>
+            <div class="flex items-center gap-3 mb-5 p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
+                <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <span class="text-sm text-indigo-700 font-medium" x-text="participantName"></span>
             </div>
+            <button @click="startTraining()"
+                    class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                Oktatás megkezdése
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
         </div>
     </div>
 
@@ -215,11 +200,23 @@
 
                             <template x-if="step.media_url">
                                 <div class="rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center">
-                                    <template x-if="step.media_type === 'video'">
-                                        <video :src="step.media_url" class="w-full max-h-64 object-contain" controls loop></video>
-                                    </template>
+                                    {{-- Kép: mindig látható --}}
                                     <template x-if="step.media_type !== 'video'">
                                         <img :src="step.media_url" class="w-full max-h-64 object-contain" alt="">
+                                    </template>
+                                    {{-- Videó: csak helyes válasz után játszható --}}
+                                    <template x-if="step.media_type === 'video' && !isCorrect">
+                                        <div class="w-full rounded-xl select-none" style="height:256px;background:#1e293b;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+                                            <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <svg style="width:28px;height:28px;color:rgba(255,255,255,0.4);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                                </svg>
+                                            </div>
+                                            <p style="color:rgba(255,255,255,0.4);font-size:0.875rem;font-weight:500;text-align:center;padding:0 24px;line-height:1.4;">A videó a helyes válasz megadása után oldódik fel</p>
+                                        </div>
+                                    </template>
+                                    <template x-if="step.media_type === 'video' && isCorrect">
+                                        <video :src="step.media_url" class="w-full max-h-64 object-contain" controls autoplay loop x-ref="mainvideo"></video>
                                     </template>
                                 </div>
                             </template>
@@ -379,7 +376,7 @@
 </div>
 
 <script>
-function trainingPlayer(stepsData, submitUrl, csrfToken) {
+function trainingPlayer(stepsData, submitUrl, csrfToken, authName, authEmail) {
     return {
         steps:            stepsData,
         started:          false,
@@ -403,9 +400,8 @@ function trainingPlayer(stepsData, submitUrl, csrfToken) {
         textCorrect:      false,
 
         // participant
-        participantName:  '',
-        participantEmail: '',
-        nameError:        false,
+        participantName:  authName,
+        participantEmail: authEmail,
 
         // result
         results:          [],
@@ -421,9 +417,7 @@ function trainingPlayer(stepsData, submitUrl, csrfToken) {
         },
 
         startTraining() {
-            if (!this.participantName.trim()) { this.nameError = true; return; }
-            this.nameError = false;
-            this.started   = true;
+            this.started = true;
         },
 
         // ── Radio ──────────────────────────────────────────────────────────────
@@ -432,8 +426,10 @@ function trainingPlayer(stepsData, submitUrl, csrfToken) {
             if (correct) {
                 this.isCorrect = true;
                 this.$nextTick(() => {
-                    const vid = document.querySelector('[x-ref="reveal"]');
-                    if (vid) vid.play().catch(() => {});
+                    ['[x-ref="reveal"]', '[x-ref="mainvideo"]'].forEach(sel => {
+                        const vid = document.querySelector(sel);
+                        if (vid) vid.play().catch(() => {});
+                    });
                 });
             } else {
                 this.attemptsPerStep[this.currentStep]++;
@@ -462,8 +458,10 @@ function trainingPlayer(stepsData, submitUrl, csrfToken) {
                 this.isCorrect    = true;
                 this.checkboxError= '';
                 this.$nextTick(() => {
-                    const vid = document.querySelector('[x-ref="reveal"]');
-                    if (vid) vid.play().catch(() => {});
+                    ['[x-ref="reveal"]', '[x-ref="mainvideo"]'].forEach(sel => {
+                        const vid = document.querySelector(sel);
+                        if (vid) vid.play().catch(() => {});
+                    });
                 });
             } else {
                 this.attemptsPerStep[this.currentStep]++;
@@ -535,11 +533,10 @@ function trainingPlayer(stepsData, submitUrl, csrfToken) {
             this.completed        = false;
             this.attemptsPerStep  = this.steps.map(() => 0);
             this.results          = [];
-            this.participantName  = '';
-            this.participantEmail = '';
+            this.participantName  = authName;
+            this.participantEmail = authEmail;
             this.completedAt      = '';
             this.submitError      = '';
-            this.nameError        = false;
             this.resetStep();
         }
     };

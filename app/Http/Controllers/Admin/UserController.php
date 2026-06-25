@@ -25,18 +25,20 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'                  => 'required|string|max:255',
-            'email'                 => ['required', 'email', 'max:255', Rule::unique(TenantUser::class)],
-            'password'              => 'required|string|min:8|confirmed',
-            'role'                  => 'required|in:admin,user',
+            'name'           => 'required|string|max:255',
+            'email'          => ['required', 'email', 'max:255', Rule::unique(TenantUser::class)],
+            'password'       => 'required|string|min:8|confirmed',
+            'role'           => 'required|in:admin,user,property_manager',
+            'employed_since' => 'nullable|date',
         ]);
 
         TenantUser::create([
-            'name'      => $validated['name'],
-            'email'     => $validated['email'],
-            'password'  => Hash::make($validated['password']),
-            'role'      => $validated['role'],
-            'is_active' => $request->boolean('is_active', true),
+            'name'           => $validated['name'],
+            'email'          => $validated['email'],
+            'password'       => Hash::make($validated['password']),
+            'role'           => $validated['role'],
+            'is_active'      => $request->boolean('is_active', true),
+            'employed_since' => $validated['employed_since'] ?? null,
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'Felhasználó sikeresen létrehozva!');
@@ -50,17 +52,19 @@ class UserController extends Controller
     public function update(Request $request, TenantUser $user)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => ['required', 'email', 'max:255', Rule::unique(TenantUser::class)->ignore($user->id)],
-            'password' => 'nullable|string|min:8|confirmed',
-            'role'     => 'required|in:admin,user',
+            'name'           => 'required|string|max:255',
+            'email'          => ['required', 'email', 'max:255', Rule::unique(TenantUser::class)->ignore($user->id)],
+            'password'       => 'nullable|string|min:8|confirmed',
+            'role'           => 'required|in:admin,user,property_manager',
+            'employed_since' => 'nullable|date',
         ]);
 
         $data = [
-            'name'      => $validated['name'],
-            'email'     => $validated['email'],
-            'role'      => $validated['role'],
-            'is_active' => $request->boolean('is_active', false),
+            'name'           => $validated['name'],
+            'email'          => $validated['email'],
+            'role'           => $validated['role'],
+            'is_active'      => $request->boolean('is_active', false),
+            'employed_since' => $validated['employed_since'] ?? null,
         ];
 
         if (!empty($validated['password'])) {
