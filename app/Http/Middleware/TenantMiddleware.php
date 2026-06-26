@@ -21,7 +21,7 @@ class TenantMiddleware
             abort(404, 'Ismeretlen vagy inaktív cég.');
         }
 
-        $dbPath = database_path('tenants/' . $slug . '.sqlite');
+        $dbPath = storage_path('database/tenants/' . $slug . '.sqlite');
 
         if (!file_exists($dbPath)) {
             abort(503, 'Az adatbázis nem érhető el. Vegye fel a kapcsolatot az adminisztrátorral.');

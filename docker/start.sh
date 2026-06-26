@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-mkdir -p /app/database/tenants
-chmod -R 775 /app/database
+mkdir -p /app/storage/database/tenants
+chmod -R 775 /app/storage/database
 
 php artisan migrate --force
 php artisan storage:link 2>/dev/null || true

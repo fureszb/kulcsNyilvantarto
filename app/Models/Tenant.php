@@ -12,7 +12,7 @@ class Tenant extends Model
 
     public function getDatabasePathAttribute(): string
     {
-        return database_path('tenants/' . $this->slug . '.sqlite');
+        return storage_path('database/tenants/' . $this->slug . '.sqlite');
     }
 
     public function getUrlAttribute(): string
