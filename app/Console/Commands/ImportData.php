@@ -55,7 +55,7 @@ class ImportData extends Command
         $mainDir = $exportDir . '/main';
         if (is_dir($mainDir)) {
             $this->info('Importing main database...');
-            $this->importDir($mainDir, 'default', self::MAIN_ORDER);
+            $this->importDir($mainDir, config('database.default'), self::MAIN_ORDER);
         }
 
         // Tenant databases
@@ -121,13 +121,13 @@ class ImportData extends Command
         // For MySQL/PgSQL: the tenant connection must already be configured in .env
 
         // Try to configure tenant connection dynamically for SQLite servers
-        $sqliteFile = database_path("tenants/{$slug}.sqlite");
-        $driver = DB::connection('default')->getDriverName();
+        $sqliteFile = storage_path("database/tenants/{$slug}.sqlite");
+        $driver = DB::connection(config('database.default'))->getDriverName();
 
         if ($driver === 'sqlite') {
             // Ensure tenant file directory exists
-            if (!is_dir(database_path('tenants'))) {
-                mkdir(database_path('tenants'), 0755, true);
+            if (!is_dir(storage_path('database/tenants'))) {
+                mkdir(storage_path('database/tenants'), 0755, true);
             }
             config(['database.connections.tenant.database' => $sqliteFile]);
             DB::purge('tenant');
