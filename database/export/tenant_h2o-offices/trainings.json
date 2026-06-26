@@ -1,0 +1,12 @@
+[
+    {
+        "id": 5,
+        "title": "Sprinkler leállítása",
+        "description": "Abban az esetben amikor le kell állítanotok a sprinkler rendszert ezeket a lépéseket kell megtanulnotok!",
+        "is_active": 1,
+        "sort_order": 0,
+        "created_at": "2026-06-25 21:49:14",
+        "updated_at": "2026-06-25 21:49:14",
+        "is_location_knowledge": 0
+    }
+]

@@ -1,0 +1,130 @@
+[
+    {
+        "id": 1,
+        "location_id": 1,
+        "name": "Albemarle",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:25:55",
+        "updated_at": "2026-06-23 10:25:55"
+    },
+    {
+        "id": 2,
+        "location_id": 1,
+        "name": "DBH",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:30:55",
+        "updated_at": "2026-06-23 10:30:55"
+    },
+    {
+        "id": 3,
+        "location_id": 1,
+        "name": "Kivitelezés",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:34:16",
+        "updated_at": "2026-06-23 10:34:16"
+    },
+    {
+        "id": 4,
+        "location_id": 1,
+        "name": "LDC",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:35:13",
+        "updated_at": "2026-06-23 10:35:13"
+    },
+    {
+        "id": 5,
+        "location_id": 1,
+        "name": "Gondoskodás",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:35:49",
+        "updated_at": "2026-06-23 10:35:49"
+    },
+    {
+        "id": 6,
+        "location_id": 1,
+        "name": "BlueBird",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:39:03",
+        "updated_at": "2026-06-23 10:39:03"
+    },
+    {
+        "id": 7,
+        "location_id": 1,
+        "name": "Futár",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:39:57",
+        "updated_at": "2026-06-23 10:39:57"
+    },
+    {
+        "id": 8,
+        "location_id": 1,
+        "name": "Takarítói",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:42:00",
+        "updated_at": "2026-06-23 10:42:00"
+    },
+    {
+        "id": 9,
+        "location_id": 1,
+        "name": "Liftek",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:44:55",
+        "updated_at": "2026-06-23 10:44:55"
+    },
+    {
+        "id": 10,
+        "location_id": 1,
+        "name": "Recowaste",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:46:15",
+        "updated_at": "2026-06-23 10:46:15"
+    },
+    {
+        "id": 11,
+        "location_id": 1,
+        "name": "Cofidis",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:46:59",
+        "updated_at": "2026-06-23 10:46:59"
+    },
+    {
+        "id": 12,
+        "location_id": 1,
+        "name": "Kertész",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:48:00",
+        "updated_at": "2026-06-23 10:48:00"
+    },
+    {
+        "id": 13,
+        "location_id": 1,
+        "name": "Johnson\/Szarvas",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:48:43",
+        "updated_at": "2026-06-23 10:48:43"
+    },
+    {
+        "id": 14,
+        "location_id": 1,
+        "name": "Skanska",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:49:11",
+        "updated_at": "2026-06-23 10:49:11"
+    },
+    {
+        "id": 15,
+        "location_id": 1,
+        "name": "Orbico",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:50:05",
+        "updated_at": "2026-06-23 10:50:05"
+    },
+    {
+        "id": 16,
+        "location_id": 1,
+        "name": "Colonnade",
+        "sort_order": 0,
+        "created_at": "2026-06-23 10:52:17",
+        "updated_at": "2026-06-23 10:52:17"
+    }
+]

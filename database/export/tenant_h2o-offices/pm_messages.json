@@ -1,0 +1,29 @@
+[
+    {
+        "id": 2,
+        "content": "Hozzd a kulcsot pls",
+        "send_to_all": 0,
+        "created_at": "2026-06-24 17:31:16",
+        "updated_at": "2026-06-24 17:31:16",
+        "sent_by_user_id": null,
+        "sent_by_name": null
+    },
+    {
+        "id": 5,
+        "content": "menjetek a recepcióra!",
+        "send_to_all": 0,
+        "created_at": "2026-06-25 10:54:57",
+        "updated_at": "2026-06-25 10:54:57",
+        "sent_by_user_id": 7,
+        "sent_by_name": "Teszt PM"
+    },
+    {
+        "id": 6,
+        "content": "testz2",
+        "send_to_all": 0,
+        "created_at": "2026-06-25 18:47:26",
+        "updated_at": "2026-06-25 18:47:26",
+        "sent_by_user_id": 7,
+        "sent_by_name": "Teszt PM"
+    }
+]

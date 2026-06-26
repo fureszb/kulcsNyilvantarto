@@ -1,0 +1,74 @@
+[
+    {
+        "id": 1,
+        "user_id": 3,
+        "content": "Teszteltem a váltóüzeneteket",
+        "note_date": "2026-06-24 00:00:00",
+        "created_at": "2026-06-24 15:18:55",
+        "updated_at": "2026-06-24 17:55:29"
+    },
+    {
+        "id": 2,
+        "user_id": 1,
+        "content": "holnap munkavégzésre érkeznek a p1 re!\r\n\r\n\r\ntdksőngkdsnvsdn\r\n\r\nvkosfnvksőn\r\n\r\nkvsúvnúks\r\n\r\nkonvsnovks\r\n\r\nvknsnv",
+        "note_date": "2026-06-24 00:00:00",
+        "created_at": "2026-06-24 15:25:09",
+        "updated_at": "2026-06-24 15:25:09"
+    },
+    {
+        "id": 3,
+        "user_id": 5,
+        "content": "0",
+        "note_date": "2026-06-24 00:00:00",
+        "created_at": "2026-06-24 16:03:25",
+        "updated_at": "2026-06-24 16:03:25"
+    },
+    {
+        "id": 4,
+        "user_id": 9,
+        "content": "Holnap érkezik az ad klíma 14:00 rá (TESZT)",
+        "note_date": "2026-06-24 00:00:00",
+        "created_at": "2026-06-25 08:21:08",
+        "updated_at": "2026-06-25 18:49:34"
+    },
+    {
+        "id": 6,
+        "user_id": 9,
+        "content": "Zayzon Zotmund kérésére a 7.emeleti Albemarle érzékelőket (2272,2273-as csoportokat) munka végezte után legalább 2 órával később élesítsétek vissza.",
+        "note_date": "2026-06-25 00:00:00",
+        "created_at": "2026-06-25 09:41:22",
+        "updated_at": "2026-06-25 09:41:22"
+    },
+    {
+        "id": 7,
+        "user_id": 9,
+        "content": "Papp Dénes által kiadott utasítást követve a P1-en azokon a területeken ahol a műgyantázási munkálaton kivűl esik és még nincs lezárva, azokon a járőr pontokon ugyanúgy el kell végezni a csekkolást ! (Elektromos elosztó,tűzjelzőközpont, a Tó gépészeti helyiéségben, és a Távhő fogadó gépészeti helyiségben !)\r\n\r\n A munkavégzés lezárása értelem szerűen változó így törekedjünk a járőr elvégzésére a (szabad területeken) hiszen ezek elektromos helyiségek, ahol rendszer hibát vélünk felfedezni avagy a Tógépészeti helyiségben előfordulhat vízfolyás\/csöpögés amit jelentenünk kell az üzemeltetés felé amikor felfedezzük a hibát ! \r\nKöszönöm a közös eggyütt működést.",
+        "note_date": "2026-06-25 00:00:00",
+        "created_at": "2026-06-25 10:13:06",
+        "updated_at": "2026-06-25 10:13:06"
+    },
+    {
+        "id": 8,
+        "user_id": 9,
+        "content": "Tisztelt Őrszolgálat!\n\nTájékoztatom, hogy 2026. 06. 26-án 8:00– 16:30 között behajtást biztosítunk a mélygarázsba és parkolást engedélyeztünk a PJZ-951 frsz-ú gépkocsinak, a P3-005 számú parkolónkon. \n\nÜdvözlettel:\n\nBARANYAI-NAGY Erzsébet\nBeszerzési és Üzemeltetési csoport\n\nE-mail: erzsebet.baranyai-nagy@cofidisbank.hu\nMobil: +36 (30) 345-5488\n\nMagyar Cofidis Bank Zrt.\nCím: 1134 Budapest, Váci út 23-27.\nwww.cofidisbank.hu",
+        "note_date": "2026-06-25 00:00:00",
+        "created_at": "2026-06-25 18:35:52",
+        "updated_at": "2026-06-25 18:35:52"
+    },
+    {
+        "id": 9,
+        "user_id": 9,
+        "content": "Tisztel Őrszolgálat ! Drága kolléga társaim !\n\nA ,,szolgálat átadás-átvételi\" információkat pl: vendégparkolás, napi teendők, üzemeltetői kérések, minden egyebet ezen a programon írunk és másolunk be a (váltóüzenetek menü pontban  !) Igy nem kell külön word dokumentumot kitöltenünk, viszont a napi jelentésben a szokásos Időpontokat (munkavégzés, takarítás, esemény leírás, ugyanúgy elkel készíteni a napi jelentést.",
+        "note_date": "2026-06-25 00:00:00",
+        "created_at": "2026-06-25 18:48:56",
+        "updated_at": "2026-06-25 18:48:56"
+    },
+    {
+        "id": 11,
+        "user_id": 9,
+        "content": "Tisztelt kollégák !\nAz átjelzés felfügesztettem 17:00-ig",
+        "note_date": "2026-06-26 00:00:00",
+        "created_at": "2026-06-26 06:24:48",
+        "updated_at": "2026-06-26 06:24:48"
+    }
+]

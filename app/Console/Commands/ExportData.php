@@ -12,7 +12,7 @@ class ExportData extends Command
 
     public function handle(): int
     {
-        $exportDir = storage_path('app/export');
+        $exportDir = database_path('export');
         if (!is_dir($exportDir)) {
             mkdir($exportDir, 0755, true);
         }

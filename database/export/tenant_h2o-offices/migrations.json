@@ -1,0 +1,142 @@
+[
+    {
+        "id": 1,
+        "migration": "2026_06_18_183727_create_locations_table",
+        "batch": 1
+    },
+    {
+        "id": 2,
+        "migration": "2026_06_18_183728_create_items_table",
+        "batch": 1
+    },
+    {
+        "id": 3,
+        "migration": "2026_06_18_183729_create_checks_table",
+        "batch": 1
+    },
+    {
+        "id": 4,
+        "migration": "2026_06_18_183730_create_check_items_table",
+        "batch": 1
+    },
+    {
+        "id": 5,
+        "migration": "2026_06_18_183731_create_settings_table",
+        "batch": 1
+    },
+    {
+        "id": 6,
+        "migration": "2026_06_19_100000_add_icon_to_locations_table",
+        "batch": 1
+    },
+    {
+        "id": 7,
+        "migration": "2026_06_19_200000_create_trainings_table",
+        "batch": 1
+    },
+    {
+        "id": 8,
+        "migration": "2026_06_19_200001_create_training_steps_table",
+        "batch": 1
+    },
+    {
+        "id": 9,
+        "migration": "2026_06_19_200002_create_training_answers_table",
+        "batch": 1
+    },
+    {
+        "id": 10,
+        "migration": "2026_06_19_300000_create_training_results_table",
+        "batch": 1
+    },
+    {
+        "id": 11,
+        "migration": "2026_06_19_400000_add_question_type_to_training_steps",
+        "batch": 1
+    },
+    {
+        "id": 12,
+        "migration": "2026_06_22_100000_create_item_groups_table",
+        "batch": 1
+    },
+    {
+        "id": 13,
+        "migration": "2026_06_22_100001_add_group_id_to_items_table",
+        "batch": 1
+    },
+    {
+        "id": 14,
+        "migration": "2026_06_22_200000_create_users_table",
+        "batch": 1
+    },
+    {
+        "id": 15,
+        "migration": "2026_06_24_100000_add_employed_since_to_users_table",
+        "batch": 2
+    },
+    {
+        "id": 16,
+        "migration": "2026_06_24_200000_add_property_manager_role_to_users",
+        "batch": 2
+    },
+    {
+        "id": 17,
+        "migration": "2026_06_24_200001_add_is_location_knowledge_to_trainings",
+        "batch": 2
+    },
+    {
+        "id": 18,
+        "migration": "2026_06_24_200002_add_user_id_and_mode_to_training_results",
+        "batch": 2
+    },
+    {
+        "id": 19,
+        "migration": "2026_06_24_200003_create_activity_logs_table",
+        "batch": 2
+    },
+    {
+        "id": 20,
+        "migration": "2026_06_25_100000_create_exams_tables",
+        "batch": 2
+    },
+    {
+        "id": 21,
+        "migration": "2026_06_25_500000_create_security_daily_reports_table",
+        "batch": 3
+    },
+    {
+        "id": 22,
+        "migration": "2026_06_25_600000_add_handover_fields_to_security_reports",
+        "batch": 4
+    },
+    {
+        "id": 23,
+        "migration": "2026_06_25_700000_create_security_report_shares_table",
+        "batch": 4
+    },
+    {
+        "id": 24,
+        "migration": "2026_06_25_200000_create_shift_notes_table",
+        "batch": 5
+    },
+    {
+        "id": 25,
+        "migration": "2026_06_25_200001_create_pm_messages_table",
+        "batch": 6
+    },
+    {
+        "id": 26,
+        "migration": "2026_06_25_300000_add_read_at_to_users_table",
+        "batch": 7
+    },
+    {
+        "id": 27,
+        "migration": "2026_06_24_174747_add_sent_by_to_pm_messages_table",
+        "batch": 8
+    },
+    {
+        "id": 28,
+        "migration": "2026_06_25_000001_add_user_id_to_checks_table",
+        "batch": 9
+    }
+]

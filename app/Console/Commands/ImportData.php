@@ -44,7 +44,7 @@ class ImportData extends Command
 
     public function handle(): int
     {
-        $exportDir = $this->argument('path') ?? storage_path('app/export');
+        $exportDir = $this->argument('path') ?? database_path('export');
 
         if (!is_dir($exportDir)) {
             $this->error("Export directory not found: {$exportDir}");

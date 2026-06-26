@@ -1,0 +1,87 @@
+[
+    {
+        "key": "kulcs-nyilvantarto-cache-bd7a63ece7eb4de4d122b110f5f412db:timer",
+        "value": "i:1782425368;",
+        "expiration": 1782425368
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-bd7a63ece7eb4de4d122b110f5f412db",
+        "value": "i:1;",
+        "expiration": 1782425368
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-h2o-offices_setting_global_email",
+        "value": "N;",
+        "expiration": 2097815344
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-h2o-offices_setting_training_notification_email",
+        "value": "N;",
+        "expiration": 2097815344
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-h2o-offices_setting_security_notification_email",
+        "value": "N;",
+        "expiration": 2097815344
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-ad97d367a9d6ca52396fbb013c7dd71b:timer",
+        "value": "i:1782427563;",
+        "expiration": 1782427563
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-ad97d367a9d6ca52396fbb013c7dd71b",
+        "value": "i:1;",
+        "expiration": 1782427563
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-c6cf3619e45ae84c50d48f605e72d084:timer",
+        "value": "i:1782446486;",
+        "expiration": 1782446486
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-c6cf3619e45ae84c50d48f605e72d084",
+        "value": "i:1;",
+        "expiration": 1782446486
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-0bf24d1a4ac26bdcf8c26539dc4bf49c:timer",
+        "value": "i:1782450039;",
+        "expiration": 1782450039
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-0bf24d1a4ac26bdcf8c26539dc4bf49c",
+        "value": "i:1;",
+        "expiration": 1782450039
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-c6e91fee431595f1440156f693939b10:timer",
+        "value": "i:1782452974;",
+        "expiration": 1782452974
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-c6e91fee431595f1440156f693939b10",
+        "value": "i:1;",
+        "expiration": 1782452974
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-f51571a7c296c9153ec6a95fc4431fa2:timer",
+        "value": "i:1782453633;",
+        "expiration": 1782453633
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-f51571a7c296c9153ec6a95fc4431fa2",
+        "value": "i:1;",
+        "expiration": 1782453633
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-24eb91da0acf4a545cbb215dcf78fe07:timer",
+        "value": "i:1782455289;",
+        "expiration": 1782455289
+    },
+    {
+        "key": "kulcs-nyilvantarto-cache-24eb91da0acf4a545cbb215dcf78fe07",
+        "value": "i:1;",
+        "expiration": 1782455289
+    }
+]

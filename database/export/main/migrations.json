@@ -1,0 +1,77 @@
+[
+    {
+        "id": 1,
+        "migration": "0001_01_01_000000_create_users_table",
+        "batch": 1
+    },
+    {
+        "id": 2,
+        "migration": "0001_01_01_000001_create_cache_table",
+        "batch": 1
+    },
+    {
+        "id": 3,
+        "migration": "0001_01_01_000002_create_jobs_table",
+        "batch": 1
+    },
+    {
+        "id": 4,
+        "migration": "2026_06_19_000001_create_tenants_table",
+        "batch": 1
+    },
+    {
+        "id": 5,
+        "migration": "2026_06_22_100000_create_item_groups_table",
+        "batch": 2
+    },
+    {
+        "id": 6,
+        "migration": "2026_06_18_183727_create_locations_table",
+        "batch": 3
+    },
+    {
+        "id": 7,
+        "migration": "2026_06_18_183728_create_items_table",
+        "batch": 3
+    },
+    {
+        "id": 8,
+        "migration": "2026_06_18_183729_create_checks_table",
+        "batch": 3
+    },
+    {
+        "id": 9,
+        "migration": "2026_06_18_183730_create_check_items_table",
+        "batch": 3
+    },
+    {
+        "id": 10,
+        "migration": "2026_06_18_183731_create_settings_table",
+        "batch": 3
+    },
+    {
+        "id": 11,
+        "migration": "2026_06_19_100000_add_icon_to_locations_table",
+        "batch": 3
+    },
+    {
+        "id": 12,
+        "migration": "2026_06_19_200000_create_trainings_table",
+        "batch": 3
+    },
+    {
+        "id": 13,
+        "migration": "2026_06_19_200001_create_training_steps_table",
+        "batch": 3
+    },
+    {
+        "id": 14,
+        "migration": "2026_06_19_200002_create_training_answers_table",
+        "batch": 3
+    },
+    {
+        "id": 15,
+        "migration": "2026_06_25_000001_add_user_id_to_checks_table",
+        "batch": 4
+    }
+]
