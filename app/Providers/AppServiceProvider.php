@@ -18,7 +18,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (app()->environment('production')) {
-            URL::forceScheme('https');
+            $scheme = parse_url(config('app.url'), PHP_URL_SCHEME) ?? 'https';
+            URL::forceScheme($scheme);
         }
 
         RateLimiter::for('login', function (Request $request) {
