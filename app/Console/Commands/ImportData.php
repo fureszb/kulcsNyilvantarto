@@ -125,15 +125,20 @@ class ImportData extends Command
         $driver = DB::connection(config('database.default'))->getDriverName();
 
         if ($driver === 'sqlite') {
-            // Ensure tenant file directory exists
             if (!is_dir(storage_path('database/tenants'))) {
                 mkdir(storage_path('database/tenants'), 0755, true);
             }
+            if (!file_exists($sqliteFile)) {
+                touch($sqliteFile);
+            }
             config(['database.connections.tenant.database' => $sqliteFile]);
             DB::purge('tenant');
+            \Artisan::call('migrate', [
+                '--database' => 'tenant',
+                '--path'     => 'database/migrations/tenant',
+                '--force'    => true,
+            ]);
         }
-        // For MySQL/PostgreSQL: assumes the 'tenant' connection is already
-        // configured in .env (e.g. TENANT_DB_DATABASE=kulcsnyilvantarto_h2o)
 
         $this->importDir($dir, 'tenant', self::TENANT_ORDER);
     }
