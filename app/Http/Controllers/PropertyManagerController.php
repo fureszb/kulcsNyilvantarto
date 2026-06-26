@@ -15,6 +15,7 @@ use App\Models\Training;
 use App\Models\TrainingResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class PropertyManagerController extends Controller
 {
@@ -31,7 +32,7 @@ class PropertyManagerController extends Controller
 
         $workerStats = $workers->map(fn($w) => $this->buildStats($w, $trainings, $allTrainResults, $allExamResults));
 
-        return view('pm.dashboard', compact('workerStats', 'welcomeName'));
+        return Inertia::render('PM/Dashboard', ['workerStats' => $workerStats, 'welcomeName' => $welcomeName]);
     }
 
     public function worker(TenantUser $user)
@@ -71,7 +72,7 @@ class PropertyManagerController extends Controller
             ->limit(20)
             ->get();
 
-        return view('pm.worker', compact('user', 'trainingRows', 'examRows', 'stats', 'recentActivity'));
+        return Inertia::render('PM/Worker', ['user' => $user, 'trainingRows' => $trainingRows, 'examRows' => $examRows, 'stats' => $stats, 'recentActivity' => $recentActivity]);
     }
 
     public function messages(Request $request)
@@ -98,7 +99,11 @@ class PropertyManagerController extends Controller
             ->where('id', '!=', Auth::guard('tenant')->id())
             ->orderBy('name')->get();
 
-        return view('pm.messages', compact('messages', 'workers'));
+        return Inertia::render('PM/Messages', [
+            'messages' => $messages,
+            'workers'  => $workers,
+            'filters'  => $request->only(['date_from', 'date_to', 'user_id']),
+        ]);
     }
 
     public function storeMessage(Request $request)
@@ -158,7 +163,7 @@ class PropertyManagerController extends Controller
             ->where('id', '!=', Auth::guard('tenant')->id())
             ->orderBy('name')->get();
         $sharedIds = $message->recipients()->pluck('user_id')->toArray();
-        return view('pm.message-edit', compact('message', 'workers', 'sharedIds'));
+        return Inertia::render('PM/MessageEdit', ['message' => $message, 'workers' => $workers, 'sharedIds' => $sharedIds]);
     }
 
     public function updateMessage(Request $request, PmMessage $message)
@@ -218,7 +223,15 @@ class PropertyManagerController extends Controller
             );
         }
 
-        return view('pm.security', compact('reports'));
+        return Inertia::render('PM/Security', [
+            'reports' => $reports,
+            'filters' => $request->only(['date_from', 'date_to', 'incidents_only']),
+        ]);
+    }
+
+    public function securityShow(SecurityDailyReport $security)
+    {
+        return Inertia::render('PM/SecurityShow', ['report' => $security]);
     }
 
     public function checks(Request $request)
@@ -226,7 +239,7 @@ class PropertyManagerController extends Controller
         $locations = Location::where('is_active', true)->orderBy('name')->get();
         $users     = TenantUser::where('is_active', true)->orderBy('name')->get();
 
-        $query = Check::with('checkItems')
+        $query = Check::with(['location', 'checkItems'])
             ->orderByDesc('created_at');
 
         if ($request->filled('location_id')) {
@@ -246,7 +259,12 @@ class PropertyManagerController extends Controller
 
         $locationMap = $locations->keyBy('id');
 
-        return view('pm.checks', compact('checks', 'locations', 'users', 'locationMap'));
+        return Inertia::render('PM/Checks', [
+            'checks'    => $checks,
+            'locations' => $locations,
+            'users'     => $users,
+            'filters'   => $request->only(['location_id', 'user_id', 'date_from', 'date_to']),
+        ]);
     }
 
     private function buildStats(TenantUser $worker, $trainings, $allTrainResults = null, $allExamResults = null): array

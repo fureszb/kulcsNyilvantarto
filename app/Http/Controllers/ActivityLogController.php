@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\TenantUser;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ActivityLogController extends Controller
 {
@@ -25,10 +26,10 @@ class ActivityLogController extends Controller
             $query->where('user_id', $userId);
         }
 
-        $logs    = $query->get();
+        $logs    = $query->paginate(50)->withQueryString();
         $workers = TenantUser::where('is_active', true)->orderBy('name')->get();
 
-        return view('activity.index', compact('logs', 'date', 'type', 'userId', 'workers'));
+        return Inertia::render('Activity/Index', ['logs' => $logs, 'date' => $date, 'type' => $type, 'userId' => $userId, 'workers' => $workers]);
     }
 
     public function pmActivity(Request $request)
@@ -48,9 +49,9 @@ class ActivityLogController extends Controller
             $query->where('user_id', $userId);
         }
 
-        $logs    = $query->get();
+        $logs    = $query->paginate(50)->withQueryString();
         $workers = TenantUser::where('is_active', true)->orderBy('name')->get();
 
-        return view('pm.activity', compact('logs', 'date', 'type', 'userId', 'workers'));
+        return Inertia::render('Activity/Index', ['logs' => $logs, 'date' => $date, 'type' => $type, 'userId' => $userId, 'workers' => $workers, 'isPm' => true]);
     }
 }

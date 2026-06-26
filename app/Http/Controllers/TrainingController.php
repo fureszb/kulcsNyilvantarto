@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class TrainingController extends Controller
 {
@@ -21,7 +22,7 @@ class TrainingController extends Controller
             ->orderBy('sort_order')->orderBy('title')
             ->get();
 
-        return view('training.index', compact('trainings'));
+        return Inertia::render('Training/Index', ['trainings' => $trainings]);
     }
 
     public function show(Training $training)
@@ -47,7 +48,11 @@ class TrainingController extends Controller
             ];
         })->values();
 
-        return view('training.show', compact('training', 'stepsData'));
+        return Inertia::render('Training/Show', [
+            'training'        => $training,
+            'stepsData'       => $stepsData,
+            'participantName' => Auth::guard('tenant')->user()?->name ?? '',
+        ]);
     }
 
     public function exam(Training $training)
@@ -69,7 +74,7 @@ class TrainingController extends Controller
             ];
         })->values();
 
-        return view('training.exam', compact('training', 'stepsData'));
+        return Inertia::render('Training/Exam', ['training' => $training, 'stepsData' => $stepsData]);
     }
 
     public function sendResult(Request $request, Training $training)

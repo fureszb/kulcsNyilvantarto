@@ -7,13 +7,14 @@ use App\Models\Exam;
 use App\Models\ExamResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ExamController extends Controller
 {
     public function index()
     {
         $exams = Exam::where('is_active', true)->orderBy('sort_order')->orderBy('id')->get();
-        return view('exam.index', compact('exams'));
+        return Inertia::render('Exam/Index', ['exams' => $exams]);
     }
 
     public function show(Exam $exam)
@@ -23,7 +24,11 @@ class ExamController extends Controller
         }
 
         $exam->load('steps.answers');
-        return view('exam.show', compact('exam'));
+        $user = Auth::guard('tenant')->user();
+        return Inertia::render('Exam/Show', [
+            'exam'            => $exam,
+            'participantName' => $user?->name ?? '',
+        ]);
     }
 
     public function sendResult(Request $request, Exam $exam)

@@ -78,9 +78,11 @@ Route::prefix('{tenant}')
             Route::put('/checks/{check}',            [CheckController::class, 'updateResult'])->name('checks.update');
 
             // Oktatások
-            Route::get('/training',                     [TrainingController::class, 'index'])->name('training.index');
-            Route::get('/training/{training}',          [TrainingController::class, 'show'])->name('training.show');
-            Route::post('/training/{training}/result',  [TrainingController::class, 'sendResult'])->name('training.result');
+            Route::get('/training',                          [TrainingController::class, 'index'])->name('training.index');
+            Route::get('/training/{training}',               [TrainingController::class, 'show'])->name('training.show');
+            Route::post('/training/{training}/result',       [TrainingController::class, 'sendResult'])->name('training.result');
+            Route::get('/training/{training}/exam',          [TrainingController::class, 'exam'])->name('training.exam');
+            Route::post('/training/{training}/exam/result',  [TrainingController::class, 'sendResult'])->name('training.exam.result');
 
             // Vizsgák
             Route::get('/exam',                    [ExamController::class, 'index'])->name('exam.index');
@@ -121,7 +123,8 @@ Route::prefix('{tenant}')
         Route::prefix('pm')->name('pm.')->middleware('property-manager')->group(function () {
             Route::get('/',              [PropertyManagerController::class, 'dashboard'])->name('dashboard');
             Route::get('/worker/{user}', [PropertyManagerController::class, 'worker'])->name('worker');
-            Route::get('/security',      [PropertyManagerController::class, 'securityReports'])->name('security');
+            Route::get('/security',           [PropertyManagerController::class, 'securityReports'])->name('security');
+            Route::get('/security/{security}', [PropertyManagerController::class, 'securityShow'])->name('security.show');
             Route::get('/checks',        [PropertyManagerController::class, 'checks'])->name('checks');
             Route::get('/activity',      [ActivityLogController::class, 'pmActivity'])->name('activity');
             Route::get('/messages',                    [PropertyManagerController::class, 'messages'])->name('messages');

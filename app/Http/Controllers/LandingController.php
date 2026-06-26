@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tenant;
+use Inertia\Inertia;
 
 class LandingController extends Controller
 {
@@ -10,6 +11,6 @@ class LandingController extends Controller
     {
         $tenants = Tenant::where('is_active', true)->orderBy('name')->get();
 
-        return view('landing', compact('tenants'));
+        return Inertia::render('Landing', ['tenants' => $tenants]);
     }
 }

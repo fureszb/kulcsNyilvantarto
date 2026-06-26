@@ -11,6 +11,7 @@ use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Inertia\Inertia;
 
 class CheckController extends Controller
 {
@@ -24,7 +25,7 @@ class CheckController extends Controller
         $groups          = $location->groups()->with('items')->get();
         $ungroupedItems  = $location->items()->whereNull('group_id')->get();
 
-        return view('check.show', compact('location', 'items', 'groups', 'ungroupedItems'));
+        return Inertia::render('Check/Show', ['location' => $location, 'groups' => $groups, 'ungroupedItems' => $ungroupedItems]);
     }
 
     public function store(Request $request, Location $location)
@@ -107,7 +108,7 @@ class CheckController extends Controller
         $ungroupedCheckItems = $check->checkItems
             ->filter(fn($ci) => $ci->item->group_id === null);
 
-        return view('checks.show', compact('check', 'groupedCheckItems', 'ungroupedCheckItems'));
+        return Inertia::render('Check/Result', ['check' => $check, 'groupedCheckItems' => $groupedCheckItems, 'ungroupedCheckItems' => $ungroupedCheckItems]);
     }
 
     public function editResult(Check $check)
@@ -126,7 +127,7 @@ class CheckController extends Controller
         $ungroupedCheckItems = $check->checkItems
             ->filter(fn($ci) => $ci->item->group_id === null);
 
-        return view('checks.edit', compact('check', 'groupedCheckItems', 'ungroupedCheckItems'));
+        return Inertia::render('Check/Edit', ['check' => $check, 'groupedCheckItems' => $groupedCheckItems, 'ungroupedCheckItems' => $ungroupedCheckItems]);
     }
 
     public function updateResult(Request $request, Check $check)

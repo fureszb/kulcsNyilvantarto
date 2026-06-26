@@ -8,18 +8,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class UserController extends Controller
 {
     public function index()
     {
         $users = TenantUser::orderBy('role')->orderBy('name')->get();
-        return view('admin.users.index', compact('users'));
+        return Inertia::render('Admin/Users/Index', ['users' => $users]);
     }
 
     public function create()
     {
-        return view('admin.users.form', ['user' => null]);
+        return Inertia::render('Admin/Users/Form', ['user' => null, 'roles' => ['admin', 'user', 'property_manager']]);
     }
 
     public function store(Request $request)
@@ -46,7 +47,7 @@ class UserController extends Controller
 
     public function edit(TenantUser $user)
     {
-        return view('admin.users.form', compact('user'));
+        return Inertia::render('Admin/Users/Form', ['user' => $user, 'roles' => ['admin', 'user', 'property_manager']]);
     }
 
     public function update(Request $request, TenantUser $user)

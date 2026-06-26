@@ -6,18 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Training;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class TrainingController extends Controller
 {
     public function index()
     {
         $trainings = Training::withCount('steps')->orderBy('sort_order')->orderBy('title')->get();
-        return view('admin.trainings.index', compact('trainings'));
+        return Inertia::render('Admin/Trainings/Index', ['trainings' => $trainings]);
     }
 
     public function create()
     {
-        return view('admin.trainings.create');
+        return Inertia::render('Admin/Trainings/Create');
     }
 
     public function store(Request $request)
@@ -40,7 +41,7 @@ class TrainingController extends Controller
 
     public function edit(Training $training)
     {
-        return view('admin.trainings.edit', compact('training'));
+        return Inertia::render('Admin/Trainings/Edit', ['training' => $training]);
     }
 
     public function update(Request $request, Training $training)

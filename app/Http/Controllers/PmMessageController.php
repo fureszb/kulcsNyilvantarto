@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PmMessage;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class PmMessageController extends Controller
 {
@@ -19,6 +20,6 @@ class PmMessageController extends Controller
         $user->messages_read_at = now();
         $user->saveQuietly();
 
-        return view('messages.index', compact('messages'));
+        return Inertia::render('Messages/Index', ['messages' => $messages]);
     }
 }

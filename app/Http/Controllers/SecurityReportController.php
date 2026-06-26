@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Inertia\Inertia;
 
 class SecurityReportController extends Controller
 {
@@ -26,14 +27,19 @@ class SecurityReportController extends Controller
                 ->orderByDesc('report_date')->orderByDesc('id')->paginate(30);
         }
 
-        return view('security.index', compact('reports', 'user'));
+        return Inertia::render('Security/Index', [
+            'reports'   => $reports,
+            'user'      => $user,
+            'isAdmin'   => $user->isAdmin(),
+            'canCreate' => !$user->isPropertyManager(),
+        ]);
     }
 
     public function create()
     {
         $sortedUsers  = $this->usersSortedByFrequency();
         $preparedBy   = Auth::guard('tenant')->user()->name;
-        return view('security.create', compact('sortedUsers', 'preparedBy'));
+        return Inertia::render('Security/Create', ['sortedUsers' => $sortedUsers, 'preparedBy' => $preparedBy]);
     }
 
     public function store(Request $request)
@@ -113,7 +119,7 @@ class SecurityReportController extends Controller
         $sharedUsers = TenantUser::whereIn('id', $security->shares()->pluck('user_id'))->get();
         $allUsers    = TenantUser::where('is_active', true)->orderBy('name')->get();
         $isCreator   = $authUser->id === $security->created_by_user_id;
-        return view('security.show', [
+        return Inertia::render('Security/Show', [
             'report'      => $security,
             'sharedUsers' => $sharedUsers,
             'allUsers'    => $allUsers,
@@ -128,7 +134,7 @@ class SecurityReportController extends Controller
 
         $sortedUsers = $this->usersSortedByFrequency();
         $sharedIds   = $security->shares()->pluck('user_id')->toArray();
-        return view('security.edit', compact('security', 'sortedUsers', 'sharedIds'));
+        return Inertia::render('Security/Edit', ['security' => $security, 'sortedUsers' => $sortedUsers, 'sharedIds' => $sharedIds]);
     }
 
     public function update(Request $request, SecurityDailyReport $security)

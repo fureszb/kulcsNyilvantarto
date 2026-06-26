@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Check;
 use App\Models\Location;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class HistoryController extends Controller
@@ -25,7 +26,7 @@ class HistoryController extends Controller
         $checks    = $query->paginate(25)->withQueryString();
         $locations = Location::orderBy('name')->get();
 
-        return view('history.index', compact('checks', 'locations'));
+        return Inertia::render('History/Index', ['checks' => $checks, 'locations' => $locations]);
     }
 
     public function export(Request $request): StreamedResponse

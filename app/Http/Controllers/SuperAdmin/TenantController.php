@@ -7,18 +7,19 @@ use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class TenantController extends Controller
 {
     public function index()
     {
         $tenants = Tenant::latest()->get();
-        return view('super-admin.dashboard', compact('tenants'));
+        return Inertia::render('SuperAdmin/Dashboard', ['tenants' => $tenants]);
     }
 
     public function create()
     {
-        return view('super-admin.tenants.create');
+        return Inertia::render('SuperAdmin/Tenants/Create');
     }
 
     public function store(Request $request)

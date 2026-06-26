@@ -6,18 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Location;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class LocationController extends Controller
 {
     public function index()
     {
-        $locations = Location::withCount(['allItems', 'checks'])->orderBy('name')->get();
-        return view('admin.locations.index', compact('locations'));
+        $locations = Location::withCount('items')->orderBy('name')->get();
+        return Inertia::render('Admin/Locations/Index', ['locations' => $locations]);
     }
 
     public function create()
     {
-        return view('admin.locations.create');
+        return Inertia::render('Admin/Locations/Create');
     }
 
     public function store(Request $request)
@@ -53,14 +54,16 @@ class LocationController extends Controller
 
     public function show(Location $location)
     {
-        $items  = $location->allItems()->get();
-        $groups = $location->groups()->with('allItems')->get();
-        return view('admin.locations.show', compact('location', 'items', 'groups'));
+        $items  = $location->allItems()->with('group')->get();
+        $groups = $location->groups()->with('items')->get();
+        $location->setRelation('items', $items);
+        $location->setRelation('groups', $groups);
+        return Inertia::render('Admin/Locations/Show', ['location' => $location]);
     }
 
     public function edit(Location $location)
     {
-        return view('admin.locations.edit', compact('location'));
+        return Inertia::render('Admin/Locations/Edit', ['location' => $location]);
     }
 
     public function update(Request $request, Location $location)

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Check;
 use App\Models\Location;
+use Inertia\Inertia;
 
 class AdminController extends Controller
 {
@@ -21,6 +22,6 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'recentChecks'));
+        return Inertia::render('Admin/Dashboard', ['stats' => $stats, 'recentChecks' => $recentChecks]);
     }
 }

@@ -8,13 +8,14 @@ use App\Models\TrainingAnswer;
 use App\Models\TrainingStep;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class TrainingStepController extends Controller
 {
     public function index(Training $training)
     {
         $steps = $training->steps()->with('answers')->get();
-        return view('admin.trainings.steps', compact('training', 'steps'));
+        return Inertia::render('Admin/Trainings/Steps', ['training' => $training, 'steps' => $steps]);
     }
 
     public function store(Request $request, Training $training)
@@ -60,7 +61,7 @@ class TrainingStepController extends Controller
     public function edit(Training $training, TrainingStep $step)
     {
         $step->load('answers');
-        return view('admin.trainings.step-edit', compact('training', 'step'));
+        return Inertia::render('Admin/Trainings/StepEdit', ['training' => $training, 'step' => $step]);
     }
 
     public function update(Request $request, Training $training, TrainingStep $step)

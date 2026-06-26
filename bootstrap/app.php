@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+        ]);
+
         $middleware->trustProxies(at: '*');
 
         $middleware->alias([
@@ -40,5 +44,22 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->respond(function (
+            \Symfony\Component\HttpFoundation\Response $response,
+            \Throwable $e,
+            \Illuminate\Http\Request $request
+        ) {
+            if (
+                in_array($response->getStatusCode(), [403, 404, 405])
+                && ! $request->expectsJson()
+            ) {
+                return \Inertia\Inertia::render('Error', [
+                    'status' => $response->getStatusCode(),
+                ])
+                ->toResponse($request)
+                ->setStatusCode($response->getStatusCode());
+            }
+
+            return $response;
+        });
     })->create();

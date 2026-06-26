@@ -6,18 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\Training;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ExamController extends Controller
 {
     public function index()
     {
         $exams = Exam::withCount('steps')->orderBy('sort_order')->orderBy('id')->get();
-        return view('admin.exams.index', compact('exams'));
+        return Inertia::render('Admin/Exams/Index', ['exams' => $exams]);
     }
 
     public function create()
     {
-        return view('admin.exams.create');
+        return Inertia::render('Admin/Exams/Create');
     }
 
     public function store(Request $request)
@@ -41,7 +42,7 @@ class ExamController extends Controller
 
     public function edit(Exam $exam)
     {
-        return view('admin.exams.edit', compact('exam'));
+        return Inertia::render('Admin/Exams/Edit', ['exam' => $exam]);
     }
 
     public function update(Request $request, Exam $exam)
@@ -77,14 +78,16 @@ class ExamController extends Controller
         $training = Training::with('steps.answers')->findOrFail($request->input('training_id'));
 
         $imported = 0;
-        foreach ($training->steps as $step) {
+        $stepsToImport = $training->steps->filter(fn($s) => !empty(trim($s->question ?? '')));
+
+        foreach ($stepsToImport as $step) {
             $examStep = $exam->steps()->create([
                 'question'      => $step->question,
                 'question_type' => $step->question_type ?? 'radio',
                 'sort_order'    => $exam->steps()->max('sort_order') + 1,
             ]);
 
-            foreach ($step->answers as $answer) {
+            foreach ($step->answers->filter(fn($a) => !empty(trim($a->text ?? ''))) as $answer) {
                 $examStep->answers()->create([
                     'text'       => $answer->text,
                     'is_correct' => $answer->is_correct,

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class TenantUserController extends Controller
 {
@@ -25,7 +26,7 @@ class TenantUserController extends Controller
         $users = TenantUser::orderByRaw("CASE role WHEN 'admin' THEN 0 ELSE 1 END")
             ->orderBy('name')
             ->get();
-        return view('super-admin.tenants.users', compact('tenant', 'users'));
+        return Inertia::render('SuperAdmin/Tenants/Users', ['tenant' => $tenant, 'users' => $users]);
     }
 
     public function store(Request $request, Tenant $tenant)

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
 
 class SettingController extends Controller
 {
@@ -14,7 +15,11 @@ class SettingController extends Controller
         $globalEmail                  = Setting::get('global_email', '');
         $trainingNotificationEmail    = Setting::get('training_notification_email', '');
         $securityNotificationEmail    = Setting::get('security_notification_email', '');
-        return view('admin.settings', compact('globalEmail', 'trainingNotificationEmail', 'securityNotificationEmail'));
+        return Inertia::render('Admin/Settings', [
+            'globalEmail'                 => $globalEmail,
+            'trainingNotificationEmail'   => $trainingNotificationEmail,
+            'securityNotificationEmail'   => $securityNotificationEmail,
+        ]);
     }
 
     public function update(Request $request)

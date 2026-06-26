@@ -8,13 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class ProfileController extends Controller
 {
     public function edit()
     {
         $user = Auth::guard('tenant')->user();
-        return view('admin.profile', compact('user'));
+        return Inertia::render('Admin/Profile', ['user' => auth('tenant')->user()]);
     }
 
     public function update(Request $request)

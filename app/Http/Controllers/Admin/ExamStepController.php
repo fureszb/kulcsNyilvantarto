@@ -5,14 +5,21 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\ExamStep;
+use App\Models\Training;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ExamStepController extends Controller
 {
     public function index(Exam $exam)
     {
-        $steps = $exam->steps()->with('answers')->get();
-        return view('admin.exams.steps', compact('exam', 'steps'));
+        $steps     = $exam->steps()->with('answers')->orderBy('sort_order')->orderBy('id')->get();
+        $trainings = Training::orderBy('title')->get(['id', 'title']);
+        return Inertia::render('Admin/Exams/Steps', [
+            'exam'      => $exam,
+            'steps'     => $steps,
+            'trainings' => $trainings,
+        ]);
     }
 
     public function store(Request $request, Exam $exam)
@@ -50,7 +57,7 @@ class ExamStepController extends Controller
     public function edit(Exam $exam, ExamStep $step)
     {
         $step->load('answers');
-        return view('admin.exams.step-edit', compact('exam', 'step'));
+        return Inertia::render('Admin/Exams/StepEdit', ['exam' => $exam, 'step' => $step]);
     }
 
     public function update(Request $request, Exam $exam, ExamStep $step)

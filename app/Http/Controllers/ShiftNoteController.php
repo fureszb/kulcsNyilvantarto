@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\ShiftNote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ShiftNoteController extends Controller
 {
@@ -27,7 +28,7 @@ class ShiftNoteController extends Controller
         $user->notes_read_at = now();
         $user->saveQuietly();
 
-        return view('notes.index', compact('notes', 'user', 'filterDate'));
+        return Inertia::render('Notes/Index', ['notes' => $notes, 'user' => $user, 'filterDate' => $filterDate]);
     }
 
     public function store(Request $request)

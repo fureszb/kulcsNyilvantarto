@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class TenantUserAuthController extends Controller
 {
@@ -17,7 +18,7 @@ class TenantUserAuthController extends Controller
                 ? redirect()->route('pm.dashboard')
                 : redirect()->route('home');
         }
-        return view('auth.login');
+        return Inertia::render('Auth/Login');
     }
 
     public function login(Request $request)
