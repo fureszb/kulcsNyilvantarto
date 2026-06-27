@@ -2,7 +2,61 @@ import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import type { PageProps } from '../types';
 
-function Toast({ type, message, onClose }: { type: 'success' | 'error'; message: string; onClose: () => void }) {
+type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+interface ToastItem {
+    id: number;
+    type: ToastType;
+    message: string;
+}
+
+const alertClass: Record<ToastType, string> = {
+    success: 'dui-alert-success',
+    error: 'dui-alert-error',
+    warning: 'dui-alert-warning',
+    info: 'dui-alert-info',
+};
+
+function SuccessIcon() {
+    return (
+        <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/>
+        </svg>
+    );
+}
+
+function ErrorIcon() {
+    return (
+        <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+    );
+}
+
+function WarningIcon() {
+    return (
+        <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+    );
+}
+
+function InfoIcon() {
+    return (
+        <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+    );
+}
+
+const icons: Record<ToastType, () => JSX.Element> = {
+    success: SuccessIcon,
+    error: ErrorIcon,
+    warning: WarningIcon,
+    info: InfoIcon,
+};
+
+function Toast({ type, message, onClose }: { type: ToastType; message: string; onClose: () => void }) {
     const [leaving, setLeaving] = useState(false);
 
     function dismiss() {
@@ -11,59 +65,57 @@ function Toast({ type, message, onClose }: { type: 'success' | 'error'; message:
     }
 
     useEffect(() => {
-        if (type === 'success') {
-            const t = setTimeout(dismiss, 5000);
-            return () => clearTimeout(t);
-        }
+        const t = setTimeout(dismiss, 4500);
+        return () => clearTimeout(t);
     }, []);
 
-    const isSuccess = type === 'success';
+    const Icon = icons[type];
+
     return (
-        <div className={`pointer-events-auto relative flex items-center gap-3 px-4 py-3.5 bg-white shadow-xl rounded-2xl min-w-[280px] max-w-sm overflow-hidden ${isSuccess ? 'border border-green-200' : 'border border-red-200'} ${leaving ? 'animate-slide-out-r' : 'animate-slide-in-r'}`}>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${isSuccess ? 'bg-green-100' : 'bg-red-100'}`}>
-                {isSuccess ? (
-                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/>
-                    </svg>
-                ) : (
-                    <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                )}
-            </div>
-            <p className="text-sm font-semibold text-slate-700 flex-1">{message}</p>
-            <button onClick={dismiss} className="text-slate-300 hover:text-slate-500 transition-colors ml-1 shrink-0">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className={`dui-alert ${alertClass[type]} shadow-lg ${leaving ? 'animate-slide-out-r' : 'animate-slide-in-r'}`}>
+            <Icon />
+            <span>{message}</span>
+            <button
+                onClick={dismiss}
+                className="dui-btn dui-btn-ghost dui-btn-xs dui-btn-circle ml-auto"
+                aria-label="Bezárás"
+            >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
-            {isSuccess && (
-                <div className="absolute bottom-0 left-0 h-0.5 bg-green-400 rounded-full animate-toast-bar"/>
-            )}
         </div>
     );
 }
 
 export default function FlashMessage() {
     const { flash } = usePage<PageProps>().props;
-    const [toasts, setToasts] = useState<Array<{ id: number; type: 'success' | 'error'; message: string }>>([]);
+    const [toasts, setToasts] = useState<ToastItem[]>([]);
     const [counter, setCounter] = useState(0);
 
+    function addToast(type: ToastType, message: string) {
+        setCounter(prev => {
+            const id = prev + 1;
+            setToasts(prevToasts => [...prevToasts, { id, type, message }]);
+            return id;
+        });
+    }
+
     useEffect(() => {
-        if (flash.success) {
-            const id = counter + 1;
-            setCounter(id);
-            setToasts(prev => [...prev, { id, type: 'success', message: flash.success! }]);
-        }
+        if (flash.success) addToast('success', flash.success);
     }, [flash.success]);
 
     useEffect(() => {
-        if (flash.error) {
-            const id = counter + 1;
-            setCounter(id);
-            setToasts(prev => [...prev, { id, type: 'error', message: flash.error! }]);
-        }
+        if (flash.error) addToast('error', flash.error);
     }, [flash.error]);
+
+    useEffect(() => {
+        if (flash.warning) addToast('warning', flash.warning);
+    }, [flash.warning]);
+
+    useEffect(() => {
+        if (flash.info) addToast('info', flash.info);
+    }, [flash.info]);
 
     function remove(id: number) {
         setToasts(prev => prev.filter(t => t.id !== id));
@@ -72,9 +124,9 @@ export default function FlashMessage() {
     if (toasts.length === 0) return null;
 
     return (
-        <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
+        <div className="dui-toast dui-toast-top dui-toast-end z-[9990]">
             {toasts.map(t => (
-                <Toast key={t.id} type={t.type} message={t.message} onClose={() => remove(t.id)}/>
+                <Toast key={t.id} type={t.type} message={t.message} onClose={() => remove(t.id)} />
             ))}
         </div>
     );
