@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->trustProxies(at: '*');
 
+        $middleware->validateCsrfTokens(except: [
+            '*/broadcasting/auth',
+        ]);
+
         $middleware->alias([
             'admin'            => \App\Http\Middleware\AdminMiddleware::class,
             'tenant'           => \App\Http\Middleware\TenantMiddleware::class,
