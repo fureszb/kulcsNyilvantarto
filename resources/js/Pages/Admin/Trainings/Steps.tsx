@@ -71,9 +71,12 @@ function MediaField({ label, mode, onModeChange, file, onFileChange, url, onUrlC
                 ))}
             </div>
             {mode === 'file' && (
-                <input type="file" accept="image/*,video/*"
-                    onChange={e => onFileChange(e.target.files?.[0] ?? null)}
-                    className="block w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                <>
+                    <input type="file" accept="image/*,video/*"
+                        onChange={e => onFileChange(e.target.files?.[0] ?? null)}
+                        className="block w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                    <p className="text-xs text-slate-400 mt-1">Max. 50 MB · jpg, png, gif, webp, mp4, webm</p>
+                </>
             )}
             {mode === 'url' && (
                 <input type="url" value={url} onChange={e => onUrlChange(e.target.value)}
