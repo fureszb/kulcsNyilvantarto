@@ -11,8 +11,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::connection('tenant')->table('pm_messages', function (Blueprint $table) {
-            $table->unsignedBigInteger('sent_by_user_id')->nullable()->after('send_to_all');
-            $table->string('sent_by_name')->nullable()->after('sent_by_user_id');
+            if (!Schema::connection('tenant')->hasColumn('pm_messages', 'sent_by_user_id')) {
+                $table->unsignedBigInteger('sent_by_user_id')->nullable()->after('send_to_all');
+            }
+            if (!Schema::connection('tenant')->hasColumn('pm_messages', 'sent_by_name')) {
+                $table->string('sent_by_name')->nullable()->after('sent_by_user_id');
+            }
         });
     }
 
