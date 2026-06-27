@@ -88,6 +88,28 @@ function MediaField({ label, mode, onModeChange, file, onFileChange, url, onUrlC
     );
 }
 
+const DEFAULT_MEDIA_WIDTH = 100;
+
+function WidthField({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+    return (
+        <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs font-semibold text-slate-500 shrink-0">Megjelenítési szélesség</span>
+            <input
+                type="number" min={10} max={100} value={value}
+                onChange={e => onChange(Math.max(10, Math.min(100, Number(e.target.value) || DEFAULT_MEDIA_WIDTH)))}
+                className="w-20 form-input text-sm text-center py-1"
+            />
+            <span className="text-xs text-slate-400">%</span>
+            {value !== DEFAULT_MEDIA_WIDTH && (
+                <button type="button" onClick={() => onChange(DEFAULT_MEDIA_WIDTH)}
+                    className="text-xs px-2 py-1 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors">
+                    Visszaállítás
+                </button>
+            )}
+        </div>
+    );
+}
+
 function StepAccordion({ step, index, trainingId }: { step: TrainingStep; index: number; trainingId: number }) {
     const [open, setOpen] = useState(false);
     const [typeLabel, typeClass] = TYPE_BADGE[step.question_type ?? 'radio'] ?? TYPE_BADGE['radio'];
@@ -191,6 +213,8 @@ function NewStepForm({ trainingId }: { trainingId: number }) {
     const [revealUrl, setRevealUrl] = useState('');
     const [mediaError, setMediaError] = useState('');
     const [revealError, setRevealError] = useState('');
+    const [mediaWidth, setMediaWidth] = useState(DEFAULT_MEDIA_WIDTH);
+    const [revealWidth, setRevealWidth] = useState(DEFAULT_MEDIA_WIDTH);
 
     const MAX_FILE_SIZE = 50 * 1024 * 1024;
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
@@ -267,8 +291,10 @@ function NewStepForm({ trainingId }: { trainingId: number }) {
         }
         if (mediaMode === 'file' && mediaFile) formData.append('media', mediaFile);
         else if (mediaMode === 'url' && mediaUrl) formData.append('media_url', mediaUrl);
+        formData.append('media_width', String(mediaWidth));
         if (revealMode === 'file' && revealFile) formData.append('reveal_media', revealFile);
         else if (revealMode === 'url' && revealUrl) formData.append('reveal_url', revealUrl);
+        formData.append('reveal_media_width', String(revealWidth));
 
         router.post(route('admin.trainings.steps.store', trainingId), formData as unknown as Record<string, unknown>, {
             onError: (errors) => {
@@ -301,20 +327,26 @@ function NewStepForm({ trainingId }: { trainingId: number }) {
                     {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
                 </div>
 
-                <MediaField
-                    label="Médiatartalom (kép/videó)"
-                    mode={mediaMode} onModeChange={setMediaMode}
-                    file={mediaFile} onFileChange={handleMediaFile}
-                    url={mediaUrl} onUrlChange={setMediaUrl}
-                    error={mediaError}
-                />
-                <MediaField
-                    label="Megoldás médiatartalma"
-                    mode={revealMode} onModeChange={setRevealMode}
-                    file={revealFile} onFileChange={handleRevealFile}
-                    url={revealUrl} onUrlChange={setRevealUrl}
-                    error={revealError}
-                />
+                <div>
+                    <MediaField
+                        label="Médiatartalom (kép/videó)"
+                        mode={mediaMode} onModeChange={setMediaMode}
+                        file={mediaFile} onFileChange={handleMediaFile}
+                        url={mediaUrl} onUrlChange={setMediaUrl}
+                        error={mediaError}
+                    />
+                    <WidthField value={mediaWidth} onChange={setMediaWidth} />
+                </div>
+                <div>
+                    <MediaField
+                        label="Megoldás médiatartalma"
+                        mode={revealMode} onModeChange={setRevealMode}
+                        file={revealFile} onFileChange={handleRevealFile}
+                        url={revealUrl} onUrlChange={setRevealUrl}
+                        error={revealError}
+                    />
+                    <WidthField value={revealWidth} onChange={setRevealWidth} />
+                </div>
 
                 <div>
                     <label className="form-label">Kérdés típusa</label>

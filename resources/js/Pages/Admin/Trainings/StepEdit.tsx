@@ -18,7 +18,9 @@ interface TrainingStep {
     question?: string;
     question_type?: string;
     media_path?: string;
+    media_width?: number;
     reveal_media_path?: string;
+    reveal_media_width?: number;
     answers?: TrainingAnswer[];
 }
 
@@ -41,6 +43,28 @@ interface AnswerDraft {
 }
 
 type MediaMode = 'none' | 'file' | 'url';
+
+const DEFAULT_MEDIA_WIDTH = 100;
+
+function WidthField({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+    return (
+        <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs font-semibold text-slate-500 shrink-0">Megjelenítési szélesség</span>
+            <input
+                type="number" min={10} max={100} value={value}
+                onChange={e => onChange(Math.max(10, Math.min(100, Number(e.target.value) || DEFAULT_MEDIA_WIDTH)))}
+                className="w-20 form-input text-sm text-center py-1"
+            />
+            <span className="text-xs text-slate-400">%</span>
+            {value !== DEFAULT_MEDIA_WIDTH && (
+                <button type="button" onClick={() => onChange(DEFAULT_MEDIA_WIDTH)}
+                    className="text-xs px-2 py-1 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors">
+                    Visszaállítás
+                </button>
+            )}
+        </div>
+    );
+}
 
 function resolveMediaUrl(path: string): string {
     return path.startsWith('http') ? path : `/storage/${path}`;
@@ -150,6 +174,8 @@ export default function StepEdit({ training, step }: Props) {
     const [removeReveal, setRemoveReveal] = useState(false);
     const [mediaError, setMediaError] = useState('');
     const [revealError, setRevealError] = useState('');
+    const [mediaWidth, setMediaWidth] = useState(step.media_width ?? DEFAULT_MEDIA_WIDTH);
+    const [revealWidth, setRevealWidth] = useState(step.reveal_media_width ?? DEFAULT_MEDIA_WIDTH);
 
     const MAX_FILE_SIZE = 50 * 1024 * 1024;
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
@@ -230,6 +256,7 @@ export default function StepEdit({ training, step }: Props) {
         } else if (mediaMode === 'url' && mediaUrl) {
             formData.append('media_url', mediaUrl);
         }
+        formData.append('media_width', String(mediaWidth));
 
         if (removeReveal) {
             formData.append('remove_reveal', '1');
@@ -238,6 +265,7 @@ export default function StepEdit({ training, step }: Props) {
         } else if (revealMode === 'url' && revealUrl) {
             formData.append('reveal_url', revealUrl);
         }
+        formData.append('reveal_media_width', String(revealWidth));
 
         router.post(
             route('admin.trainings.steps.update', [training.id, step.id]),
@@ -278,26 +306,32 @@ export default function StepEdit({ training, step }: Props) {
                             />
                         </div>
 
-                        <MediaField
-                            label="Médiatartalom (kép/videó)"
-                            mode={mediaMode} onModeChange={setMediaMode}
-                            file={mediaFile} onFileChange={handleMediaFile}
-                            url={mediaUrl} onUrlChange={setMediaUrl}
-                            existingPath={step.media_path}
-                            removeExisting={removeMedia}
-                            onRemoveChange={setRemoveMedia}
-                            error={mediaError}
-                        />
-                        <MediaField
-                            label="Megoldás médiatartalma"
-                            mode={revealMode} onModeChange={setRevealMode}
-                            file={revealFile} onFileChange={handleRevealFile}
-                            url={revealUrl} onUrlChange={setRevealUrl}
-                            existingPath={step.reveal_media_path}
-                            removeExisting={removeReveal}
-                            onRemoveChange={setRemoveReveal}
-                            error={revealError}
-                        />
+                        <div>
+                            <MediaField
+                                label="Médiatartalom (kép/videó)"
+                                mode={mediaMode} onModeChange={setMediaMode}
+                                file={mediaFile} onFileChange={handleMediaFile}
+                                url={mediaUrl} onUrlChange={setMediaUrl}
+                                existingPath={step.media_path}
+                                removeExisting={removeMedia}
+                                onRemoveChange={setRemoveMedia}
+                                error={mediaError}
+                            />
+                            <WidthField value={mediaWidth} onChange={setMediaWidth} />
+                        </div>
+                        <div>
+                            <MediaField
+                                label="Megoldás médiatartalma"
+                                mode={revealMode} onModeChange={setRevealMode}
+                                file={revealFile} onFileChange={handleRevealFile}
+                                url={revealUrl} onUrlChange={setRevealUrl}
+                                existingPath={step.reveal_media_path}
+                                removeExisting={removeReveal}
+                                onRemoveChange={setRemoveReveal}
+                                error={revealError}
+                            />
+                            <WidthField value={revealWidth} onChange={setRevealWidth} />
+                        </div>
 
                         <div>
                             <label className="form-label">Kérdés típusa</label>

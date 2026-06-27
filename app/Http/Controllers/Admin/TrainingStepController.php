@@ -45,11 +45,13 @@ class TrainingStepController extends Controller
         $slug = app('tenant')->slug;
 
         $step = $training->steps()->create([
-            'question'          => $request->input('question'),
-            'question_type'     => $type,
-            'media_path'        => $this->resolveUpload($request, 'media', "trainings/{$slug}"),
-            'reveal_media_path' => $this->resolveUpload($request, 'reveal_media', "trainings/{$slug}"),
-            'sort_order'        => $training->steps()->max('sort_order') + 1,
+            'question'            => $request->input('question'),
+            'question_type'       => $type,
+            'media_path'          => $this->resolveUpload($request, 'media', "trainings/{$slug}"),
+            'media_width'         => (int) $request->input('media_width', 100),
+            'reveal_media_path'   => $this->resolveUpload($request, 'reveal_media', "trainings/{$slug}"),
+            'reveal_media_width'  => (int) $request->input('reveal_media_width', 100),
+            'sort_order'          => $training->steps()->max('sort_order') + 1,
         ]);
 
         $this->createAnswers($step, $request, $type);
@@ -94,10 +96,12 @@ class TrainingStepController extends Controller
         $revealPath = $this->updateMedia($request, $step, 'reveal_media', "trainings/{$slug}");
 
         $step->update([
-            'question'          => $request->input('question'),
-            'question_type'     => $type,
-            'media_path'        => $mediaPath,
-            'reveal_media_path' => $revealPath,
+            'question'           => $request->input('question'),
+            'question_type'      => $type,
+            'media_path'         => $mediaPath,
+            'media_width'        => (int) $request->input('media_width', 100),
+            'reveal_media_path'  => $revealPath,
+            'reveal_media_width' => (int) $request->input('reveal_media_width', 100),
         ]);
 
         $step->answers()->delete();

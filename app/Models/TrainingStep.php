@@ -11,7 +11,7 @@ class TrainingStep extends Model
 {
     protected $connection = 'tenant';
 
-    protected $fillable = ['training_id', 'question', 'question_type', 'media_path', 'reveal_media_path', 'sort_order'];
+    protected $fillable = ['training_id', 'question', 'question_type', 'media_path', 'media_width', 'reveal_media_path', 'reveal_media_width', 'sort_order'];
 
     public const TYPES = ['radio', 'checkbox', 'text'];
     public const TYPE_LABELS = ['radio' => 'Rádiógomb', 'checkbox' => 'Jelölőnégyzet', 'text' => 'Szöveges'];
