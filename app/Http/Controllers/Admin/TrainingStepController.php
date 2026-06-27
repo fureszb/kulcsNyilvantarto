@@ -7,6 +7,7 @@ use App\Models\Training;
 use App\Models\TrainingAnswer;
 use App\Models\TrainingStep;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -127,7 +128,13 @@ class TrainingStepController extends Controller
     private function resolveUpload(Request $request, string $field, string $dir): ?string
     {
         if ($request->hasFile($field)) {
-            return $request->file($field)->store($dir, 'public');
+            Storage::disk('public')->makeDirectory($dir);
+            try {
+                return $request->file($field)->store($dir, 'public');
+            } catch (\Throwable $e) {
+                Log::error("File store failed [{$field}]: " . $e->getMessage());
+                return null;
+            }
         }
         $urlField = $field === 'media' ? 'media_url' : 'reveal_url';
         return $request->filled($urlField) ? $request->input($urlField) : null;
@@ -149,7 +156,13 @@ class TrainingStepController extends Controller
         }
 
         if ($request->hasFile($field)) {
-            return $request->file($field)->store($dir, 'public');
+            Storage::disk('public')->makeDirectory($dir);
+            try {
+                return $request->file($field)->store($dir, 'public');
+            } catch (\Throwable $e) {
+                Log::error("File store failed [{$field}]: " . $e->getMessage());
+                return $existing;
+            }
         }
         if ($request->filled($urlField)) {
             return $request->input($urlField);
