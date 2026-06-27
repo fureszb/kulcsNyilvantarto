@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm, router, Link } from '@inertiajs/react';
 import PmLayout from '../../Layouts/PmLayout';
-import type { PmMessage, TenantUser, PaginatedData } from '../../types';
+import type { PmMessage, PmMessageReply, TenantUser, PaginatedData } from '../../types';
 
 interface Props {
     messages: PaginatedData<PmMessage>;
@@ -467,6 +467,27 @@ export default function PmMessages({ messages, workers, filters }: Props) {
                                             {/* Content */}
                                             <div className="px-5 py-4">
                                                 <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{msg.content}</p>
+                                                {(msg.replies?.length ?? 0) > 0 && (
+                                                    <div className="mt-4 space-y-2 border-t border-slate-100 pt-3">
+                                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Válaszok ({msg.replies!.length})</p>
+                                                        {msg.replies!.map((r: PmMessageReply) => (
+                                                            <div key={r.id} className="flex items-start gap-2.5">
+                                                                <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+                                                                    <span className="text-[10px] font-bold text-blue-600">{r.sender_name.charAt(0).toUpperCase()}</span>
+                                                                </div>
+                                                                <div className="flex-1 bg-slate-50 rounded-xl px-3 py-2">
+                                                                    <div className="flex items-center gap-2 mb-1">
+                                                                        <span className="text-xs font-semibold text-slate-700">{r.sender_name}</span>
+                                                                        <span className="text-[10px] text-slate-400">
+                                                                            {new Date(r.created_at).toLocaleString('hu-HU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">{r.content}</p>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                             {/* Action footer */}
                                             <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/40 flex items-center justify-end gap-2">

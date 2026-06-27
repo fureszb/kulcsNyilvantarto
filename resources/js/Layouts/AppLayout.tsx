@@ -46,12 +46,16 @@ export default function AppLayout({ children, title }: Props) {
     }, []);
 
     useEffect(() => {
-        if (!tenant?.slug || !user?.id || user?.is_property_manager) return;
+        if (!tenant?.slug || !user?.id) return;
         const echo = getEcho(tenant.slug);
         const ch = echo.private(`tenant.${tenant.slug}.${user.id}`);
         channelRef.current = ch;
         ch.listen('.new-pm-message', () => setExtraMessages(n => n + 1));
-        return () => { ch.stopListening('.new-pm-message'); };
+        ch.listen('.new-pm-reply', () => setExtraMessages(n => n + 1));
+        return () => {
+            ch.stopListening('.new-pm-message');
+            ch.stopListening('.new-pm-reply');
+        };
     }, [tenant?.slug, user?.id]);
 
     useEffect(() => { setExtraMessages(0); }, [nav?.newMessages]);

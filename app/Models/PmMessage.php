@@ -21,6 +21,11 @@ class PmMessage extends Model
         return $this->hasMany(PmMessageRecipient::class, 'pm_message_id');
     }
 
+    public function replies(): HasMany
+    {
+        return $this->hasMany(PmMessageReply::class, 'pm_message_id')->orderBy('created_at');
+    }
+
     public function scopeVisibleTo($query, int $userId)
     {
         return $query->where('send_to_all', true)

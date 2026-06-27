@@ -1,6 +1,7 @@
-import { Link } from '@inertiajs/react';
+import { useState } from 'react';
+import { Link, useForm } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-import type { PmMessage, PaginatedData } from '../../types';
+import type { PmMessage, PmMessageReply, PaginatedData } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -8,7 +9,71 @@ interface Props {
     messages: PaginatedData<PmMessage>;
 }
 
+function ReplyForm({ messageId, onSuccess }: { messageId: number; onSuccess: () => void }) {
+    const { data, setData, post, processing, errors, reset } = useForm({ content: '' });
+
+    function submit(e: React.FormEvent) {
+        e.preventDefault();
+        post(route('messages.reply', messageId), {
+            onSuccess: () => { reset(); onSuccess(); },
+        });
+    }
+
+    return (
+        <form onSubmit={submit} className="mt-3 flex gap-2 items-end">
+            <div className="flex-1">
+                <textarea
+                    value={data.content}
+                    onChange={e => setData('content', e.target.value)}
+                    rows={2}
+                    required
+                    maxLength={2000}
+                    placeholder="Írj választ a PM-nek…"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 focus:border-amber-400 focus:bg-white focus:outline-none transition resize-none"
+                />
+                {errors.content && <p className="text-xs text-rose-500 mt-1">{errors.content}</p>}
+            </div>
+            <button
+                type="submit"
+                disabled={processing || !data.content.trim()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shrink-0 cursor-pointer"
+            >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
+                {processing ? 'Küldés…' : 'Küldés'}
+            </button>
+        </form>
+    );
+}
+
+function ReplyList({ replies }: { replies: PmMessageReply[] }) {
+    if (replies.length === 0) return null;
+    return (
+        <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+            {replies.map(r => (
+                <div key={r.id} className="flex items-start gap-2.5">
+                    <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <span className="text-[10px] font-bold text-blue-600">{r.sender_name.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div className="flex-1 bg-slate-50 rounded-xl px-3 py-2">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-semibold text-slate-700">{r.sender_name}</span>
+                            <span className="text-[10px] text-slate-400">
+                                {new Date(r.created_at).toLocaleString('hu-HU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">{r.content}</p>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function MessagesIndex({ messages }: Props) {
+    const [openReplyId, setOpenReplyId] = useState<number | null>(null);
+
     return (
         <AppLayout title="PM üzenetek">
             <div className="max-w-7xl mx-auto space-y-5">
@@ -84,8 +149,31 @@ export default function MessagesIndex({ messages }: Props) {
                                                     <span className="text-xs text-slate-400">
                                                         {new Date(message.created_at).toLocaleDateString('hu-HU', { year: 'numeric', month: 'short', day: 'numeric' })}
                                                     </span>
+                                                    {(message.replies?.length ?? 0) > 0 && (
+                                                        <span className="text-xs text-slate-400">{message.replies!.length} válasz</span>
+                                                    )}
                                                 </div>
                                                 <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{message.content}</p>
+
+                                                <ReplyList replies={message.replies ?? []} />
+
+                                                {openReplyId === message.id ? (
+                                                    <ReplyForm
+                                                        messageId={message.id}
+                                                        onSuccess={() => setOpenReplyId(null)}
+                                                    />
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setOpenReplyId(message.id)}
+                                                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
+                                                    >
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                                        </svg>
+                                                        Válasz
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </li>

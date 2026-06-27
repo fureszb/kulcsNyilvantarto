@@ -106,6 +106,7 @@ Route::prefix('{tenant}')
 
             // PM üzenetek megtekintése (user + admin)
             Route::get('/messages', [PmMessageController::class, 'index'])->name('messages.index');
+            Route::post('/messages/{message}/reply', [PmMessageController::class, 'storeReply'])->name('messages.reply');
 
             // Profil
             Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

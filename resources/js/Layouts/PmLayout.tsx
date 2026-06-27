@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import { getEcho } from '../echo';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -14,6 +15,7 @@ export default function PmLayout({ children, title }: Props) {
     const [scrolled,     setScrolled]     = useState(false);
     const [loaded,       setLoaded]       = useState(false);
     const [loaderFading, setLoaderFading] = useState(false);
+    const [newReplies,   setNewReplies]   = useState(0);
     const mountTime = useRef(Date.now());
     const [successVisible, setSuccessVisible] = useState(!!flash?.success);
     const [errorVisible,   setErrorVisible]   = useState(!!flash?.error);
@@ -28,6 +30,18 @@ export default function PmLayout({ children, title }: Props) {
         const handler = () => setScrolled(window.scrollY > 20);
         window.addEventListener('scroll', handler, { passive: true });
         return () => window.removeEventListener('scroll', handler);
+    }, []);
+
+    useEffect(() => {
+        if (!tenant?.slug || !auth.user?.id) return;
+        const echo = getEcho(tenant.slug);
+        const ch = echo.private(`tenant.${tenant.slug}.${auth.user.id}`);
+        ch.listen('.new-pm-reply', () => setNewReplies(n => n + 1));
+        return () => { ch.stopListening('.new-pm-reply'); };
+    }, [tenant?.slug, auth.user?.id]);
+
+    useEffect(() => {
+        if (route().current('pm.messages*')) setNewReplies(0);
     }, []);
 
     useEffect(() => {
@@ -91,6 +105,7 @@ export default function PmLayout({ children, title }: Props) {
             label: 'Üzenetek',
             icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
             matchRoute: 'pm.messages*',
+            badge: newReplies,
         },
     ];
 
@@ -240,12 +255,18 @@ export default function PmLayout({ children, title }: Props) {
                                     <Link
                                         key={item.route}
                                         href={route(item.route)}
-                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${active ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                                        className={`relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${active ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}/>
                                         </svg>
                                         {item.label}
+                                        {item.badge && item.badge > 0 ? (
+                                            <span className="absolute -top-0.5 -right-0.5">
+                                                <span className="absolute -inset-0.5 rounded-full bg-amber-500 animate-ping opacity-40"/>
+                                                <span className="relative min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-amber-500 text-white text-[9px] font-bold leading-none px-0.5">{item.badge > 9 ? '9+' : item.badge}</span>
+                                            </span>
+                                        ) : null}
                                     </Link>
                                 );
                             })}

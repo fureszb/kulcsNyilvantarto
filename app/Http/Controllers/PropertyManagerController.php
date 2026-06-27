@@ -78,7 +78,7 @@ class PropertyManagerController extends Controller
 
     public function messages(Request $request)
     {
-        $query = PmMessage::with('recipients.user')->orderByDesc('created_at');
+        $query = PmMessage::with('recipients.user', 'replies')->orderByDesc('created_at');
 
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);

@@ -208,6 +208,15 @@ export interface ShiftNote {
     author?: { id: number; name: string };
 }
 
+export interface PmMessageReply {
+    id: number;
+    pm_message_id: number;
+    sender_id: number;
+    sender_name: string;
+    content: string;
+    created_at: string;
+}
+
 export interface PmMessage {
     id: number;
     content: string;
@@ -217,6 +226,7 @@ export interface PmMessage {
     created_at: string;
     updated_at: string;
     recipients?: PmMessageRecipient[];
+    replies?: PmMessageReply[];
 }
 
 export interface PmMessageRecipient {
