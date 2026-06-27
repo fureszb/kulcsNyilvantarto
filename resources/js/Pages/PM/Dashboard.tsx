@@ -3,6 +3,8 @@ import { Link, usePage } from '@inertiajs/react';
 import PmLayout from '../../Layouts/PmLayout';
 import type { TenantUser, PageProps } from '../../types';
 
+const NOISE_BG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")";
+
 interface WorkerStat {
     worker: TenantUser;
     training_pct: number;
@@ -16,9 +18,9 @@ interface Props {
 }
 
 function pctColor(pct: number, threshHigh = 80, threshMid = 50) {
-    if (pct >= threshHigh) return { text: 'text-green-600', bar: 'bg-green-500' };
-    if (pct >= threshMid)  return { text: 'text-amber-600',  bar: 'bg-amber-400' };
-    return { text: 'text-red-500', bar: 'bg-red-400' };
+    if (pct >= threshHigh) return { text: 'text-green-600', gradient: 'linear-gradient(90deg,#16a34a,#22c55e,#4ade80)', pulse: false };
+    if (pct >= threshMid)  return { text: 'text-amber-600', gradient: 'linear-gradient(90deg,#d97706,#f59e0b,#fcd34d)', pulse: false };
+    return                        { text: 'text-red-500',   gradient: 'linear-gradient(90deg,#dc2626,#ef4444,#f87171)', pulse: true  };
 }
 
 function StatBar({ label, pct, threshHigh, threshMid, delayMs }: {
@@ -51,7 +53,11 @@ function StatBar({ label, pct, threshHigh, threshMid, delayMs }: {
             </div>
             <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 {pct !== null && colors && (
-                    <div ref={barRef} className={`h-full rounded-full ${colors.bar}`} style={{ width: '0%' }} />
+                    <div
+                        ref={barRef}
+                        className={`h-full rounded-full${colors.pulse ? ' progress-pulse' : ''}`}
+                        style={{ width: '0%', background: colors.gradient }}
+                    />
                 )}
             </div>
         </div>
@@ -160,15 +166,18 @@ export default function PmDashboard({ workerStats, welcomeName }: Props) {
     const { tenant } = usePage<PageProps>().props;
     const tenantName = tenant?.name ?? 'KK Nyilvántartó';
     const [showWelcome, setShowWelcome] = useState(!!welcomeName);
+    const [welcomeVisible, setWelcomeVisible] = useState(false);
     const [welcomeFading, setWelcomeFading] = useState(false);
     const [entered, setEntered] = useState(false);
 
     useEffect(() => {
         if (!welcomeName) return;
-        requestAnimationFrame(() => setTimeout(() => setEntered(true), 50));
-        const t1 = setTimeout(() => setWelcomeFading(true), 2600);
-        const t2 = setTimeout(() => setShowWelcome(false), 3300);
-        return () => { clearTimeout(t1); clearTimeout(t2); };
+        // PM loader fades at ~480ms — start welcome crossfade just before that
+        const t0 = setTimeout(() => setWelcomeVisible(true), 400);
+        const t1 = setTimeout(() => setEntered(true), 550);
+        const t2 = setTimeout(() => setWelcomeFading(true), 2800);
+        const t3 = setTimeout(() => setShowWelcome(false), 3500);
+        return () => { clearTimeout(t0); clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
     }, [welcomeName]);
 
     return (
@@ -176,7 +185,7 @@ export default function PmDashboard({ workerStats, welcomeName }: Props) {
             {/* Welcome overlay */}
             {showWelcome && welcomeName && (
                 <div
-                    className={`fixed inset-0 z-[999] flex items-center justify-center transition-opacity duration-700 ease-in-out pointer-events-none ${welcomeFading ? 'opacity-0' : 'opacity-100'}`}
+                    className={`fixed inset-0 z-[10000] flex items-center justify-center transition-opacity duration-500 ease-in-out pointer-events-none ${welcomeFading ? 'opacity-0' : welcomeVisible ? 'opacity-100' : 'opacity-0'}`}
                     style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1c1917 50%, #0f172a 100%)' }}
                 >
                     <div className="absolute inset-0 overflow-hidden">
@@ -200,10 +209,12 @@ export default function PmDashboard({ workerStats, welcomeName }: Props) {
             )}
 
             {/* Hero */}
-            <div className="relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
-                <div className="absolute -top-16 -right-16 w-48 h-48 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }} />
-                <div className="relative px-8 py-8 flex items-center justify-between gap-6">
+            <div className="relative overflow-hidden rounded-2xl mb-8 shadow-2xl"
+                style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)' }}>
+                {/* Dot grid */}
+                <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
+                {/* Content */}
+                <div className="relative z-10 px-8 py-8 flex items-center justify-between gap-6">
                     <div>
                         <p className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-1">Property Manager Portál</p>
                         <h1 className="text-3xl font-extrabold text-white tracking-tight" style={{ animation: 'pmHeartbeat 4s ease-in-out infinite' }}>Dolgozók áttekintése</h1>
@@ -215,6 +226,8 @@ export default function PmDashboard({ workerStats, welcomeName }: Props) {
                         </svg>
                     </div>
                 </div>
+                {/* Noise */}
+                <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.038, backgroundImage: NOISE_BG, backgroundSize: '180px 180px', mixBlendMode: 'screen' }}/>
             </div>
 
             {/* Worker grid */}

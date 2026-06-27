@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import PmLayout from '../../Layouts/PmLayout';
 import type { ActivityLog, PaginatedData, TenantUserBasic } from '../../types';
+import { useScrollReveal } from '../../hooks/ui';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -47,7 +48,7 @@ const eventLabels: Record<string, string> = {
     'user.logout':        'Kijelentkezés',
 };
 
-function LogEntry({ log }: { log: ActivityLog }) {
+function LogEntry({ log, index }: { log: ActivityLog; index: number }) {
     const [open, setOpen] = useState(false);
     const c = colorMap[log.event_type] ?? colorMap['user.login'];
     const label = eventLabels[log.event_type] ?? log.event_type;
@@ -58,7 +59,7 @@ function LogEntry({ log }: { log: ActivityLog }) {
         : '';
 
     return (
-        <div>
+        <div data-sr data-sr-delay={String(index * 55)}>
             <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
@@ -143,6 +144,7 @@ function LogEntry({ log }: { log: ActivityLog }) {
 }
 
 function ActivityContent({ logs, date, type, userId, workers }: Omit<Props, 'isPm'>) {
+    const logContainerRef = useScrollReveal();
     const [filterDate, setFilterDate] = useState(date);
     const [filterType, setFilterType] = useState(type);
     const [filterUserId, setFilterUserId] = useState(userId ?? '');
@@ -254,9 +256,9 @@ function ActivityContent({ logs, date, type, userId, workers }: Omit<Props, 'isP
                         <p className="text-slate-400 text-sm">Ezen a napon nem történt naplózott esemény.</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-slate-100">
-                        {logs.data.map((log) => (
-                            <LogEntry key={log.id} log={log} />
+                    <div ref={logContainerRef} className="divide-y divide-slate-100">
+                        {logs.data.map((log, i) => (
+                            <LogEntry key={log.id} log={log} index={i} />
                         ))}
                     </div>
                 )}

@@ -4,6 +4,8 @@ import AppLayout from '../../Layouts/AppLayout';
 import PmLayout from '../../Layouts/PmLayout';
 import type { Check, CheckItem, PageProps } from '../../types';
 
+const NOISE_BG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")";
+
 declare function route(name: string, params?: unknown): string;
 
 interface Props {
@@ -135,6 +137,8 @@ export default function CheckResult({ check, groupedCheckItems, ungroupedCheckIt
     const pct          = totalItems > 0 ? Math.round(checkedItems / totalItems * 100) : 0;
     const missingItems = allItems.filter(ci => !ci.is_checked);
 
+    const heroRef = useRef<HTMLDivElement>(null);
+
     const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
         const s = new Set<string>();
         Object.entries(groupedCheckItems).forEach(([name, items]) => {
@@ -171,13 +175,19 @@ export default function CheckResult({ check, groupedCheckItems, ungroupedCheckIt
         <Layout title={`Ellenőrzés – ${check.location?.name ?? ''}`}>
             <div className="max-w-5xl mx-auto">
 
-                {/* Hero */}
-                <div className="relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
-                    <div className="absolute -top-16 -right-16 w-56 h-56 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"/>
-                    <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-indigo-800/10 rounded-full blur-3xl pointer-events-none"/>
+                {/* Hero – aurora */}
+                <div ref={heroRef} className="relative overflow-hidden rounded-2xl mb-8 shadow-2xl"
+                    style={{ background: 'linear-gradient(135deg,#0d1829 0%,#0f1f3d 40%,#0d1829 100%)' }}>
+                    {/* Aurora blobs */}
+                    <div className="absolute top-[-50%] left-[-15%] w-[55%] h-[200%] bg-blue-600/20 rounded-full blur-3xl aurora-blob-1 pointer-events-none"/>
+                    <div className="absolute bottom-[-40%] right-[-8%] w-[48%] h-[160%] bg-indigo-500/[0.14] rounded-full blur-3xl aurora-blob-2 pointer-events-none"/>
+                    <div className="absolute top-[10%] right-[25%] w-[28%] h-[80%] bg-cyan-500/[0.09] rounded-full blur-3xl aurora-blob-3 pointer-events-none"/>
+                    {/* Dot grid */}
                     <div className="absolute inset-0 opacity-[0.025] pointer-events-none"
                         style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
-                    <div className="relative px-4 py-6 sm:px-8 sm:py-8 flex items-start justify-between gap-6 flex-wrap">
+                    {/* Noise */}
+                    <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.038, backgroundImage: NOISE_BG, backgroundSize: '180px 180px', mixBlendMode: 'screen' }}/>
+                    <div className="relative z-10 px-4 py-6 sm:px-8 sm:py-8 flex items-start justify-between gap-6 flex-wrap">
                         <div>
                             <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Kulcs &amp; Kártya Ellenőrzés</p>
                             <h1 className="text-2xl font-extrabold text-white tracking-tight sm:text-3xl">{check.location?.name ?? 'Helyszín'}</h1>

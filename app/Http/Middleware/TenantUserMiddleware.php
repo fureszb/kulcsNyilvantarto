@@ -28,6 +28,10 @@ class TenantUserMiddleware
             return redirect()->route('login')->with('error', 'Fiókja inaktív. Vegye fel a kapcsolatot az adminisztrátorral.');
         }
 
+        if ($user->isPropertyManager()) {
+            return redirect()->route('pm.dashboard');
+        }
+
         return $next($request);
     }
 }

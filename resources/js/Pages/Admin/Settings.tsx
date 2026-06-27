@@ -14,22 +14,25 @@ interface Props {
     globalEmail?: string;
     trainingNotificationEmail?: string;
     securityNotificationEmail?: string;
+    securityModuleVisible?: boolean;
 }
 
 interface FormData {
     global_email: string;
     training_notification_email: string;
     security_notification_email: string;
+    security_module_visible: boolean;
     new_password: string;
     new_password_confirmation: string;
     [key: string]: unknown;
 }
 
-export default function SettingsPage({ globalEmail, trainingNotificationEmail, securityNotificationEmail }: Props) {
+export default function SettingsPage({ globalEmail, trainingNotificationEmail, securityNotificationEmail, securityModuleVisible }: Props) {
     const { data, setData, post, processing, errors } = useForm<FormData>({
         global_email: globalEmail ?? '',
         training_notification_email: trainingNotificationEmail ?? '',
         security_notification_email: securityNotificationEmail ?? '',
+        security_module_visible: securityModuleVisible ?? true,
         new_password: '',
         new_password_confirmation: '',
     });
@@ -58,6 +61,26 @@ export default function SettingsPage({ globalEmail, trainingNotificationEmail, s
                     </div>
 
                     <form onSubmit={submit} className="px-6 py-6 space-y-5">
+
+                        {/* Modul láthatóság */}
+                        <div className="flex items-center justify-between gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                            <div>
+                                <p className="text-sm font-semibold text-slate-700">Napi Jelentés modul</p>
+                                <p className="text-xs text-slate-400 mt-0.5">Ha ki van kapcsolva, a Napi Jelentés kártya nem jelenik meg a dolgozók portálján.</p>
+                            </div>
+                            <button
+                                type="button"
+                                role="switch"
+                                aria-checked={data.security_module_visible}
+                                onClick={() => setData('security_module_visible', !data.security_module_visible)}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${data.security_module_visible ? 'bg-blue-600' : 'bg-slate-300'}`}
+                            >
+                                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ${data.security_module_visible ? 'translate-x-5' : 'translate-x-0'}`}/>
+                            </button>
+                        </div>
+
+                        <div className="border-t border-slate-100"/>
+
                         <div>
                             <label className="block text-sm font-semibold text-slate-700 mb-1.5" htmlFor="global_email">
                                 Kulcsnyilvántartó – értesítési email

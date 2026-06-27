@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
 import type { PageProps } from '../types';
@@ -32,7 +32,14 @@ export default function AppLayout({ children, title }: Props) {
     const page = usePage<PageProps>();
     const { auth, tenant, nav } = page.props;
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
     const user = auth.user;
+
+    useEffect(() => {
+        const handler = () => setScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handler, { passive: true });
+        return () => window.removeEventListener('scroll', handler);
+    }, []);
 
     const currentYear = new Date().getFullYear();
     const tenantName = tenant?.name ?? 'KK Nyilvántartó';
@@ -46,7 +53,15 @@ export default function AppLayout({ children, title }: Props) {
         <div className="relative min-h-screen overflow-x-hidden bg-slate-50 text-slate-800 antialiased flex flex-col">
             {title && <title>{title} – {tenantName}</title>}
 
-            <header className="bg-slate-900 sticky top-0 z-30">
+            <header
+                className="sticky top-0 z-30 transition-all duration-300"
+                style={scrolled ? {
+                    background: 'rgba(15,23,42,0.82)',
+                    backdropFilter: 'blur(20px) saturate(1.4)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
+                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                } : { background: '#0f172a' }}
+            >
                 <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-14 border-b border-white/5">

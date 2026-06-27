@@ -1,9 +1,47 @@
 import './bootstrap';
 import '../css/app.css';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+
+// ── Page transition overlay ───────────────────────────────
+let ptOverlay: HTMLDivElement | null = null;
+
+router.on('start', () => {
+    if (ptOverlay) return;
+    ptOverlay = document.createElement('div');
+    ptOverlay.id = 'page-trans-overlay';
+    document.body.appendChild(ptOverlay);
+    requestAnimationFrame(() => ptOverlay?.classList.add('pt-active'));
+});
+
+router.on('finish', () => {
+    if (!ptOverlay) return;
+    const el = ptOverlay;
+    ptOverlay = null;
+    el.classList.remove('pt-active');
+    setTimeout(() => el.remove(), 250);
+
+    // Re-init scroll reveal for freshly rendered [data-sr] elements
+    requestAnimationFrame(() => {
+        const targets = Array.from(document.querySelectorAll<HTMLElement>('[data-sr]:not(.sr-visible)'));
+        if (!targets.length) return;
+        targets.forEach(el => el.classList.add('sr-hidden'));
+        const obs = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (!e.isIntersecting) return;
+                const t = e.target as HTMLElement;
+                setTimeout(() => {
+                    t.classList.remove('sr-hidden');
+                    t.classList.add('sr-visible');
+                }, parseInt(t.dataset.srDelay ?? '0', 10));
+                obs.unobserve(t);
+            });
+        }, { threshold: 0.07, rootMargin: '0px 0px -48px 0px' });
+        targets.forEach(el => obs.observe(el));
+    });
+});
 
 createInertiaApp({
     title: (title) => title ? `${title} – KK Nyilvántartó` : 'KK Nyilvántartó',

@@ -11,6 +11,7 @@ export default function PmLayout({ children, title }: Props) {
     const page = usePage<PageProps>();
     const { auth, tenant, flash } = page.props;
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [scrolled,     setScrolled]     = useState(false);
     const [loaded,       setLoaded]       = useState(false);
     const [loaderFading, setLoaderFading] = useState(false);
     const mountTime = useRef(Date.now());
@@ -22,6 +23,12 @@ export default function PmLayout({ children, title }: Props) {
     const currentYear = new Date().getFullYear();
     const userName = auth.user?.name ?? '';
     const userInitial = userName ? userName.charAt(0) : '';
+
+    useEffect(() => {
+        const handler = () => setScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handler, { passive: true });
+        return () => window.removeEventListener('scroll', handler);
+    }, []);
 
     useEffect(() => {
         const MIN  = 480;
@@ -198,7 +205,15 @@ export default function PmLayout({ children, title }: Props) {
             </div>
 
             {/* Header */}
-            <header className="bg-slate-900 border-b border-white/5 sticky top-0 z-30">
+            <header
+                className="sticky top-0 z-30 transition-all duration-300"
+                style={scrolled ? {
+                    background: 'rgba(15,23,42,0.82)',
+                    backdropFilter: 'blur(20px) saturate(1.4)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
+                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                } : { background: '#0f172a', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+            >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-14">
 

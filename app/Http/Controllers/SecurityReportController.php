@@ -16,8 +16,19 @@ use Inertia\Inertia;
 
 class SecurityReportController extends Controller
 {
+    private function authorizeForUsers(): void
+    {
+        $user = Auth::guard('tenant')->user();
+        if ($user && !$user->isAdmin() && !$user->isPropertyManager()) {
+            if (Setting::get('security_module_visible', '1') !== '1') {
+                abort(403, 'A Napi Jelentés modul jelenleg nem elérhető.');
+            }
+        }
+    }
+
     public function index()
     {
+        $this->authorizeForUsers();
         $user = Auth::guard('tenant')->user();
 
         if ($user && $user->isAdmin()) {
@@ -37,6 +48,7 @@ class SecurityReportController extends Controller
 
     public function create()
     {
+        $this->authorizeForUsers();
         $sortedUsers  = $this->usersSortedByFrequency();
         $preparedBy   = Auth::guard('tenant')->user()->name;
         return Inertia::render('Security/Create', ['sortedUsers' => $sortedUsers, 'preparedBy' => $preparedBy]);
@@ -44,6 +56,7 @@ class SecurityReportController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeForUsers();
         $request->validate([
             'report_date'     => 'required|date',
             'prepared_by'     => 'required|string|max:255',
@@ -106,6 +119,7 @@ class SecurityReportController extends Controller
 
     public function show(SecurityDailyReport $security)
     {
+        $this->authorizeForUsers();
         $authUser = Auth::guard('tenant')->user();
 
         abort_if(
@@ -129,6 +143,7 @@ class SecurityReportController extends Controller
 
     public function edit(SecurityDailyReport $security)
     {
+        $this->authorizeForUsers();
         $authUser = Auth::guard('tenant')->user();
         abort_if(!$authUser || $authUser->id !== $security->created_by_user_id, 403);
 
@@ -139,6 +154,7 @@ class SecurityReportController extends Controller
 
     public function update(Request $request, SecurityDailyReport $security)
     {
+        $this->authorizeForUsers();
         $authUser = Auth::guard('tenant')->user();
         abort_if(!$authUser || $authUser->id !== $security->created_by_user_id, 403);
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Check;
 use App\Models\Location;
+use App\Models\Setting;
 use App\Models\Training;
 use App\Models\TrainingResult;
 use Illuminate\Support\Facades\Auth;
@@ -35,10 +36,11 @@ class HomeController extends Controller
             ]);
 
         return Inertia::render('Portal', [
-            'welcomeName'        => $welcomeName,
-            'checksToday'        => $checksToday,
-            'trainingsCompleted' => $trainingsCompleted,
-            'locations'          => $locations,
+            'welcomeName'           => $welcomeName,
+            'checksToday'           => $checksToday,
+            'trainingsCompleted'    => $trainingsCompleted,
+            'locations'             => $locations,
+            'securityModuleVisible' => Setting::get('security_module_visible', '1') === '1',
         ]);
     }
 
