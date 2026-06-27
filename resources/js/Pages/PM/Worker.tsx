@@ -74,7 +74,7 @@ export default function PmWorker({ user, trainingRows, examRows, stats, recentAc
         <PmLayout title={`${user.name} – részletek`}>
 
             {/* Hero */}
-            <div className="relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
+            <div className="-mx-4 sm:-mx-6 lg:-mx-8 relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
                 <div className="absolute -top-16 -right-16 w-48 h-48 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
                 <div
                     className="absolute inset-0 opacity-[0.025] pointer-events-none"

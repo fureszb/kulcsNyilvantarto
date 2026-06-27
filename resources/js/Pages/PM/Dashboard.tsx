@@ -209,7 +209,7 @@ export default function PmDashboard({ workerStats, welcomeName }: Props) {
             )}
 
             {/* Hero */}
-            <div className="relative overflow-hidden rounded-2xl mb-8 shadow-2xl"
+            <div className="-mx-4 sm:-mx-6 lg:-mx-8 relative overflow-hidden rounded-2xl mb-8 shadow-2xl"
                 style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)' }}>
                 {/* Dot grid */}
                 <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
