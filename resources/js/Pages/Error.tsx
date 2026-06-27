@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 
 interface Props {
-    status: 403 | 404 | 405 | number;
+    status: 403 | 404 | 405 | 419 | number;
 }
 
 const config: Record<number, { color: string; label: string; title: string; description: string; iconPath: string }> = {
@@ -25,6 +25,13 @@ const config: Record<number, { color: string; label: string; title: string; desc
         title: 'Nem engedélyezett kérés',
         description: 'Ez a kérési módszer nem engedélyezett az adott erőforráson.',
         iconPath: 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636',
+    },
+    419: {
+        color: 'from-orange-950 via-slate-900',
+        label: 'text-orange-400',
+        title: 'Az oldal lejárt',
+        description: 'Az oldal munkamenete lejárt. Kérjük frissítse az oldalt és próbálja újra.',
+        iconPath: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
     },
 };
 

@@ -396,9 +396,9 @@ export default function TrainingShow({ training, stepsData, participantName = ''
                         {step.media_url && (
                             <div className="rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center">
                                 {step.media_type !== 'video' ? (
-                                    <img src={step.media_url} className="w-full max-h-64 object-contain" alt="" />
+                                    <img src={step.media_url} className="w-full max-h-[32rem] object-contain" alt="" />
                                 ) : !isCorrect ? (
-                                    <div className="w-full rounded-xl select-none" style={{ height: 256, background: '#1e293b', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                                    <div className="w-full rounded-xl select-none" style={{ height: 384, background: '#1e293b', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
                                         <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             <svg style={{ width: 28, height: 28, color: 'rgba(255,255,255,0.4)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -407,7 +407,7 @@ export default function TrainingShow({ training, stepsData, participantName = ''
                                         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.875rem', fontWeight: 500, textAlign: 'center', padding: '0 24px', lineHeight: 1.4 }}>A videó a helyes válasz megadása után oldódik fel</p>
                                     </div>
                                 ) : (
-                                    <video src={step.media_url} className="w-full max-h-64 object-contain" controls autoPlay loop />
+                                    <video src={step.media_url} className="w-full max-h-[32rem] object-contain" controls autoPlay loop />
                                 )}
                             </div>
                         )}
@@ -419,9 +419,9 @@ export default function TrainingShow({ training, stepsData, participantName = ''
                                     <span className="text-xs font-semibold text-green-700">Helyes! Nézze meg a demonstrációt:</span>
                                 </div>
                                 {step.reveal_type === 'video' ? (
-                                    <video src={step.reveal_url} className="w-full max-h-56 object-contain" autoPlay loop controls />
+                                    <video src={step.reveal_url} className="w-full max-h-96 object-contain" autoPlay loop controls />
                                 ) : (
-                                    <img src={step.reveal_url} className="w-full max-h-56 object-contain" alt="" />
+                                    <img src={step.reveal_url} className="w-full max-h-96 object-contain" alt="" />
                                 )}
                             </div>
                         )}

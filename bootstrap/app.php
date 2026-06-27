@@ -49,6 +49,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \Throwable $e,
             \Illuminate\Http\Request $request
         ) {
+            if ($e instanceof \Illuminate\Session\TokenMismatchException && ! $request->expectsJson()) {
+                return \Inertia\Inertia::render('Error', ['status' => 419])
+                    ->toResponse($request)
+                    ->setStatusCode(419);
+            }
+
             if (
                 in_array($response->getStatusCode(), [403, 404, 405])
                 && ! $request->expectsJson()
