@@ -25,6 +25,7 @@ RUN composer dump-autoload --optimize \
     && chmod -R 775 storage bootstrap/cache
 
 COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/php.ini /usr/local/etc/php/conf.d/uploads.ini
 COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
