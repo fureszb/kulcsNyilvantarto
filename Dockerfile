@@ -9,9 +9,10 @@ RUN npm run build
 # Stage 2: PHP application
 FROM php:8.3-fpm-alpine
 
-ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN chmod +x /usr/local/bin/install-php-extensions \
-    && apk add --no-cache nginx \
+RUN apk add --no-cache nginx sqlite-dev libzip-dev oniguruma-dev curl \
+    && curl -sSLf https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
+        -o /usr/local/bin/install-php-extensions \
+    && chmod +x /usr/local/bin/install-php-extensions \
     && install-php-extensions pdo_sqlite mbstring bcmath zip \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
