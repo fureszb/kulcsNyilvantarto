@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import type { Training } from '../../types';
@@ -65,6 +65,14 @@ export default function TrainingShow({ training, stepsData, participantName = ''
 
     // zoom modal
     const [zoomItem, setZoomItem] = useState<{ url: string; type: string } | null>(null);
+    const dialogRef = useRef<HTMLDialogElement>(null);
+    useEffect(() => {
+        if (zoomItem) {
+            dialogRef.current?.showModal();
+        } else {
+            dialogRef.current?.close();
+        }
+    }, [zoomItem]);
 
     const step = steps[currentStep];
     const progress = steps.length > 0 ? ((currentStep + 1) / steps.length) * 100 : 0;
@@ -574,31 +582,30 @@ export default function TrainingShow({ training, stepsData, participantName = ''
             )}
         </AppLayout>
 
-        {zoomItem && (
-            <dialog
-                className="dui-modal dui-modal-open"
-                onClose={() => setZoomItem(null)}
-            >
-                <div className="dui-modal-box bg-transparent shadow-none max-w-[92vw] p-2 flex items-center justify-center relative">
-                    <button
-                        type="button"
-                        onClick={() => setZoomItem(null)}
-                        className="dui-btn dui-btn-sm dui-btn-circle dui-btn-ghost absolute top-3 right-3 text-white"
-                        title="Bezárás (Esc)"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                    {zoomItem.type !== 'video' ? (
-                        <img src={zoomItem.url} className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" alt="" />
-                    ) : (
-                        <video src={zoomItem.url} className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" controls autoPlay />
-                    )}
-                </div>
-                <form method="dialog" className="dui-modal-backdrop">
-                    <button onClick={() => setZoomItem(null)}>close</button>
-                </form>
-            </dialog>
-        )}
+        <dialog
+            ref={dialogRef}
+            className="dui-modal"
+            onClose={() => setZoomItem(null)}
+        >
+            <div className="dui-modal-box bg-transparent shadow-none max-w-[92vw] p-2 flex items-center justify-center relative">
+                <button
+                    type="button"
+                    onClick={() => setZoomItem(null)}
+                    className="dui-btn dui-btn-sm dui-btn-circle dui-btn-ghost absolute top-3 right-3 text-white z-10"
+                    title="Bezárás (Esc)"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                {zoomItem && (zoomItem.type !== 'video' ? (
+                    <img src={zoomItem.url} className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" alt="" />
+                ) : (
+                    <video src={zoomItem.url} className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" controls autoPlay />
+                ))}
+            </div>
+            <form method="dialog" className="dui-modal-backdrop">
+                <button onClick={() => setZoomItem(null)}>close</button>
+            </form>
+        </dialog>
         </>
     );
 }

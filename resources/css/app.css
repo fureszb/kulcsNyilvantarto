@@ -46,6 +46,10 @@
     .form-label    { @apply block text-sm font-semibold text-slate-700 mb-1.5; }
 }
 
+.dui-modal::backdrop {
+    background: rgba(0, 0, 0, 0.85);
+}
+
 /* ═══════════════════════════════════════════════════════════
    1. AURORA — animált gradiens háttér
 ═══════════════════════════════════════════════════════════ */
