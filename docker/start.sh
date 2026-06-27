@@ -7,7 +7,7 @@ chmod -R 775 /app/storage/database
 mkdir -p /app/storage/app/public
 
 php artisan migrate --force
-php artisan tenant:migrate-all
+php artisan tenant:migrate-all 2>&1 || echo "[WARN] tenant:migrate-all failed, continuing"
 php artisan storage:link --force 2>/dev/null || true
 php artisan config:cache
 php artisan route:cache
