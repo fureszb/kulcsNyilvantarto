@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import type { Training } from '../../types';
@@ -65,13 +65,6 @@ export default function TrainingShow({ training, stepsData, participantName = ''
 
     // zoom modal
     const [zoomItem, setZoomItem] = useState<{ url: string; type: string } | null>(null);
-
-    useEffect(() => {
-        if (!zoomItem) return;
-        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setZoomItem(null); };
-        window.addEventListener('keydown', handler);
-        return () => window.removeEventListener('keydown', handler);
-    }, [zoomItem]);
 
     const step = steps[currentStep];
     const progress = steps.length > 0 ? ((currentStep + 1) / steps.length) * 100 : 0;
@@ -582,25 +575,29 @@ export default function TrainingShow({ training, stepsData, participantName = ''
         </AppLayout>
 
         {zoomItem && (
-            <div
-                className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
-                onClick={() => setZoomItem(null)}
+            <dialog
+                className="dui-modal dui-modal-open"
+                onClose={() => setZoomItem(null)}
             >
-                <button
-                    className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-                    onClick={() => setZoomItem(null)}
-                    title="Bezárás (Esc)"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-                <div onClick={e => e.stopPropagation()} className="flex items-center justify-center max-w-full max-h-[90vh]">
+                <div className="dui-modal-box bg-transparent shadow-none max-w-[92vw] p-2 flex items-center justify-center relative">
+                    <button
+                        type="button"
+                        onClick={() => setZoomItem(null)}
+                        className="dui-btn dui-btn-sm dui-btn-circle dui-btn-ghost absolute top-3 right-3 text-white"
+                        title="Bezárás (Esc)"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
                     {zoomItem.type !== 'video' ? (
-                        <img src={zoomItem.url} className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" alt="" />
+                        <img src={zoomItem.url} className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" alt="" />
                     ) : (
-                        <video src={zoomItem.url} className="max-w-full max-h-[90vh] rounded-lg shadow-2xl" controls autoPlay />
+                        <video src={zoomItem.url} className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" controls autoPlay />
                     )}
                 </div>
-            </div>
+                <form method="dialog" className="dui-modal-backdrop">
+                    <button onClick={() => setZoomItem(null)}>close</button>
+                </form>
+            </dialog>
         )}
         </>
     );
