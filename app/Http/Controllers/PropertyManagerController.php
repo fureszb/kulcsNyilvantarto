@@ -10,12 +10,14 @@ use App\Models\ExamResult;
 use App\Models\Location;
 use App\Models\PmMessage;
 use App\Models\PmMessageRecipient;
+use App\Models\PmMessageReply;
 use App\Models\SecurityDailyReport;
 use App\Models\TenantUser;
 use App\Models\Training;
 use App\Models\TrainingResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class PropertyManagerController extends Controller
@@ -176,6 +178,44 @@ class PropertyManagerController extends Controller
         ]);
         $message->delete();
         return back()->with('success', 'Üzenet törölve.');
+    }
+
+    public function replyToMessage(Request $request, PmMessage $message)
+    {
+        $request->validate(['content' => 'required|string|max:2000']);
+
+        $sender = Auth::guard('tenant')->user();
+
+        $reply = PmMessageReply::create([
+            'pm_message_id' => $message->id,
+            'sender_id'     => $sender->id,
+            'sender_name'   => $sender->name,
+            'content'       => $request->content,
+        ]);
+
+        // Értesítés a címzetteknek
+        $slug = app('tenant')->slug;
+        $recipientIds = $message->send_to_all
+            ? TenantUser::where('is_active', true)->where('id', '!=', $sender->id)->pluck('id')->toArray()
+            : $message->recipients()->pluck('user_id')->toArray();
+
+        try {
+            broadcast(new NewPmMessage(
+                message: [
+                    'id'          => $message->id,
+                    'content'     => $reply->content,
+                    'created_at'  => $reply->created_at->toISOString(),
+                    'send_to_all' => $message->send_to_all,
+                    'sent_by_name'=> $sender->name,
+                ],
+                tenantSlug: $slug,
+                recipientIds: $recipientIds,
+            ))->toOthers();
+        } catch (\Throwable $e) {
+            Log::error('PM replyToMessage broadcast failed: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Válasz elküldve.');
     }
 
     public function editMessage(PmMessage $message)

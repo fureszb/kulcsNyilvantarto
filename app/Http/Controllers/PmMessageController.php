@@ -7,6 +7,7 @@ use App\Models\PmMessage;
 use App\Models\PmMessageReply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class PmMessageController extends Controller
@@ -47,17 +48,21 @@ class PmMessageController extends Controller
         ]);
 
         if ($message->sent_by_user_id) {
-            broadcast(new NewPmReply(
-                reply: [
-                    'id'             => $reply->id,
-                    'pm_message_id'  => $message->id,
-                    'sender_name'    => $reply->sender_name,
-                    'content'        => $reply->content,
-                    'created_at'     => $reply->created_at->toISOString(),
-                ],
-                tenantSlug: app('tenant')->slug,
-                pmUserId: $message->sent_by_user_id,
-            ))->toOthers();
+            try {
+                broadcast(new NewPmReply(
+                    reply: [
+                        'id'            => $reply->id,
+                        'pm_message_id' => $message->id,
+                        'sender_name'   => $reply->sender_name,
+                        'content'       => $reply->content,
+                        'created_at'    => $reply->created_at->toISOString(),
+                    ],
+                    tenantSlug: app('tenant')->slug,
+                    pmUserId: $message->sent_by_user_id,
+                ))->toOthers();
+            } catch (\Throwable $e) {
+                Log::error('NewPmReply broadcast failed: ' . $e->getMessage());
+            }
         }
 
         return back()->with('success', 'Válasz elküldve.');

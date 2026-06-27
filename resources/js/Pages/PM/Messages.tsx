@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm, router, Link } from '@inertiajs/react';
 import PmLayout from '../../Layouts/PmLayout';
-import type { PmMessage, PmMessageReply, TenantUser, PaginatedData } from '../../types';
+import type { PmMessage, PmMessageReply, TenantUser, PaginatedData, PageProps } from '../../types';
+import { usePage } from '@inertiajs/react';
 
 interface Props {
     messages: PaginatedData<PmMessage>;
@@ -174,11 +175,49 @@ function InlineEditForm({ message, workers, onCancel }: { message: PmMessage; wo
     );
 }
 
+function PmReplyForm({ messageId, onDone }: { messageId: number; onDone: () => void }) {
+    const { data, setData, post, processing, errors, reset } = useForm({ content: '' });
+    function submit(e: React.FormEvent) {
+        e.preventDefault();
+        post(route('pm.messages.reply', messageId), { onSuccess: () => { reset(); onDone(); } });
+    }
+    return (
+        <form onSubmit={submit} className="mt-3 flex gap-2 items-end border-t border-slate-100 pt-3">
+            <div className="flex-1">
+                <textarea
+                    value={data.content}
+                    onChange={e => setData('content', e.target.value)}
+                    rows={2}
+                    required
+                    maxLength={2000}
+                    placeholder="Válasz a munkavállalónak…"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 focus:border-amber-400 focus:bg-white focus:outline-none transition resize-none"
+                />
+                {errors.content && <p className="text-xs text-rose-500 mt-1">{errors.content}</p>}
+            </div>
+            <div className="flex gap-1.5 shrink-0">
+                <button type="submit" disabled={processing || !data.content.trim()}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                    {processing ? 'Küldés…' : 'Küldés'}
+                </button>
+                <button type="button" onClick={onDone}
+                    className="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 text-sm hover:bg-slate-50 transition-colors cursor-pointer">
+                    Mégse
+                </button>
+            </div>
+        </form>
+    );
+}
+
 export default function PmMessages({ messages, workers, filters }: Props) {
     const [sendToAll, setSendToAll] = useState(true);
     const [search, setSearch]       = useState('');
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [openReplyId, setOpenReplyId] = useState<number | null>(null);
 
     const [dateFrom, setDateFrom] = useState(filters?.date_from ?? '');
     const [dateTo, setDateTo]     = useState(filters?.date_to   ?? '');
@@ -489,24 +528,40 @@ export default function PmMessages({ messages, workers, filters }: Props) {
                                                     </div>
                                                 )}
                                             </div>
+                                            {/* Reply form */}
+                                            {openReplyId === msg.id && (
+                                                <div className="px-5 pb-3">
+                                                    <PmReplyForm messageId={msg.id} onDone={() => setOpenReplyId(null)} />
+                                                </div>
+                                            )}
                                             {/* Action footer */}
-                                            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/40 flex items-center justify-end gap-2">
+                                            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/40 flex items-center justify-between gap-2">
                                                 <button
                                                     type="button"
-                                                    onClick={() => setEditingId(msg.id)}
-                                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-amber-50 hover:border-amber-200 text-slate-600 hover:text-amber-700 text-xs font-semibold transition-colors cursor-pointer"
+                                                    onClick={() => setOpenReplyId(openReplyId === msg.id ? null : msg.id)}
+                                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold transition-colors cursor-pointer"
                                                 >
-                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                                    Szerkesztés
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                                    Válasz
                                                 </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setDeleteTargetId(msg.id)}
-                                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:border-rose-200 text-slate-400 hover:text-rose-600 text-xs font-semibold transition-colors cursor-pointer"
-                                                >
-                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                    Törlés
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditingId(msg.id)}
+                                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-amber-50 hover:border-amber-200 text-slate-600 hover:text-amber-700 text-xs font-semibold transition-colors cursor-pointer"
+                                                    >
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                        Szerkesztés
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDeleteTargetId(msg.id)}
+                                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:border-rose-200 text-slate-400 hover:text-rose-600 text-xs font-semibold transition-colors cursor-pointer"
+                                                    >
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                        Törlés
+                                                    </button>
+                                                </div>
                                             </div>
                                         </>
                                     )}

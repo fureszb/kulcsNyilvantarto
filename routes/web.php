@@ -134,11 +134,12 @@ Route::prefix('{tenant}')
             Route::get('/security/{security}', [PropertyManagerController::class, 'securityShow'])->name('security.show');
             Route::get('/checks',        [PropertyManagerController::class, 'checks'])->name('checks');
             Route::get('/activity',      [ActivityLogController::class, 'pmActivity'])->name('activity');
-            Route::get('/messages',                    [PropertyManagerController::class, 'messages'])->name('messages');
-            Route::post('/messages',                   [PropertyManagerController::class, 'storeMessage'])->name('messages.store');
-            Route::get('/messages/{message}/edit',     [PropertyManagerController::class, 'editMessage'])->name('messages.edit');
-            Route::put('/messages/{message}',          [PropertyManagerController::class, 'updateMessage'])->name('messages.update');
-            Route::delete('/messages/{message}',       [PropertyManagerController::class, 'destroyMessage'])->name('messages.destroy');
+            Route::get('/messages',                        [PropertyManagerController::class, 'messages'])->name('messages');
+            Route::post('/messages',                       [PropertyManagerController::class, 'storeMessage'])->name('messages.store');
+            Route::post('/messages/{message}/reply',       [PropertyManagerController::class, 'replyToMessage'])->name('messages.reply');
+            Route::get('/messages/{message}/edit',         [PropertyManagerController::class, 'editMessage'])->name('messages.edit');
+            Route::put('/messages/{message}',              [PropertyManagerController::class, 'updateMessage'])->name('messages.update');
+            Route::delete('/messages/{message}',           [PropertyManagerController::class, 'destroyMessage'])->name('messages.destroy');
         });
 
         // ── Admin ──────────────────────────────────────────────────────────────
