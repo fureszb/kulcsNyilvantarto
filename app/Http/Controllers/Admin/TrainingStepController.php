@@ -25,9 +25,9 @@ class TrainingStepController extends Controller
         $rules = [
             'question'        => 'required|string',
             'question_type'   => 'required|in:radio,checkbox,text',
-            'media'           => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:20480',
+            'media'           => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:51200',
             'media_url'       => 'nullable|url|max:2048',
-            'reveal_media'    => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:20480',
+            'reveal_media'    => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:51200',
             'reveal_url'      => 'nullable|url|max:2048',
             'answers'         => 'required|array|min:1',
             'answers.*.text'  => 'required|string|max:500',
@@ -71,9 +71,9 @@ class TrainingStepController extends Controller
         $rules = [
             'question'        => 'required|string',
             'question_type'   => 'required|in:radio,checkbox,text',
-            'media'           => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:20480',
+            'media'           => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:51200',
             'media_url'       => 'nullable|url|max:2048',
-            'reveal_media'    => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:20480',
+            'reveal_media'    => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:51200',
             'reveal_url'      => 'nullable|url|max:2048',
             'answers'         => 'required|array|min:1',
             'answers.*.text'  => 'required|string|max:500',

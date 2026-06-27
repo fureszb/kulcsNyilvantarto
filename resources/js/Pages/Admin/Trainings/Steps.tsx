@@ -76,7 +76,7 @@ function MediaField({ label, mode, onModeChange, file, onFileChange, url, onUrlC
                     <input type="file" accept="image/*,video/*"
                         onChange={e => onFileChange(e.target.files?.[0] ?? null)}
                         className="block w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-                    <p className="text-xs text-slate-400 mt-1">Max. 20 MB · jpg, png, gif, webp, mp4, webm</p>
+                    <p className="text-xs text-slate-400 mt-1">Max. 50 MB · jpg, png, gif, webp, mp4, webm</p>
                 </>
             )}
             {mode === 'url' && (
@@ -192,19 +192,19 @@ function NewStepForm({ trainingId }: { trainingId: number }) {
     const [mediaError, setMediaError] = useState('');
     const [revealError, setRevealError] = useState('');
 
-    const MAX_FILE_SIZE = 20 * 1024 * 1024;
+    const MAX_FILE_SIZE = 50 * 1024 * 1024;
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
 
     function handleMediaFile(f: File | null) {
         setMediaError('');
-        if (f && f.size > MAX_FILE_SIZE) { setMediaError('A fájl mérete meghaladja a 20 MB-os limitet.'); return; }
+        if (f && f.size > MAX_FILE_SIZE) { setMediaError('A fájl mérete meghaladja az 50 MB-os limitet.'); return; }
         if (f && !ALLOWED_TYPES.includes(f.type)) { setMediaError('Nem támogatott fájlformátum.'); return; }
         setMediaFile(f);
     }
 
     function handleRevealFile(f: File | null) {
         setRevealError('');
-        if (f && f.size > MAX_FILE_SIZE) { setRevealError('A fájl mérete meghaladja a 20 MB-os limitet.'); return; }
+        if (f && f.size > MAX_FILE_SIZE) { setRevealError('A fájl mérete meghaladja az 50 MB-os limitet.'); return; }
         if (f && !ALLOWED_TYPES.includes(f.type)) { setRevealError('Nem támogatott fájlformátum.'); return; }
         setRevealFile(f);
     }
