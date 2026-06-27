@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NewPmMessage;
 use App\Models\ActivityLog;
 use App\Models\Check;
 use App\Models\Exam;
@@ -129,11 +130,31 @@ class PropertyManagerController extends Controller
             'sent_by_name'     => $sender->name,
         ]);
 
+        $userIds = [];
         if (!$sendToAll) {
             foreach ($request->input('user_ids', []) as $userId) {
                 PmMessageRecipient::create(['pm_message_id' => $message->id, 'user_id' => (int) $userId]);
+                $userIds[] = (int) $userId;
             }
+        } else {
+            $userIds = TenantUser::where('is_active', true)
+                ->where('id', '!=', $sender->id)
+                ->pluck('id')
+                ->toArray();
         }
+
+        $slug = app('tenant')->slug;
+        broadcast(new NewPmMessage(
+            message: [
+                'id'         => $message->id,
+                'content'    => $message->content,
+                'created_at' => $message->created_at->toISOString(),
+                'send_to_all' => $message->send_to_all,
+                'sent_by_name' => $message->sent_by_name,
+            ],
+            tenantSlug: $slug,
+            recipientIds: $userIds,
+        ))->toOthers();
 
         $recipientCount = $sendToAll ? null : count($request->input('user_ids', []));
         $recipientLabel = $sendToAll ? 'mindenkinek' : "{$recipientCount} felhasználónak";

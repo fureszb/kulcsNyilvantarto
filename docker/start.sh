@@ -15,5 +15,4 @@ php artisan view:cache 2>/dev/null || true
 
 chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
-php-fpm -D
-exec nginx -g "daemon off;"
+exec supervisord -c /etc/supervisor/conf.d/supervisord.conf

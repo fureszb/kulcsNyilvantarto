@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
+import { getEcho } from '../echo';
 import type { PageProps } from '../types';
 
 function LiveClock() {
@@ -33,6 +34,9 @@ export default function AppLayout({ children, title }: Props) {
     const { auth, tenant, nav } = page.props;
     const [mobileOpen, setMobileOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [extraMessages, setExtraMessages] = useState(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const channelRef = useRef<any>(null);
     const user = auth.user;
 
     useEffect(() => {
@@ -40,6 +44,17 @@ export default function AppLayout({ children, title }: Props) {
         window.addEventListener('scroll', handler, { passive: true });
         return () => window.removeEventListener('scroll', handler);
     }, []);
+
+    useEffect(() => {
+        if (!tenant?.slug || !user?.id || user?.is_property_manager) return;
+        const echo = getEcho(tenant.slug);
+        const ch = echo.private(`tenant.${tenant.slug}.${user.id}`);
+        channelRef.current = ch;
+        ch.listen('.new-pm-message', () => setExtraMessages(n => n + 1));
+        return () => { ch.stopListening('.new-pm-message'); };
+    }, [tenant?.slug, user?.id]);
+
+    useEffect(() => { setExtraMessages(0); }, [nav?.newMessages]);
 
     const currentYear = new Date().getFullYear();
     const tenantName = tenant?.name ?? 'KK Nyilvántartó';
@@ -82,7 +97,7 @@ export default function AppLayout({ children, title }: Props) {
                                 { href: route('security.index'), active: route().current('security.*'), icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', label: 'Napi Jelentés', badge: 0, badgeColor: '' },
                                 ...(!user?.is_property_manager ? [
                                     { href: route('notes.index'), active: route().current('notes.*'), icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z', label: 'Váltóüzenetek', badge: nav?.newNotes ?? 0, badgeColor: 'bg-rose-500' },
-                                    { href: route('messages.index'), active: route().current('messages.*'), icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', label: 'PM üzenetek', badge: nav?.newMessages ?? 0, badgeColor: 'bg-amber-500' },
+                                    { href: route('messages.index'), active: route().current('messages.*'), icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', label: 'PM üzenetek', badge: (nav?.newMessages ?? 0) + extraMessages, badgeColor: 'bg-amber-500' },
                                 ] : []),
                             ].map(nl => (
                                 <Link key={nl.href} href={nl.href}
@@ -143,7 +158,7 @@ export default function AppLayout({ children, title }: Props) {
                             { href: route('security.index'), active: route().current('security.*'), icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', label: 'Napi Jelentés', badge: 0, badgeColor: '' },
                             ...(!user?.is_property_manager ? [
                                 { href: route('notes.index'), active: route().current('notes.*'), icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z', label: 'Váltóüzenetek', badge: nav?.newNotes ?? 0, badgeColor: 'bg-rose-500' },
-                                { href: route('messages.index'), active: route().current('messages.*'), icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', label: 'PM üzenetek', badge: nav?.newMessages ?? 0, badgeColor: 'bg-amber-500' },
+                                { href: route('messages.index'), active: route().current('messages.*'), icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', label: 'PM üzenetek', badge: (nav?.newMessages ?? 0) + extraMessages, badgeColor: 'bg-amber-500' },
                             ] : []),
                         ].map(nl => (
                             <Link key={nl.href} href={nl.href} onClick={() => setMobileOpen(false)}

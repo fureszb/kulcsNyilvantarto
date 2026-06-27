@@ -9,7 +9,7 @@ RUN npm run build
 # Stage 2: PHP application
 FROM php:8.3-fpm-alpine
 
-RUN apk add --no-cache nginx sqlite-dev libzip-dev oniguruma-dev \
+RUN apk add --no-cache nginx sqlite-dev libzip-dev oniguruma-dev supervisor \
     && docker-php-ext-install pdo pdo_sqlite mbstring bcmath zip \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
@@ -26,6 +26,7 @@ RUN composer dump-autoload --optimize \
 
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/php.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
