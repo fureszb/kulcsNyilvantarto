@@ -34,7 +34,7 @@ class TrainingStep extends Model
     public function resolveMediaUrl(?string $path): ?string
     {
         if (!$path) return null;
-        return self::isExternalUrl($path) ? $path : Storage::url($path);
+        return self::isExternalUrl($path) ? $path : Storage::disk('public')->url($path);
     }
 
     public function mediaType(?string $path = null): string
