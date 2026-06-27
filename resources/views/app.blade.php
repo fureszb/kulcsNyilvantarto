@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="hu" class="h-full overflow-x-hidden">
+<html lang="hu" class="h-full overflow-x-hidden" data-theme="kulcsapp">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

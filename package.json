@@ -24,6 +24,7 @@
         "@dnd-kit/sortable": "^10.0.0",
         "@dnd-kit/utilities": "^3.2.2",
         "@inertiajs/react": "^2.0.6",
+        "daisyui": "^4.12.24",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "ziggy-js": "^2.5.2"

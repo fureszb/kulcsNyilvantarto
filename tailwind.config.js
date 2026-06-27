@@ -1,3 +1,5 @@
+import daisyui from 'daisyui';
+
 /** @type {import('tailwindcss').Config} */
 export default {
     content: [
@@ -38,5 +40,31 @@ export default {
             },
         },
     },
-    plugins: [],
+    plugins: [daisyui],
+    daisyui: {
+        themes: [
+            {
+                kulcsapp: {
+                    'primary':           '#2563eb',
+                    'primary-content':   '#ffffff',
+                    'secondary':         '#64748b',
+                    'secondary-content': '#ffffff',
+                    'accent':            '#f59e0b',
+                    'accent-content':    '#ffffff',
+                    'neutral':           '#1e293b',
+                    'neutral-content':   '#f8fafc',
+                    'base-100':          '#ffffff',
+                    'base-200':          '#f8fafc',
+                    'base-300':          '#f1f5f9',
+                    'base-content':      '#0f172a',
+                    'info':              '#0ea5e9',
+                    'success':           '#22c55e',
+                    'warning':           '#f59e0b',
+                    'error':             '#ef4444',
+                },
+            },
+        ],
+        prefix: 'dui-',
+        logs: false,
+    },
 };
