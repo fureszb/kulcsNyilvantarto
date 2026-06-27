@@ -23,4 +23,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /.serena
+/.claude
 /nul
+/storage/database/
+*.sqlite
