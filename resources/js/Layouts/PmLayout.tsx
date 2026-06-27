@@ -36,7 +36,12 @@ export default function PmLayout({ children, title }: Props) {
         if (!tenant?.slug || !auth.user?.id) return;
         const echo = getEcho(tenant.slug);
         const ch = echo.private(`tenant.${tenant.slug}.${auth.user.id}`);
-        ch.listen('.new-pm-reply', () => setNewReplies(n => n + 1));
+        ch.listen('.new-pm-reply', () => {
+            setNewReplies(n => n + 1);
+            if (route().current('pm.messages*')) {
+                router.reload({ only: ['messages'] });
+            }
+        });
         return () => { ch.stopListening('.new-pm-reply'); };
     }, [tenant?.slug, auth.user?.id]);
 

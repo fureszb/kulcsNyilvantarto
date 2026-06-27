@@ -50,8 +50,18 @@ export default function AppLayout({ children, title }: Props) {
         const echo = getEcho(tenant.slug);
         const ch = echo.private(`tenant.${tenant.slug}.${user.id}`);
         channelRef.current = ch;
-        ch.listen('.new-pm-message', () => setExtraMessages(n => n + 1));
-        ch.listen('.new-pm-reply', () => setExtraMessages(n => n + 1));
+        ch.listen('.new-pm-message', () => {
+            setExtraMessages(n => n + 1);
+            if (route().current('messages.*')) {
+                router.reload({ only: ['messages'] });
+            }
+        });
+        ch.listen('.new-pm-reply', () => {
+            setExtraMessages(n => n + 1);
+            if (route().current('messages.*')) {
+                router.reload({ only: ['messages'] });
+            }
+        });
         return () => {
             ch.stopListening('.new-pm-message');
             ch.stopListening('.new-pm-reply');
