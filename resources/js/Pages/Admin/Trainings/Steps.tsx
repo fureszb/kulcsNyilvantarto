@@ -48,10 +48,11 @@ interface AnswerDraft {
 
 type MediaMode = 'none' | 'file' | 'url';
 
-function MediaField({ label, mode, onModeChange, file, onFileChange, url, onUrlChange }: {
+function MediaField({ label, mode, onModeChange, file, onFileChange, url, onUrlChange, error }: {
     label: string; mode: MediaMode; onModeChange: (m: MediaMode) => void;
     file: File | null; onFileChange: (f: File | null) => void;
     url: string; onUrlChange: (u: string) => void;
+    error?: string;
 }) {
     return (
         <div>
@@ -75,13 +76,14 @@ function MediaField({ label, mode, onModeChange, file, onFileChange, url, onUrlC
                     <input type="file" accept="image/*,video/*"
                         onChange={e => onFileChange(e.target.files?.[0] ?? null)}
                         className="block w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-                    <p className="text-xs text-slate-400 mt-1">Max. 50 MB · jpg, png, gif, webp, mp4, webm</p>
+                    <p className="text-xs text-slate-400 mt-1">Max. 20 MB · jpg, png, gif, webp, mp4, webm</p>
                 </>
             )}
             {mode === 'url' && (
                 <input type="url" value={url} onChange={e => onUrlChange(e.target.value)}
                     className="form-input" placeholder="https://..."/>
             )}
+            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
         </div>
     );
 }
@@ -187,6 +189,25 @@ function NewStepForm({ trainingId }: { trainingId: number }) {
     const [revealMode, setRevealMode] = useState<MediaMode>('none');
     const [revealFile, setRevealFile] = useState<File | null>(null);
     const [revealUrl, setRevealUrl] = useState('');
+    const [mediaError, setMediaError] = useState('');
+    const [revealError, setRevealError] = useState('');
+
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+
+    function handleMediaFile(f: File | null) {
+        setMediaError('');
+        if (f && f.size > MAX_FILE_SIZE) { setMediaError('A fájl mérete meghaladja a 20 MB-os limitet.'); return; }
+        if (f && !ALLOWED_TYPES.includes(f.type)) { setMediaError('Nem támogatott fájlformátum.'); return; }
+        setMediaFile(f);
+    }
+
+    function handleRevealFile(f: File | null) {
+        setRevealError('');
+        if (f && f.size > MAX_FILE_SIZE) { setRevealError('A fájl mérete meghaladja a 20 MB-os limitet.'); return; }
+        if (f && !ALLOWED_TYPES.includes(f.type)) { setRevealError('Nem támogatott fájlformátum.'); return; }
+        setRevealFile(f);
+    }
 
     function changeType(type: 'radio' | 'checkbox' | 'text') {
         setQtype(type);
@@ -229,6 +250,7 @@ function NewStepForm({ trainingId }: { trainingId: number }) {
     function submit(e: React.FormEvent) {
         e.preventDefault();
         if (!question.trim()) { setError('A kérdés megadása kötelező.'); return; }
+        if (mediaError || revealError) return;
         setError('');
         setProcessing(true);
 
@@ -249,6 +271,10 @@ function NewStepForm({ trainingId }: { trainingId: number }) {
         else if (revealMode === 'url' && revealUrl) formData.append('reveal_url', revealUrl);
 
         router.post(route('admin.trainings.steps.store', trainingId), formData as unknown as Record<string, unknown>, {
+            onError: (errors) => {
+                if (errors.media) setMediaError(errors.media);
+                if (errors.reveal_media) setRevealError(errors.reveal_media);
+            },
             onFinish: () => setProcessing(false),
         });
     }
@@ -278,14 +304,16 @@ function NewStepForm({ trainingId }: { trainingId: number }) {
                 <MediaField
                     label="Médiatartalom (kép/videó)"
                     mode={mediaMode} onModeChange={setMediaMode}
-                    file={mediaFile} onFileChange={setMediaFile}
+                    file={mediaFile} onFileChange={handleMediaFile}
                     url={mediaUrl} onUrlChange={setMediaUrl}
+                    error={mediaError}
                 />
                 <MediaField
                     label="Megoldás médiatartalma"
                     mode={revealMode} onModeChange={setRevealMode}
-                    file={revealFile} onFileChange={setRevealFile}
+                    file={revealFile} onFileChange={handleRevealFile}
                     url={revealUrl} onUrlChange={setRevealUrl}
+                    error={revealError}
                 />
 
                 <div>

@@ -50,11 +50,12 @@ function isVideoPath(path: string): boolean {
     return /\.(mp4|webm)$/i.test(path);
 }
 
-function MediaField({ label, mode, onModeChange, file, onFileChange, url, onUrlChange, existingPath, removeExisting, onRemoveChange }: {
+function MediaField({ label, mode, onModeChange, file, onFileChange, url, onUrlChange, existingPath, removeExisting, onRemoveChange, error }: {
     label: string; mode: MediaMode; onModeChange: (m: MediaMode) => void;
     file: File | null; onFileChange: (f: File | null) => void;
     url: string; onUrlChange: (u: string) => void;
     existingPath?: string; removeExisting?: boolean; onRemoveChange?: (v: boolean) => void;
+    error?: string;
 }) {
     return (
         <div>
@@ -102,7 +103,7 @@ function MediaField({ label, mode, onModeChange, file, onFileChange, url, onUrlC
                             <input type="file" accept="image/*,video/*"
                                 onChange={e => onFileChange(e.target.files?.[0] ?? null)}
                                 className="block w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-                            <p className="text-xs text-slate-400 mt-1">Max. 50 MB · jpg, png, gif, webp, mp4, webm</p>
+                            <p className="text-xs text-slate-400 mt-1">Max. 20 MB · jpg, png, gif, webp, mp4, webm</p>
                         </>
                     )}
                     {mode === 'url' && (
@@ -111,6 +112,7 @@ function MediaField({ label, mode, onModeChange, file, onFileChange, url, onUrlC
                     )}
                 </>
             )}
+            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
         </div>
     );
 }
@@ -146,6 +148,25 @@ export default function StepEdit({ training, step }: Props) {
     const [revealFile, setRevealFile] = useState<File | null>(null);
     const [revealUrl, setRevealUrl] = useState('');
     const [removeReveal, setRemoveReveal] = useState(false);
+    const [mediaError, setMediaError] = useState('');
+    const [revealError, setRevealError] = useState('');
+
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+
+    function handleMediaFile(f: File | null) {
+        setMediaError('');
+        if (f && f.size > MAX_FILE_SIZE) { setMediaError('A fájl mérete meghaladja a 20 MB-os limitet.'); return; }
+        if (f && !ALLOWED_TYPES.includes(f.type)) { setMediaError('Nem támogatott fájlformátum.'); return; }
+        setMediaFile(f);
+    }
+
+    function handleRevealFile(f: File | null) {
+        setRevealError('');
+        if (f && f.size > MAX_FILE_SIZE) { setRevealError('A fájl mérete meghaladja a 20 MB-os limitet.'); return; }
+        if (f && !ALLOWED_TYPES.includes(f.type)) { setRevealError('Nem támogatott fájlformátum.'); return; }
+        setRevealFile(f);
+    }
 
     function changeType(type: string) {
         setQtype(type);
@@ -221,7 +242,13 @@ export default function StepEdit({ training, step }: Props) {
         router.post(
             route('admin.trainings.steps.update', [training.id, step.id]),
             formData as unknown as Record<string, unknown>,
-            { onFinish: () => setProcessing(false) }
+            {
+                onError: (errors) => {
+                    if (errors.media) setMediaError(errors.media);
+                    if (errors.reveal_media) setRevealError(errors.reveal_media);
+                },
+                onFinish: () => setProcessing(false),
+            }
         );
     }
 
@@ -254,20 +281,22 @@ export default function StepEdit({ training, step }: Props) {
                         <MediaField
                             label="Médiatartalom (kép/videó)"
                             mode={mediaMode} onModeChange={setMediaMode}
-                            file={mediaFile} onFileChange={setMediaFile}
+                            file={mediaFile} onFileChange={handleMediaFile}
                             url={mediaUrl} onUrlChange={setMediaUrl}
                             existingPath={step.media_path}
                             removeExisting={removeMedia}
                             onRemoveChange={setRemoveMedia}
+                            error={mediaError}
                         />
                         <MediaField
                             label="Megoldás médiatartalma"
                             mode={revealMode} onModeChange={setRevealMode}
-                            file={revealFile} onFileChange={setRevealFile}
+                            file={revealFile} onFileChange={handleRevealFile}
                             url={revealUrl} onUrlChange={setRevealUrl}
                             existingPath={step.reveal_media_path}
                             removeExisting={removeReveal}
                             onRemoveChange={setRemoveReveal}
+                            error={revealError}
                         />
 
                         <div>
