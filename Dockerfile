@@ -10,7 +10,7 @@ RUN npm run build
 FROM php:8.3-fpm-alpine
 
 RUN apk add --no-cache nginx sqlite-dev libzip-dev oniguruma-dev supervisor \
-    && docker-php-ext-install pdo pdo_sqlite mbstring bcmath zip \
+    && docker-php-ext-install pdo pdo_sqlite mbstring bcmath zip pcntl \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 WORKDIR /app
