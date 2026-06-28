@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     DndContext, closestCenter, KeyboardSensor, PointerSensor,
@@ -558,13 +559,10 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                 </div>
             </div>
 
-            {/* Modal */}
-            {(selected || closing) && selected && (
-                <div
-                    className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4"
-                    onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
-                >
-                    {/* Backdrop */}
+            {/* Modal – rendered via portal to escape stacking context */}
+            {(selected || closing) && selected && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4">
+                    {/* Backdrop – clickable */}
                     <div
                         className="absolute inset-0 transition-opacity duration-300"
                         style={{
@@ -573,6 +571,7 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                             WebkitBackdropFilter: 'blur(6px)',
                             opacity: visible ? 1 : 0,
                         }}
+                        onClick={closeModal}
                     />
                     {/* Panel – light */}
                     <div
@@ -582,6 +581,7 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                             opacity: visible ? 1 : 0,
                             transform: visible ? 'translateY(0) scale(1)' : 'translateY(32px) scale(0.97)',
                         }}
+                        onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
                         <div className="flex items-start gap-4 px-6 pt-6 pb-4 border-b border-slate-100">
@@ -656,7 +656,8 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </>
     );
