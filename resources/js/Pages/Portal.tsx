@@ -20,6 +20,8 @@ interface LocationInfo {
     description?: string | null;
     icon?: string | null;
     logo_path?: string | null;
+    responsible_person?: string | null;
+    email?: string | null;
     itemsCount: number;
 }
 
@@ -506,36 +508,28 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
 
     return (
         <>
-            {/* Widget */}
-            <div className="relative overflow-hidden rounded-2xl mb-6 shadow-xl" style={{ background: 'linear-gradient(135deg,#0d1829 0%,#0f1f3d 40%,#0d1829 100%)' }}>
-                {/* Grid pattern */}
-                <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
-                {/* Glow */}
-                <div className="absolute -top-12 -left-12 w-48 h-48 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"/>
-                <div className="absolute -bottom-8 -right-8 w-36 h-36 bg-indigo-700/15 rounded-full blur-3xl pointer-events-none"/>
-
-                <div className="relative z-10 px-5 pt-4 pb-2 flex items-center justify-between border-b border-white/5">
+            {/* Widget – light theme */}
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-6">
+                <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Helyszínek a házban</span>
                     </div>
-                    <span className="text-xs text-slate-500 tabular-nums">{locations.length} helyszín</span>
+                    <span className="text-xs text-slate-400 tabular-nums">{locations.length} helyszín</span>
                 </div>
 
-                <div className="relative z-10 p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
                     {locations.map((loc) => (
                         <button
                             key={loc.id}
                             onClick={() => openModal(loc)}
-                            className="group relative text-left rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.09] hover:border-blue-400/40 transition-all duration-200 p-3.5 overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                            className="group relative text-left rounded-xl border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-200 transition-all duration-200 p-3.5 overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-400/40 shadow-sm hover:shadow-md"
                         >
-                            {/* Card glow on hover */}
-                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(59,130,246,0.15) 0%, transparent 60%)' }}/>
-                            <div className="relative z-10 flex flex-col gap-2">
+                            <div className="flex flex-col gap-2">
                                 {/* Icon */}
-                                <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0 overflow-hidden">
+                                <div className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
                                     {loc.logo_path ? (
                                         <img src={`/storage/${loc.logo_path}`} className="w-full h-full object-contain p-0.5" alt=""/>
                                     ) : loc.icon ? (
@@ -547,16 +541,15 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                                     )}
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-sm font-bold text-white leading-snug truncate group-hover:text-blue-200 transition-colors">{loc.name}</p>
-                                    <p className="text-xs text-slate-500 mt-0.5">{loc.itemsCount} tétel</p>
+                                    <p className="text-sm font-bold text-slate-800 leading-snug truncate group-hover:text-blue-700 transition-colors">{loc.name}</p>
+                                    <p className="text-xs text-slate-400 mt-0.5">{loc.itemsCount} tétel</p>
                                 </div>
-                                {/* Info badge */}
-                                {loc.description && (
-                                    <div className="flex items-center gap-1 mt-0.5">
-                                        <svg className="w-3 h-3 text-blue-400/70 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {(loc.description || loc.responsible_person) && (
+                                    <div className="flex items-center gap-1">
+                                        <svg className="w-3 h-3 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
-                                        <span className="text-[10px] text-blue-400/70 font-medium">Leírás</span>
+                                        <span className="text-[10px] text-blue-500 font-medium">Részletek</span>
                                     </div>
                                 )}
                             </div>
@@ -569,38 +562,30 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
             {(selected || closing) && selected && (
                 <div
                     className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4"
-                    style={{ perspective: '800px' }}
                     onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
                 >
                     {/* Backdrop */}
                     <div
                         className="absolute inset-0 transition-opacity duration-300"
                         style={{
-                            background: 'rgba(9,14,30,0.75)',
-                            backdropFilter: 'blur(8px)',
-                            WebkitBackdropFilter: 'blur(8px)',
+                            background: 'rgba(15,23,42,0.6)',
+                            backdropFilter: 'blur(6px)',
+                            WebkitBackdropFilter: 'blur(6px)',
                             opacity: visible ? 1 : 0,
                         }}
                     />
-                    {/* Panel */}
+                    {/* Panel – light */}
                     <div
-                        className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-2xl"
+                        className="relative w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200"
                         style={{
-                            background: 'linear-gradient(135deg,#0d1829 0%,#111f3c 60%,#0d1829 100%)',
-                            border: '1px solid rgba(255,255,255,0.1)',
                             transition: 'opacity 0.3s cubic-bezier(.16,1,.3,1), transform 0.35s cubic-bezier(.16,1,.3,1)',
                             opacity: visible ? 1 : 0,
                             transform: visible ? 'translateY(0) scale(1)' : 'translateY(32px) scale(0.97)',
                         }}
                     >
-                        {/* Grid bg */}
-                        <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
-                        {/* Glow top */}
-                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-32 bg-blue-600/25 rounded-full blur-3xl pointer-events-none"/>
-
                         {/* Header */}
-                        <div className="relative z-10 flex items-start gap-4 px-6 pt-6 pb-4 border-b border-white/8">
-                            <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 overflow-hidden mt-0.5">
+                        <div className="flex items-start gap-4 px-6 pt-6 pb-4 border-b border-slate-100">
+                            <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden mt-0.5">
                                 {selected.logo_path ? (
                                     <img src={`/storage/${selected.logo_path}`} className="w-full h-full object-contain p-1" alt=""/>
                                 ) : selected.icon ? (
@@ -612,13 +597,13 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                                 )}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">Helyszín</p>
-                                <h2 className="text-xl font-extrabold text-white leading-tight">{selected.name}</h2>
-                                <p className="text-xs text-slate-500 mt-1">{selected.itemsCount} regisztrált kulcs / kártya</p>
+                                <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1">Helyszín</p>
+                                <h2 className="text-xl font-extrabold text-slate-900 leading-tight">{selected.name}</h2>
+                                <p className="text-xs text-slate-400 mt-1">{selected.itemsCount} regisztrált kulcs / kártya</p>
                             </div>
                             <button
                                 onClick={closeModal}
-                                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0 mt-0.5"
+                                className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors shrink-0 mt-0.5"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
@@ -627,19 +612,45 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                         </div>
 
                         {/* Body */}
-                        <div className="relative z-10 px-6 py-5">
-                            {selected.description ? (
-                                <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">{selected.description}</p>
-                            ) : (
-                                <p className="text-sm text-slate-500 italic">Nincs leírás megadva ehhez a helyszínhez.</p>
+                        <div className="px-6 py-5 space-y-4">
+                            {selected.description && (
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Leírás</p>
+                                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{selected.description}</p>
+                                </div>
+                            )}
+                            {selected.responsible_person && (
+                                <div className="flex items-center gap-3 py-2.5 px-3 bg-slate-50 rounded-xl border border-slate-100">
+                                    <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                    <div>
+                                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Felelős személy</p>
+                                        <p className="text-sm font-semibold text-slate-700">{selected.responsible_person}</p>
+                                    </div>
+                                </div>
+                            )}
+                            {selected.email && (
+                                <div className="flex items-center gap-3 py-2.5 px-3 bg-slate-50 rounded-xl border border-slate-100">
+                                    <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                    <div>
+                                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Email cím</p>
+                                        <a href={`mailto:${selected.email}`} className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">{selected.email}</a>
+                                    </div>
+                                </div>
+                            )}
+                            {!selected.description && !selected.responsible_person && !selected.email && (
+                                <p className="text-sm text-slate-400 italic">Nincs további információ ehhez a helyszínhez.</p>
                             )}
                         </div>
 
                         {/* Footer */}
-                        <div className="relative z-10 px-6 pb-6 flex justify-end">
+                        <div className="px-6 pb-6 flex justify-end border-t border-slate-100 pt-4">
                             <button
                                 onClick={closeModal}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 hover:text-white text-sm font-medium transition-colors"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-600 hover:text-slate-800 text-sm font-medium transition-colors"
                             >
                                 Bezárás
                             </button>
