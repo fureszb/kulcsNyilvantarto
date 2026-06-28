@@ -66,11 +66,25 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
         };
     }, []);
 
-    // fullscreen change
+    // fullscreen change (standard + webkit prefix for Safari <16.4 + iOS native)
     useEffect(() => {
-        const fn = () => setFullscreen(!!document.fullscreenElement);
+        const v = videoRef.current;
+        const fn = () => {
+            const el = document.fullscreenElement || (document as any).webkitFullscreenElement;
+            setFullscreen(!!el);
+        };
+        const onBegin = () => setFullscreen(true);
+        const onEnd   = () => setFullscreen(false);
         document.addEventListener('fullscreenchange', fn);
-        return () => document.removeEventListener('fullscreenchange', fn);
+        document.addEventListener('webkitfullscreenchange', fn);
+        v?.addEventListener('webkitbeginfullscreen', onBegin);
+        v?.addEventListener('webkitendfullscreen', onEnd);
+        return () => {
+            document.removeEventListener('fullscreenchange', fn);
+            document.removeEventListener('webkitfullscreenchange', fn);
+            v?.removeEventListener('webkitbeginfullscreen', onBegin);
+            v?.removeEventListener('webkitendfullscreen', onEnd);
+        };
     }, []);
 
     // controls auto-hide
@@ -122,8 +136,24 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
     };
     const toggleFs = () => {
         const c = containerRef.current;
-        if (!c) return;
-        document.fullscreenElement ? document.exitFullscreen() : c.requestFullscreen().catch(() => {});
+        const v = videoRef.current;
+        if (!c || !v) return;
+        try {
+            const fsEl = document.fullscreenElement || (document as any).webkitFullscreenElement;
+            if (fsEl) {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen();
+            } else if (c.requestFullscreen) {
+                c.requestFullscreen().catch(() => {});
+            } else if ((c as any).webkitRequestFullscreen) {
+                (c as any).webkitRequestFullscreen();
+            } else if ((v as any).webkitEnterFullscreen) {
+                // iOS Safari: native video fullscreen
+                (v as any).webkitEnterFullscreen();
+            }
+        } catch {
+            // fullscreen not supported
+        }
     };
 
     const fmt = (s: number) => {
