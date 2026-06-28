@@ -9,7 +9,7 @@
     @routes
     <script>
     window.__REVERB_CONFIG__ = {
-        key:     '{{ config("broadcasting.connections.reverb.app_key") }}',
+        key:     '{{ config("broadcasting.connections.reverb.key") }}',
         wsHost:  '{{ config("reverb.servers.reverb.hostname") }}',
         wsPort:   {{ (int) config("reverb.apps.apps.0.options.port", 443) }},
         forceTLS: {{ config("reverb.apps.apps.0.options.scheme", "https") === "https" ? "true" : "false" }}
