@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Link, useForm } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { Link, useForm, router, usePage } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-import type { PmMessage, PmMessageReply, PaginatedData } from '../../types';
+import { getEcho } from '../../echo';
+import type { PmMessage, PmMessageReply, PaginatedData, PageProps } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -72,7 +73,15 @@ function ReplyList({ replies }: { replies: PmMessageReply[] }) {
 }
 
 export default function MessagesIndex({ messages }: Props) {
+    const { props: { auth, tenant } } = usePage<PageProps>();
     const [openReplyId, setOpenReplyId] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (!tenant?.slug || !auth.user?.id) return;
+        const channel = getEcho(tenant.slug).private(`tenant.${tenant.slug}.${auth.user.id}`);
+        channel.listen('.new-pm-message', () => router.reload({ only: ['messages'] }));
+        return () => { channel.stopListening('.new-pm-message'); };
+    }, [tenant?.slug, auth.user?.id]);
 
     return (
         <AppLayout title="PM üzenetek">

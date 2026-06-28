@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm, router, Link } from '@inertiajs/react';
+import { getEcho } from '../../echo';
 import PmLayout from '../../Layouts/PmLayout';
 import type { PmMessage, PmMessageReply, TenantUser, PaginatedData, PageProps } from '../../types';
 import { usePage } from '@inertiajs/react';
@@ -213,11 +214,19 @@ function PmReplyForm({ messageId, onDone }: { messageId: number; onDone: () => v
 }
 
 export default function PmMessages({ messages, workers, filters }: Props) {
+    const { props: { auth, tenant } } = usePage<PageProps>();
     const [sendToAll, setSendToAll] = useState(true);
     const [search, setSearch]       = useState('');
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [openReplyId, setOpenReplyId] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (!tenant?.slug || !auth.user?.id) return;
+        const channel = getEcho(tenant.slug).private(`tenant.${tenant.slug}.${auth.user.id}`);
+        channel.listen('.new-pm-reply', () => router.reload({ only: ['messages'] }));
+        return () => { channel.stopListening('.new-pm-reply'); };
+    }, [tenant?.slug, auth.user?.id]);
 
     const [dateFrom, setDateFrom] = useState(filters?.date_from ?? '');
     const [dateTo, setDateTo]     = useState(filters?.date_to   ?? '');
