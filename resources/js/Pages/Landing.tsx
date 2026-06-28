@@ -279,14 +279,14 @@ function SuperAdminCard({ theme }: { theme: Theme }) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s',
                 boxShadow: hovered ? '0 0 14px rgba(148,163,184,0.1)' : 'none',
             }}>
-                <svg width="21" height="21" fill="none" stroke="#5a7090" viewBox="0 0 24 24">
+                <svg width="21" height="21" fill="none" stroke="#8aa0b8" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75"
                         d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                 </svg>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '2px', color: '#c8d8e8' }}>Super Admin</p>
-                <p style={{ fontSize: '12px', color: '#3a5060' }}>Szervezetek és rendszerbeállítások kezelése</p>
+                <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '2px', color: '#e2eaf2' }}>Super Admin</p>
+                <p style={{ fontSize: '12px', color: '#8aa0b8' }}>Szervezetek és rendszerbeállítások kezelése</p>
             </div>
             <div style={{
                 width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
