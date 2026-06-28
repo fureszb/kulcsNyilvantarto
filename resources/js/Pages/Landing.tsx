@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import type { TenantRecord } from '../types';
 
@@ -90,37 +90,6 @@ function CortexSplash({ onDone }: { onDone: () => void }) {
     );
 }
 
-/* ─── Theme toggle ─── */
-function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }) {
-    const isDark = theme === 'dark';
-    return (
-        <button
-            onClick={onToggle}
-            title={isDark ? 'Váltás világos témára' : 'Váltás sötét témára'}
-            style={{
-                position: 'fixed', top: '16px', right: '18px', zIndex: 200,
-                width: '38px', height: '38px', borderRadius: '11px', border: 'none',
-                background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
-                color: isDark ? '#94a3b8' : '#64748b',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', transition: 'all 0.2s',
-                boxShadow: isDark ? '0 0 0 1px rgba(255,255,255,0.1)' : '0 0 0 1px rgba(0,0,0,0.09)',
-            }}
-        >
-            {isDark ? (
-                <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
-                </svg>
-            ) : (
-                <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                </svg>
-            )}
-        </button>
-    );
-}
 
 /* ─── Tenant card ─── */
 function TenantCard({ tenant, theme, index }: { tenant: TenantRecord; theme: Theme; index: number }) {
@@ -308,20 +277,7 @@ function SuperAdminCard({ theme }: { theme: Theme }) {
 export default function Landing({ tenants }: Props) {
     const currentYear = new Date().getFullYear();
     const [splashDone, setSplashDone] = useState(false);
-    const [theme, setTheme] = useState<Theme>('light');
-
-    useEffect(() => {
-        const stored = localStorage.getItem('landing-theme') as Theme | null;
-        if (stored === 'dark' || stored === 'light') setTheme(stored);
-    }, []);
-
-    const toggleTheme = useCallback(() => {
-        setTheme(prev => {
-            const next = prev === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('landing-theme', next);
-            return next;
-        });
-    }, []);
+    const [theme] = useState<Theme>('light');
 
     const isDark = theme === 'dark';
 
@@ -336,7 +292,6 @@ export default function Landing({ tenants }: Props) {
         <>
             <style>{STYLES}</style>
             {!splashDone && <CortexSplash onDone={() => setSplashDone(true)} />}
-            <ThemeToggle theme={theme} onToggle={toggleTheme} />
 
             <div style={{
                 opacity: splashDone ? 1 : 0,
