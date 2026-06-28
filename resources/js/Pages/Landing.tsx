@@ -260,46 +260,42 @@ function SuperAdminCard({ theme }: { theme: Theme }) {
             className="landing-card-enter"
             style={{
                 display: 'flex', alignItems: 'center', gap: '14px', textDecoration: 'none',
-                background: isDark
-                    ? hovered ? 'linear-gradient(135deg, #111827, #0d1520)' : 'linear-gradient(135deg, #0b1120, #08101a)'
-                    : hovered ? 'linear-gradient(135deg, #f1f5f9, #e8edf5)' : 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-                border: isDark
-                    ? `1px solid ${hovered ? 'rgba(148,163,184,0.2)' : 'rgba(255,255,255,0.08)'}`
-                    : `1px solid ${hovered ? '#cbd5e1' : '#dde5f0'}`,
+                background: hovered ? 'linear-gradient(135deg, #111827, #0d1520)' : 'linear-gradient(135deg, #0b1120, #08101a)',
+                border: `1px solid ${hovered ? 'rgba(148,163,184,0.2)' : 'rgba(255,255,255,0.08)'}`,
                 borderRadius: '18px', padding: '17px 20px',
                 transition: 'all 0.25s cubic-bezier(0.22,1,0.36,1)',
                 transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
                 boxShadow: hovered
-                    ? isDark ? '0 14px 36px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' : '0 10px 28px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)'
-                    : isDark ? '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)' : '0 2px 6px rgba(0,0,0,0.05)',
+                    ? '0 14px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)'
+                    : '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)',
                 cursor: 'pointer',
                 animationDelay: '200ms',
             }}
         >
             <div style={{
                 width: '44px', height: '44px', borderRadius: '13px', flexShrink: 0,
-                background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(30,41,59,0.07)',
-                border: `1px solid ${isDark ? 'rgba(255,255,255,0.09)' : 'rgba(30,41,59,0.12)'}`,
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.09)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s',
-                boxShadow: hovered && isDark ? '0 0 14px rgba(148,163,184,0.1)' : 'none',
+                boxShadow: hovered ? '0 0 14px rgba(148,163,184,0.1)' : 'none',
             }}>
-                <svg width="21" height="21" fill="none" stroke={isDark ? '#5a7090' : '#78909c'} viewBox="0 0 24 24">
+                <svg width="21" height="21" fill="none" stroke="#5a7090" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75"
                         d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                 </svg>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '2px', color: isDark ? '#c8d8e8' : '#1e293b' }}>Super Admin</p>
-                <p style={{ fontSize: '12px', color: isDark ? '#3a5060' : '#8090a0' }}>Szervezetek és rendszerbeállítások kezelése</p>
+                <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '2px', color: '#c8d8e8' }}>Super Admin</p>
+                <p style={{ fontSize: '12px', color: '#3a5060' }}>Szervezetek és rendszerbeállítások kezelése</p>
             </div>
             <div style={{
                 width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
-                background: hovered ? isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0' : 'transparent',
-                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : '#dde5f0'}`,
+                background: hovered ? 'rgba(255,255,255,0.1)' : 'transparent',
+                border: '1px solid rgba(255,255,255,0.08)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s',
             }}>
                 <svg width="12" height="12" fill="none"
-                    stroke={hovered ? isDark ? '#c8d8e8' : '#475569' : isDark ? '#3a5070' : '#94a3b8'}
+                    stroke={hovered ? '#c8d8e8' : '#3a5070'}
                     viewBox="0 0 24 24" style={{ transition: 'stroke 0.25s' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"/>
                 </svg>
