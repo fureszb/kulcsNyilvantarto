@@ -26,15 +26,26 @@ export default function ExamsIndex({ exams }: Props) {
         <AdminLayout
             title="Vizsgák"
             headerActions={
-                <Link
-                    href={route('admin.exams.create')}
-                    className="btn-primary text-sm flex items-center gap-1.5"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Új vizsga
-                </Link>
+                <div className="flex items-center gap-2">
+                    <Link
+                        href={route('admin.exam-results.index')}
+                        className="btn-secondary text-sm flex items-center gap-1.5"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Kitöltések
+                    </Link>
+                    <Link
+                        href={route('admin.exams.create')}
+                        className="btn-primary text-sm flex items-center gap-1.5"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Új vizsga
+                    </Link>
+                </div>
             }
         >
             {exams.length === 0 ? (

@@ -85,9 +85,10 @@ Route::prefix('{tenant}')
             Route::post('/training/{training}/exam/result',  [TrainingController::class, 'sendResult'])->name('training.exam.result');
 
             // Vizsgák
-            Route::get('/exam',                    [ExamController::class, 'index'])->name('exam.index');
-            Route::get('/exam/{exam}',             [ExamController::class, 'show'])->name('exam.show');
-            Route::post('/exam/{exam}/result',     [ExamController::class, 'submitAnswers'])->name('exam.result');
+            Route::get('/exam',                         [ExamController::class, 'index'])->name('exam.index');
+            Route::get('/exam-results/{result}',        [ExamController::class, 'showResult'])->name('exam.result.show');
+            Route::get('/exam/{exam}',                  [ExamController::class, 'show'])->name('exam.show');
+            Route::post('/exam/{exam}/result',          [ExamController::class, 'submitAnswers'])->name('exam.result');
 
             // Napi jelentés
             Route::get('/security',                        [SecurityReportController::class, 'index'])->name('security.index');
@@ -182,6 +183,8 @@ Route::prefix('{tenant}')
                 Route::delete('trainings/{training}/steps/{step}',       [TrainingStepController::class, 'destroy'])->name('trainings.steps.destroy');
 
                 // Vizsgák (admin)
+                Route::get('exam-results',          [AdminExamController::class, 'results'])->name('admin.exam-results.index');
+                Route::get('exam-results/{result}', [AdminExamController::class, 'resultShow'])->name('admin.exam-results.show');
                 Route::resource('exams', AdminExamController::class)->except(['show']);
                 Route::post('exams/{exam}/import',               [AdminExamController::class, 'importFromTraining'])->name('exams.import');
                 Route::get('exams/{exam}/steps',                 [ExamStepController::class, 'index'])->name('exams.steps.index');

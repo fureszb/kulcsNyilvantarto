@@ -15,7 +15,29 @@ class ExamController extends Controller
     public function index()
     {
         $exams = Exam::where('is_active', true)->orderBy('sort_order')->orderBy('id')->get();
-        return Inertia::render('Exam/Index', ['exams' => $exams]);
+        $user  = Auth::guard('tenant')->user();
+
+        $myResults = collect();
+        if ($user) {
+            $myResults = ExamResult::with('exam:id,title')
+                ->where('user_id', $user->id)
+                ->orderByDesc('completed_at')
+                ->get()
+                ->map(fn($r) => [
+                    'id'             => $r->id,
+                    'exam_title'     => $r->exam?->title ?? '—',
+                    'score'          => $r->first_try_count,
+                    'total'          => $r->total_steps,
+                    'score_percent'  => $r->scorePercent(),
+                    'completed_at'   => $r->completed_at?->format('Y. m. d. H:i'),
+                    'tab_violations' => $r->tab_violations ?? 0,
+                ]);
+        }
+
+        return Inertia::render('Exam/Index', [
+            'exams'     => $exams,
+            'myResults' => $myResults,
+        ]);
     }
 
     public function show(Exam $exam)
@@ -180,7 +202,7 @@ class ExamController extends Controller
             'user_id'            => $user?->id,
             'name'               => $user?->name ?? 'Vendég',
             'email'              => $user?->email,
-            'results'            => array_map(fn($r) => ['question' => $r['question'], 'correct' => $r['is_correct']], $results),
+            'results'            => $results,
             'first_try_count'    => $correctCount,
             'total_steps'        => $totalSteps,
             'completed_at'       => now(),
@@ -202,6 +224,34 @@ class ExamController extends Controller
             'score'   => $correctCount,
             'total'   => $totalSteps,
             'results' => $results,
+        ]);
+    }
+
+    public function showResult(ExamResult $result)
+    {
+        $user = Auth::guard('tenant')->user();
+
+        if (!$user) abort(403);
+        if ($user->role !== 'admin' && $result->user_id !== $user->id) abort(403);
+
+        $result->load('exam:id,title');
+
+        return Inertia::render('Exam/Result', [
+            'result' => [
+                'id'                  => $result->id,
+                'exam_title'          => $result->exam?->title ?? '—',
+                'name'                => $result->name,
+                'email'               => $result->email,
+                'score'               => $result->first_try_count,
+                'total'               => $result->total_steps,
+                'score_percent'       => $result->scorePercent(),
+                'completed_at'        => $result->completed_at?->format('Y. m. d. H:i'),
+                'tab_violations'      => $result->tab_violations ?? 0,
+                'ip_address'          => $result->ip_address,
+                'time_taken_seconds'  => $result->time_taken_seconds,
+                'results'             => $result->results ?? [],
+            ],
+            'isAdmin' => $user->role === 'admin',
         ]);
     }
 }
