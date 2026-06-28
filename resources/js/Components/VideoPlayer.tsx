@@ -23,7 +23,7 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
     const [showCtrl,    setShowCtrl]    = useState(true);
     const [showVol,     setShowVol]     = useState(false);
     const [fullscreen,  setFullscreen]  = useState(false);
-    const [loading,     setLoading]     = useState(true);
+    const [loading,     setLoading]     = useState(false);
 
     // autoplay when ≥50% visible
     useEffect(() => {
@@ -55,14 +55,15 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
         const onDur  = () => setDuration(v.duration);
         const onWait = () => setLoading(true);
         const onCan  = () => setLoading(false);
+        const onLoad = () => setLoading(false);
         const onVol  = () => { setVolume(v.volume); setMuted(v.muted); };
         on('play', onPlay); on('pause', onPause); on('timeupdate', onTime);
         on('durationchange', onDur); on('waiting', onWait); on('canplay', onCan);
-        on('volumechange', onVol);
+        on('volumechange', onVol); on('loadeddata', onLoad);
         return () => {
             off('play', onPlay); off('pause', onPause); off('timeupdate', onTime);
             off('durationchange', onDur); off('waiting', onWait); off('canplay', onCan);
-            off('volumechange', onVol);
+            off('volumechange', onVol); off('loadeddata', onLoad);
         };
     }, []);
 
@@ -189,6 +190,7 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
                 src={src}
                 loop={loop}
                 playsInline
+                preload="metadata"
                 className={`block object-contain ${fullscreen ? 'w-full h-full' : `mx-auto ${maxHeight}`}`}
                 style={fullscreen ? undefined : { width: `${width}%` }}
             />
