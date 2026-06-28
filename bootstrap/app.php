@@ -48,22 +48,29 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // render() korábban fut — TokenMismatchException itt kezelhető megbízhatóan
+        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            if (! ($e instanceof \Illuminate\Session\TokenMismatchException)) {
+                return null;
+            }
+            if ($request->header('X-Inertia')) {
+                // Full-page reload session-írás nélkül (session lehet sérült)
+                return \Inertia\Inertia::location(url()->previous() ?: '/');
+            }
+            if (! $request->expectsJson()) {
+                return \Inertia\Inertia::render('Error', ['status' => 419])
+                    ->toResponse($request)
+                    ->setStatusCode(419);
+            }
+            return null;
+        });
+
+        // respond() a már generált response status code alapján kezeli a többi HTTP hibát
         $exceptions->respond(function (
             \Symfony\Component\HttpFoundation\Response $response,
             \Throwable $e,
             \Illuminate\Http\Request $request
         ) {
-            if ($e instanceof \Illuminate\Session\TokenMismatchException) {
-                if ($request->header('X-Inertia')) {
-                    return redirect()->back()->with('error', 'Az oldal munkamenete lejárt. Kérjük próbálja újra.');
-                }
-                if (! $request->expectsJson()) {
-                    return \Inertia\Inertia::render('Error', ['status' => 419])
-                        ->toResponse($request)
-                        ->setStatusCode(419);
-                }
-            }
-
             if (
                 in_array($response->getStatusCode(), [403, 404, 405])
                 && ! $request->expectsJson()
@@ -74,7 +81,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->toResponse($request)
                 ->setStatusCode($response->getStatusCode());
             }
-
             return $response;
         });
     })->create();
