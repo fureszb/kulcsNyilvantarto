@@ -76,12 +76,23 @@ export default function MessagesIndex({ messages }: Props) {
     const { props: { auth, tenant } } = usePage<PageProps>();
     const [openReplyId, setOpenReplyId] = useState<number | null>(null);
 
+    // WebSocket (instant if Reverb reachable)
     useEffect(() => {
         if (!tenant?.slug || !auth.user?.id) return;
-        const channel = getEcho(tenant.slug).private(`tenant.${tenant.slug}.${auth.user.id}`);
-        channel.listen('.new-pm-message', () => router.reload({ only: ['messages'] }));
-        return () => { channel.stopListening('.new-pm-message'); };
+        try {
+            const channel = getEcho(tenant.slug).private(`tenant.${tenant.slug}.${auth.user.id}`);
+            channel.listen('.new-pm-message', () => router.reload({ only: ['messages'] }));
+            return () => { channel.stopListening('.new-pm-message'); };
+        } catch { /* WebSocket unavailable, polling fallback below */ }
     }, [tenant?.slug, auth.user?.id]);
+
+    // Polling fallback — fires every 5s while tab is visible
+    useEffect(() => {
+        const id = setInterval(() => {
+            if (document.visibilityState === 'visible') router.reload({ only: ['messages'] });
+        }, 5000);
+        return () => clearInterval(id);
+    }, []);
 
     return (
         <AppLayout title="PM üzenetek">

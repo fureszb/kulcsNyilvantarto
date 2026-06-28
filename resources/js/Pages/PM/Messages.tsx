@@ -221,12 +221,23 @@ export default function PmMessages({ messages, workers, filters }: Props) {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [openReplyId, setOpenReplyId] = useState<number | null>(null);
 
+    // WebSocket (instant if Reverb reachable)
     useEffect(() => {
         if (!tenant?.slug || !auth.user?.id) return;
-        const channel = getEcho(tenant.slug).private(`tenant.${tenant.slug}.${auth.user.id}`);
-        channel.listen('.new-pm-reply', () => router.reload({ only: ['messages'] }));
-        return () => { channel.stopListening('.new-pm-reply'); };
+        try {
+            const channel = getEcho(tenant.slug).private(`tenant.${tenant.slug}.${auth.user.id}`);
+            channel.listen('.new-pm-reply', () => router.reload({ only: ['messages'] }));
+            return () => { channel.stopListening('.new-pm-reply'); };
+        } catch { /* WebSocket unavailable, polling fallback below */ }
     }, [tenant?.slug, auth.user?.id]);
+
+    // Polling fallback — fires every 5s while tab is visible
+    useEffect(() => {
+        const id = setInterval(() => {
+            if (document.visibilityState === 'visible') router.reload({ only: ['messages'] });
+        }, 5000);
+        return () => clearInterval(id);
+    }, []);
 
     const [dateFrom, setDateFrom] = useState(filters?.date_from ?? '');
     const [dateTo, setDateTo]     = useState(filters?.date_to   ?? '');
