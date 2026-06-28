@@ -9,10 +9,11 @@ interface Props {
 }
 
 export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh]', loop = true, className = '' }: Props) {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const videoRef     = useRef<HTMLVideoElement>(null);
-    const progressRef  = useRef<HTMLDivElement>(null);
-    const hideTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const containerRef  = useRef<HTMLDivElement>(null);
+    const videoRef      = useRef<HTMLVideoElement>(null);
+    const progressRef   = useRef<HTMLDivElement>(null);
+    const hideTimer     = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const playIntentRef = useRef(false); // true only after user gesture or successful autoplay
 
     const [playing,     setPlaying]     = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -33,7 +34,7 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
         const obs = new IntersectionObserver(
             ([entry]) => {
                 if (entry.intersectionRatio >= 0.5) {
-                    v.play().catch(() => setLoading(false));
+                    v.play().catch(() => { playIntentRef.current = false; setLoading(false); });
                 } else {
                     v.pause();
                 }
@@ -50,15 +51,15 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
         if (!v) return;
         const on = (ev: string, fn: () => void) => v.addEventListener(ev, fn);
         const off = (ev: string, fn: () => void) => v.removeEventListener(ev, fn);
-        const onPlay  = () => setPlaying(true);
+        const onPlay  = () => { setPlaying(true); playIntentRef.current = true; };
         const onPause = () => setPlaying(false);
         const onTime  = () => {
             setCurrentTime(v.currentTime);
             if (v.buffered.length) setBuffered(v.buffered.end(v.buffered.length - 1));
         };
         const onDur  = () => setDuration(v.duration);
-        // only show spinner when actively buffering during real playback
-        const onWait    = () => setLoading(true);
+        // only show spinner when actively buffering during real playback (not during blocked autoplay)
+        const onWait    = () => { if (playIntentRef.current) setLoading(true); };
         const onCan     = () => setLoading(false);
         const onLoad    = () => setLoading(false);
         // iOS: stalled/suspend fire when the browser stops trying to load without user gesture
@@ -140,7 +141,8 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
         if (playing) {
             v.pause();
         } else {
-            v.play().catch(() => setLoading(false));
+            playIntentRef.current = true;
+            v.play().catch(() => { playIntentRef.current = false; setLoading(false); });
         }
     };
     const toggleMute = () => { if (videoRef.current) videoRef.current.muted = !videoRef.current.muted; };
