@@ -612,13 +612,7 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                         </div>
 
                         {/* Body */}
-                        <div className="px-6 py-5 space-y-4">
-                            {selected.description && (
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Leírás</p>
-                                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{selected.description}</p>
-                                </div>
-                            )}
+                        <div className="px-6 py-5 space-y-3">
                             {selected.responsible_person && (
                                 <div className="flex items-center gap-3 py-2.5 px-3 bg-slate-50 rounded-xl border border-slate-100">
                                     <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -638,6 +632,17 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                                     <div>
                                         <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Email cím</p>
                                         <a href={`mailto:${selected.email}`} className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">{selected.email}</a>
+                                    </div>
+                                </div>
+                            )}
+                            {selected.description && (
+                                <div className="flex items-start gap-3 py-2.5 px-3 bg-slate-50 rounded-xl border border-slate-100">
+                                    <svg className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-1">Leírás</p>
+                                        <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{selected.description}</p>
                                     </div>
                                 </div>
                             )}
