@@ -128,8 +128,8 @@ export default function LocationShow({ location, checks, authUser }: Props) {
                             const total = check.check_items_count ?? 0;
                             const checked = check.checked_count ?? 0;
                             const pct = total > 0 ? Math.round((checked / total) * 100) : 0;
-                            const allOk = pct === 100;
-                            const noneOk = pct === 0;
+                            const allOk = total > 0 && pct === 100;
+                            const noItems = total === 0;
 
                             return (
                                 <div key={check.id} className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
@@ -139,7 +139,7 @@ export default function LocationShow({ location, checks, authUser }: Props) {
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                                             allOk
                                                 ? 'bg-emerald-50 border border-emerald-100'
-                                                : noneOk
+                                                : noItems
                                                 ? 'bg-slate-100 border border-slate-200'
                                                 : 'bg-amber-50 border border-amber-100'
                                         }`}>
@@ -147,7 +147,7 @@ export default function LocationShow({ location, checks, authUser }: Props) {
                                                 <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                            ) : noneOk ? (
+                                            ) : noItems ? (
                                                 <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
@@ -167,21 +167,17 @@ export default function LocationShow({ location, checks, authUser }: Props) {
                                                 <span className="text-xs text-slate-400">
                                                     {new Date(check.created_at).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
-                                                {canSeeAll && (
-                                                    <span className="text-xs bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-medium">
-                                                        {check.checked_by}
-                                                    </span>
-                                                )}
                                             </div>
+                                            <div className="text-xs text-slate-500 mt-0.5">{check.checked_by}</div>
                                             {/* Progress bar */}
                                             <div className="flex items-center gap-2.5 mt-2">
                                                 <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden max-w-[160px]">
                                                     <div
-                                                        className={`h-full rounded-full transition-all ${allOk ? 'bg-emerald-500' : noneOk ? 'bg-slate-300' : 'bg-amber-400'}`}
+                                                        className={`h-full rounded-full transition-all ${allOk ? 'bg-emerald-500' : noItems ? 'bg-slate-300' : 'bg-amber-400'}`}
                                                         style={{ width: `${pct}%` }}
                                                     />
                                                 </div>
-                                                <span className={`text-xs font-semibold whitespace-nowrap ${allOk ? 'text-emerald-600' : noneOk ? 'text-slate-400' : 'text-amber-600'}`}>
+                                                <span className={`text-xs font-semibold whitespace-nowrap ${allOk ? 'text-emerald-600' : noItems ? 'text-slate-400' : 'text-amber-600'}`}>
                                                     {checked}/{total} ({pct}%)
                                                 </span>
                                             </div>

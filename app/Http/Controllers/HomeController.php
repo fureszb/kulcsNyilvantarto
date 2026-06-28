@@ -67,7 +67,10 @@ class HomeController extends Controller
 
         $authUser = Auth::guard('tenant')->user();
 
-        $checks = Check::with('checkItems')
+        $checks = Check::withCount([
+                'checkItems as check_items_count',
+                'checkItems as checked_count' => fn($q) => $q->where('is_checked', true),
+            ])
             ->where('location_id', $location->id)
             ->when(
                 !$authUser->isAdmin() && !$authUser->isPropertyManager(),
