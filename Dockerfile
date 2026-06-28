@@ -16,7 +16,7 @@ RUN apk add --no-cache nginx sqlite-dev libzip-dev oniguruma-dev supervisor \
 WORKDIR /app
 
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --prefer-source
 
 COPY . .
 COPY --from=frontend-builder /app/public/build ./public/build
