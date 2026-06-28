@@ -126,13 +126,16 @@ Route::prefix('{tenant}')
             // Profil
             Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
-            // WebSocket broadcast auth
-            Route::post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
-                $request->setUserResolver(fn() => \Illuminate\Support\Facades\Auth::guard('tenant')->user());
-                return \Illuminate\Support\Facades\Broadcast::auth($request);
-            })->name('broadcasting.auth');
         });
+
+        // WebSocket broadcast auth — tenant guard-dal (worker és PM egyaránt eléri)
+        Route::post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
+            if (!\Illuminate\Support\Facades\Auth::guard('tenant')->check()) {
+                abort(403);
+            }
+            $request->setUserResolver(fn() => \Illuminate\Support\Facades\Auth::guard('tenant')->user());
+            return \Illuminate\Support\Facades\Broadcast::auth($request);
+        })->name('broadcasting.auth');
 
         // Előzmények + napló – csak admin (tenant admin szerepkör)
         Route::middleware('admin')->group(function () {
