@@ -154,7 +154,7 @@ Route::prefix('{tenant}')
 
                 // Felhasználók
                 Route::resource('users', UserController::class)->except(['show']);
-                Route::put('users/{user}/exam-overrides', [UserController::class, 'updateExamOverrides'])->name('admin.users.exam-overrides');
+                Route::put('users/{user}/exam-overrides', [UserController::class, 'updateExamOverrides'])->name('users.exam-overrides');
 
                 // Profil
                 Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile.edit');
@@ -183,8 +183,8 @@ Route::prefix('{tenant}')
                 Route::delete('trainings/{training}/steps/{step}',       [TrainingStepController::class, 'destroy'])->name('trainings.steps.destroy');
 
                 // Vizsgák (admin)
-                Route::get('exam-results',          [AdminExamController::class, 'results'])->name('admin.exam-results.index');
-                Route::get('exam-results/{result}', [AdminExamController::class, 'resultShow'])->name('admin.exam-results.show');
+                Route::get('exam-results',          [AdminExamController::class, 'results'])->name('exam-results.index');
+                Route::get('exam-results/{result}', [AdminExamController::class, 'resultShow'])->name('exam-results.show');
                 Route::resource('exams', AdminExamController::class)->except(['show']);
                 Route::post('exams/{exam}/import',               [AdminExamController::class, 'importFromTraining'])->name('exams.import');
                 Route::get('exams/{exam}/steps',                 [ExamStepController::class, 'index'])->name('exams.steps.index');
