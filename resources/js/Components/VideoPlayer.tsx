@@ -8,7 +8,7 @@ interface Props {
     className?: string;
 }
 
-export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh]', loop = false, className = '' }: Props) {
+export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh]', loop = true, className = '' }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const videoRef     = useRef<HTMLVideoElement>(null);
     const progressRef  = useRef<HTMLDivElement>(null);
@@ -138,7 +138,7 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
     return (
         <div
             ref={containerRef}
-            className={`relative rounded-xl overflow-hidden bg-[#0d1117] ${className}`}
+            className={`relative overflow-hidden bg-[#0d1117] ${fullscreen ? 'flex items-center justify-center' : 'rounded-xl'} ${className}`}
             onMouseMove={onActivity}
             onMouseLeave={() => playing && setShowCtrl(false)}
             onClick={togglePlay}
@@ -159,8 +159,8 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
                 src={src}
                 loop={loop}
                 playsInline
-                className={`block object-contain mx-auto ${maxHeight}`}
-                style={{ width: `${width}%` }}
+                className={`block object-contain ${fullscreen ? 'w-full h-full' : `mx-auto ${maxHeight}`}`}
+                style={fullscreen ? undefined : { width: `${width}%` }}
             />
 
             {/* Loading spinner */}
