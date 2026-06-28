@@ -1,6 +1,6 @@
 # Kulcs & Kártya Nyilvántartó
 
-Webalapú kulcs- és kártyaellenőrző rendszer Laravel 11 alapokon. Multi-tenant architektúrával, privát üzenetrendszerrel, képzési modullal és valós idejű WebSocket értesítésekkel.
+Webalapú kulcs- és kártyaellenőrző rendszer Laravel 12 alapokon. Multi-tenant architektúrával, privát üzenetrendszerrel, képzési és vizsgamodullal, valós idejű WebSocket értesítésekkel.
 
 ---
 
@@ -9,35 +9,41 @@ Webalapú kulcs- és kártyaellenőrző rendszer Laravel 11 alapokon. Multi-tena
 ### Kulcs/kártya ellenőrzés
 - **Helyszín alapú ellenőrzés** – több helyszín (épület, szoba, raktár stb.) önálló kulcs/kártya készlettel
 - **Ellenőrzési form** – tételek bepipálása, ellenőrző személy neve, opcionális megjegyzés és extra email cím
-- **Azonnali email értesítés** – befejezéskor a rendszer emailt küld a helyszín felelősének, a globális értesítési email-re és az opcionálisan megadott extra email-re
-- **Előzmények** – minden ellenőrzés adatbázisban tárolódik, szűrhető lista nézetben visszakereshető
+- **Azonnali email értesítés** – befejezéskor emailt küld a felelősnek, globális értesítési email-re és opcionális extra email-re
+- **Előzmények** – minden ellenőrzés adatbázisban tárolódik, szűrhető listában visszakereshető
 - **CSV export** – az előzmények letölthetők táblázatkezelőbe
 
+### Képzési modul (Training)
+- Lépésenként szervezett tartalom képek és videók feltöltésével
+- Egyedi `VideoPlayer` komponens: saját vezérlők, progress bar, hangerő, teljesképernyő
+- Média zoom modal, szélesség-szabályozás
+- 50 MB-os feltöltési limit, kliens- és szerveroldali hibakezelés
+
+### Vizsga modul (Exam)
+- Kérdéstípusok: radio (egy helyes), checkbox (több helyes), szöveges válasz
+- **Anti-cheat rendszer**: tab/ablakváltás detektálás (`visibilitychange` + `blur`), blokkolási küszöb konfigurálható
+- Időkorlát, automatikus beküldés lejáratkor
+- Helyes/helytelen kiértékelés szerveroldalon, kísérletszám-limit
+- **Admin override**: felhasználónként felülírható kísérletszám
+- **Eredményelőzmények**: elvégzett vizsgák visszanézhetők kérdés-szintű bontással (melyik választ jelölte meg), admin mindenkiét látja
+
 ### Admin panel
-- Jelszóvédett felület helyszínek és tételek kezeléséhez, email és jelszó beállításokhoz
-- Admin security toggle – biztonsági szintű hozzáférés-szabályozás
+- Felhasználók, helyszínek, tételek, képzések, vizsgák teljes CRUD kezelése
+- Vizsga kitöltések listája (szűrhető vizsgára), részletes eredménymegjelenítő
+- Tenant-szintű beállítások
 
 ### Multi-tenant architektúra
 - Bérlőnként izolált SQLite adatbázis
-- Tenant specifikus migráció (`tenant:migrate-all`)
+- Tenant specifikus migráció: `php artisan tenant:migrate-all`
 - Docker container indulásakor automatikus migrálás minden tenant DB-re
 
-### Portal – Inertia.js/React frontend
-- **Privát üzenetrendszer (PM)** – üzenetváltás, válasz funkció real-time WebSocket értesítésekkel
-- **Képzési modul (Training)** – lépésenként szervezett tartalom, képek és videók feltöltésével
-  - Média zoom modal, szélesség-szabályozás
-  - 50 MB-os feltöltési limit, kliens- és szerveroldali hibakezelés
-- **Műszaknaplók (Shift Notes)** – műszakhoz kötött feljegyzések
-- **Tevékenységnapló (Activity Log)** – rendszereseményekek auditálása
+### Egyéb
+- **Privát üzenetrendszer (PM)** – üzenetváltás valós idejű WebSocket értesítésekkel
+- **Műszaknaplók (Shift Notes)**
+- **Tevékenységnapló (Activity Log)** – rendszeresemények auditálása
 - **Biztonsági riportok (Security Reports)**
-- **Vizsgák (Exams)**
-- **Profilkezelés**
 - **Ingatlankezelő (Property Manager)** modul
-
-### Valós idejű funkciók (Laravel Reverb + WebSocket)
-- PM értesítések érkezéskor azonnali push
-- Válasz érkezésekor router reload, live frissítés
-- Laravel Echo integráció React oldalon (`echo.ts`)
+- **Profilkezelés**
 
 ---
 
@@ -45,12 +51,14 @@ Webalapú kulcs- és kártyaellenőrző rendszer Laravel 11 alapokon. Multi-tena
 
 | Réteg | Technológia |
 |---|---|
-| Backend | Laravel 11, PHP 8.2 |
-| Frontend | React 18 + Inertia.js, TypeScript, Tailwind CSS v3.4 |
+| Backend | Laravel 12, PHP 8.3 |
+| Frontend | React 19 + Inertia.js v2, TypeScript, Tailwind CSS v3.4 |
 | Asset build | Vite 7 |
 | WebSocket | Laravel Reverb |
-| Adatbázis | SQLite (tenant DB-k) / MySQL (production) |
-| Konténerizáció | Docker |
+| Adatbázis | SQLite (tenant DB-k per-tenant) |
+| Konténerizáció | Docker (multi-stage build) |
+| Reverse proxy | Nginx (konténeren belül) + Traefik (Coolify) + Cloudflare |
+| Deploy | Coolify (GitHub auto-deploy) |
 | Email | SMTP (Gmail vagy más) |
 
 ---
@@ -59,10 +67,10 @@ Webalapú kulcs- és kártyaellenőrző rendszer Laravel 11 alapokon. Multi-tena
 
 ### Követelmények
 
-- PHP 8.2+ (pcntl extension Reverb-hez)
+- PHP 8.3+ (pcntl extension Reverb-hez)
 - Composer 2+
-- Node.js 18+ (Node 20+ ajánlott)
-- SQLite vagy MySQL
+- Node.js 20+
+- SQLite
 
 ### Lépések
 
@@ -78,13 +86,16 @@ php artisan key:generate
 # 3. Adatbázis létrehozása
 php artisan migrate
 
-# 4. Frontend build
+# 4. Storage symlink
+php artisan storage:link
+
+# 5. Frontend build
 npm run build
 
-# 5. Fejlesztői szerver indítása
+# 6. Fejlesztői szerver indítása
 php artisan serve
 
-# 6. WebSocket szerver (külön terminalban)
+# 7. WebSocket szerver (külön terminalban)
 php artisan reverb:start
 ```
 
@@ -96,19 +107,30 @@ Az alkalmazás elérhető: `http://localhost:8000`
 
 ```bash
 docker build -t kulcsnyilvantarto .
-docker run -p 8000:8000 kulcsnyilvantarto
+docker run -p 80:80 kulcsnyilvantarto
 ```
 
 A container indulásakor a `start.sh` automatikusan:
-- lefuttatja a migrációkat minden tenant SQLite DB-re
+- létrehozza a szükséges könyvtárakat (`storage/app/public`, `storage/database/tenants`)
+- lefuttatja a migrációkat (`migrate --force`)
+- lefuttatja a tenant migrációkat minden SQLite DB-re (`tenant:migrate-all`)
 - létrehozza a `storage:link`-et
-- elindítja a PHP-FPM és Nginx processeket
+- cache-eli a konfigurációt, route-okat és view-kat
+- elindítja a PHP-FPM és Nginx processeket (supervisord-on keresztül)
+
+### Coolify storage konfigurálása
+
+Coolify-ban 3 persistent storage szükséges:
+
+| Típus | Source / Mount | Destination | Mit tárol |
+|---|---|---|---|
+| Volume | `laravel-uploads-data` | `/app/storage/app` | Feltöltött fájlok (képek, videók) |
+| Volume | `bejelentkezve-marad` | `/app/storage/framework/sessions` | Session fájlok |
+| Directory | `/laravel-sqlite-data` | `/app/storage/database` | SQLite adatbázisok |
 
 ---
 
 ## Email konfiguráció
-
-A `.env` fájlban kell beállítani az SMTP adatokat:
 
 ```env
 MAIL_MAILER=smtp
@@ -125,107 +147,11 @@ Gmail esetén 2FA szükséges, majd generálj egy **app-specific password**-öt.
 
 ---
 
-## MySQL váltás (production)
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=kulcsnyilvantarto
-DB_USERNAME=root
-DB_PASSWORD=jelszo
-```
-
-Majd: `php artisan migrate`
-
----
-
 ## Admin panel
 
-Első belépés: `http://localhost:8000/admin/login`
+Első belépés: `http://localhost:8000/{tenant}/admin/login`
 
 Az első bejelentkezéskor bármilyen jelszót megadsz, azt rögzíti a rendszer. Jelszót és globális email-t utána az **Admin → Beállítások** menüben lehet módosítani.
-
-### Admin funkciók
-
-- **Helyszínek** – felvétel, szerkesztés, törlés, aktív/inaktív állapot
-- **Tételek** – helyszínenként kulcsok és kártyák kezelése (név, típus, sorrend)
-- **Beállítások** – globális értesítési email cím, admin jelszó csere, biztonsági szint
-
----
-
-## Adatbázis struktúra
-
-```
-locations       → helyszínek (név, felelős, email, aktív)
-items           → tételek (location_id, név, típus: key/card, sorrend)
-checks          → ellenőrzések (location_id, ellenőrző neve, extra email, megjegyzés)
-check_items     → ellenőrzés sorok (check_id, item_id, pipált-e)
-settings        → rendszerbeállítások (kulcs-érték párok)
-pm_messages     → privát üzenetek (feladó, címzett, tartalom, válasz hivatkozás)
-training_steps  → képzési lépések (cím, leírás, média)
-shift_notes     → műszaknaplók
-activity_logs   → rendszer tevékenységnapló
-```
-
----
-
-## Projekt struktúra
-
-```
-app/
-├── Http/Controllers/
-│   ├── HomeController.php              # főoldal – helyszín választó
-│   ├── CheckController.php             # ellenőrzési form + email küldés
-│   ├── HistoryController.php           # előzmények + CSV export
-│   ├── AdminController.php             # admin login/logout/dashboard
-│   ├── PmMessageController.php         # privát üzenetrendszer
-│   ├── TrainingController.php          # képzési modul
-│   ├── ShiftNoteController.php         # műszaknaplók
-│   ├── ActivityLogController.php       # tevékenységnapló
-│   ├── SecurityReportController.php    # biztonsági riportok
-│   ├── ExamController.php              # vizsgák
-│   ├── ProfileController.php           # profil kezelés
-│   ├── PropertyManagerController.php   # ingatlankezelő
-│   ├── LandingController.php           # landing oldal
-│   ├── TenantUserAuthController.php    # tenant autentikáció
-│   └── Admin/
-│       ├── LocationController.php      # helyszín CRUD
-│       ├── ItemController.php          # tétel CRUD
-│       └── SettingController.php       # email + jelszó beállítások
-│   └── SuperAdmin/
-├── Http/Middleware/
-│   └── AdminMiddleware.php             # session alapú admin védelem
-├── Mail/
-│   └── CheckCompletedMail.php          # email értesítő
-└── Models/
-    ├── Location.php
-    ├── Item.php
-    ├── Check.php
-    ├── CheckItem.php
-    ├── Setting.php
-    └── PmMessage.php
-
-resources/
-├── js/
-│   ├── Pages/                          # Inertia.js React oldalak
-│   ├── Components/                     # újrahasználható React komponensek
-│   ├── Layouts/                        # layout komponensek
-│   ├── hooks/                          # custom React hook-ok
-│   ├── utils/                          # segédfüggvények
-│   ├── types/                          # TypeScript típusdefiníciók
-│   ├── echo.ts                         # Laravel Echo WebSocket konfiguráció
-│   └── app.tsx                         # alkalmazás belépési pont
-└── views/
-    ├── layouts/
-    │   ├── app.blade.php               # publikus layout
-    │   └── admin.blade.php             # admin layout
-    ├── home.blade.php
-    ├── check/show.blade.php
-    ├── history/index.blade.php
-    ├── admin/
-    └── emails/check_completed.blade.php
-```
 
 ---
 
@@ -241,14 +167,60 @@ npm run build
 # Route lista
 php artisan route:list
 
-# Adatbázis reset
-php artisan migrate:fresh
-
 # Tenant migrációk
 php artisan tenant:migrate-all
 
-# WebSocket szerver
+# WebSocket szerver debug módban
 php artisan reverb:start --debug
+```
+
+---
+
+## Ismert infrastruktúra-problémák és megoldásaik
+
+### Videó nem játszik le Safari/iOS/Mac eszközökön
+
+**Tünet:** Videolejátszó örökös loading spinnert mutat iPhone-on és Mac Safariban, de Windows/Android Chrome-on működik.
+
+**Gyökér ok:** A Safari/WebKit **kötelezően byte-range (`Range: bytes=X-Y`) kéréseket** küld videókhoz, és `206 Partial Content` választ vár (`Accept-Ranges: bytes` headerrel). Chrome (Blink) toleránsabb, a teljes fájlt is le tudja tölteni és lejátszani. A probléma láncolata:
+
+1. Az Nginx statikus fájloknál automatikusan hozzáadja az `Accept-Ranges: bytes` headert
+2. A **Coolify Traefik reverse proxy** azonban levágja ezt a headert a válaszból
+3. A **Cloudflare CDN** ezért `Accept-Ranges` nélkül cache-eli a fájlt
+4. Safari byte-range kérésre `200 OK` (teljes fájl) érkezik `206 Partial Content` helyett → lejátszás megtagadva
+
+**Megoldás:** A `/storage/` URL-ek helyett egy dedikált `/stream/{path}` PHP route szolgálja ki a videófájlokat. A Symfony `BinaryFileResponse` (amit Laravel `response()->file()` használ) natívan kezeli a `Range` headert és mindig helyes `206` választ ad — Nginx/Traefik/Cloudflare konfigurációtól függetlenül.
+
+```php
+// routes/web.php
+Route::get('/stream/{path}', function (string $path) {
+    $storageRoot = realpath(storage_path('app/public'));
+    $fullPath    = realpath(storage_path('app/public/' . ltrim($path, '/')));
+
+    if (!$fullPath || !$storageRoot || !str_starts_with($fullPath, $storageRoot . DIRECTORY_SEPARATOR)) {
+        abort(404);
+    }
+
+    return response()->file($fullPath, ['Cache-Control' => 'public, max-age=86400']);
+})->where('path', '.*');
+```
+
+A `VideoPlayer` komponens automatikusan transzformálja az URL-t:
+```ts
+// /storage/trainings/... → /stream/trainings/...
+const src = rawSrc.replace(/\/storage\//, '/stream/');
+```
+
+**Diagnózis lépések** ha hasonló probléma merül fel:
+```bash
+# 1. Ellenőrizd a response headereket
+curl -I https://your-domain.com/storage/path/to/video.mp4
+
+# 2. Teszteld a range request támogatást (206-ot kell kapni)
+curl -I -H "Range: bytes=0-1023" https://your-domain.com/storage/path/to/video.mp4
+
+# 3. Ha Cloudflare van előtte, bypass-old a cache-t query stringgel
+curl -I https://your-domain.com/storage/path/to/video.mp4?cb=1
 ```
 
 ---
