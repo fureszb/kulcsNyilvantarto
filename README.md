@@ -223,6 +223,106 @@ curl -I -H "Range: bytes=0-1023" https://your-domain.com/storage/path/to/video.m
 curl -I https://your-domain.com/storage/path/to/video.mp4?cb=1
 ```
 
+### WebSocket channel auth nem működik Docker/production környezetben
+
+**Tünet:** A WebSocket kapcsolat (101 Switching Protocols) felépül, de a privát csatorna authorization kérése (`POST /broadcasting/auth`) hibával tér vissza, az üzenetek csak az 5 másodperces polling miatt frissülnek.
+
+A hiba három egymástól független okból állt fenn, amelyek sorban jelentkeztek:
+
+---
+
+#### 1. `VITE_*` env változók undefined a bundleben
+
+**Hiba:** `wss://undefined` – az Echo nem tud csatlakozni.
+
+**Gyökér ok:** A `VITE_REVERB_*` változókat a Vite build-időben süti bele a bundleba. Docker multi-stage buildnél az első stage-ben nincs `ARG` deklaráció → a változók `undefined`-ként kerülnek a JS bundlebe, még ha a konténer futásakor be is vannak állítva.
+
+**Megoldás:** Runtime injektálás Blade template-ből, `config()` hívással (nem `env()`, mert `config:cache` után az `env()` Blade-ből null-t ad vissza):
+
+```blade
+{{-- resources/views/app.blade.php --}}
+<script>
+window.__REVERB_CONFIG__ = {
+    key:     '{{ config("broadcasting.connections.reverb.key") }}',
+    wsHost:  '{{ config("reverb.servers.reverb.hostname") }}',
+    wsPort:   {{ (int) config("reverb.apps.apps.0.options.port", 443) }},
+    forceTLS: {{ config("reverb.apps.apps.0.options.scheme", "https") === "https" ? "true" : "false" }}
+};
+</script>
+```
+
+```ts
+// resources/js/echo.ts
+const cfg = window.__REVERB_CONFIG__ ?? {};
+instance = new Echo({
+    broadcaster: 'reverb',
+    key: cfg.key,
+    wsHost: cfg.wsHost,
+    // ...
+});
+```
+
+---
+
+#### 2. `config/broadcasting.php` rossz kulcsneveket használt → 500
+
+**Hiba:** `POST /broadcasting/auth` → 500 Internal Server Error.
+
+**Gyökér ok:** A `BroadcastManager::createPusherDriver()` a `$config['key']` és `$config['secret']` kulcsokat olvassa. A `config/broadcasting.php`-ban viszont `app_key` és `app_secret` volt. PHP 8.1-ben a `hash_hmac($algo, $data, null)` `TypeError`-t dob (strict null handling), ezért 500-as hiba keletkezett.
+
+**Megoldás:** A `config/broadcasting.php` reverb blokkjában a kulcsneveket átírni:
+
+```php
+'reverb' => [
+    'driver'  => 'reverb',
+    'app_id'  => env('REVERB_APP_ID'),
+    'key'     => env('REVERB_APP_KEY'),    // volt: app_key
+    'secret'  => env('REVERB_APP_SECRET'), // volt: app_secret
+    // ...
+],
+```
+
+---
+
+#### 3. `routes/channels.php` soha nem töltődött be → 403
+
+**Hiba:** `POST /broadcasting/auth` → 403 Forbidden.
+
+**Gyökér ok:** Laravel 11-ben a `bootstrap/app.php` `withRouting()` metódusa explicit `channels:` paramétert igényel a `routes/channels.php` betöltéséhez. Enélkül a `Broadcast::channel()` bejegyzések soha nem regisztrálódnak. Amikor `Broadcast::auth()` hívódik, a belső `verifyUserCanAccessChannel()` az üres csatornalistán nem talál egyező mintát, és `AccessDeniedHttpException`-t dob → 403.
+
+**Megoldás:**
+
+```php
+// bootstrap/app.php
+->withRouting(
+    web:      __DIR__.'/../routes/web.php',
+    channels: __DIR__.'/../routes/channels.php', // ez hiányzott
+    commands: __DIR__.'/../routes/console.php',
+    health:   '/up',
+)
+```
+
+---
+
+#### Kiegészítő: PM felhasználók 302-t kaptak az auth endpointon
+
+**Tünet:** Property Manager userként a WebSocket auth 302 redirect-et kapott.
+
+**Gyökér ok:** A `/broadcasting/auth` route korábban a `tenant-user` middleware csoporton belül volt. A `TenantUserMiddleware` PM usereket a `pm.dashboard` route-ra irányít át → az auth kérés 302-t kapott JSON helyett → a csatorna auth csendesen meghiúsult.
+
+**Megoldás:** Az auth route-ot ki kellett emelni a `tenant-user` csoportból, és közvetlenül `tenant` middleware szintre tenni egyedi guard ellenőrzéssel:
+
+```php
+// routes/web.php – tenant middleware szinten, tenant-user csoporton kívül
+Route::post('/broadcasting/auth', function (Request $request) {
+    if (!Auth::guard('tenant')->check()) {
+        abort(403);
+    }
+    $request->setUserResolver(fn() => Auth::guard('tenant')->user());
+    return Broadcast::auth($request);
+})->name('broadcasting.auth');
+```
+
 ---
 
 ## Licenc
