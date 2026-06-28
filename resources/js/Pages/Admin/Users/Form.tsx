@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 
@@ -15,9 +16,22 @@ interface TenantUser {
     employed_since?: string;
 }
 
+interface ExamItem {
+    id: number;
+    title: string;
+    max_attempts: number | null;
+}
+
+interface OverrideItem {
+    exam_id: number;
+    max_attempts: number | null;
+}
+
 interface Props {
     user?: TenantUser;
     roles: string[];
+    exams?: ExamItem[];
+    overrides?: OverrideItem[];
 }
 
 interface FormData {
@@ -37,8 +51,36 @@ const ROLE_LABELS: Record<string, string> = {
     property_manager: 'Ingatlankezelő',
 };
 
-export default function UserForm({ user, roles }: Props) {
+export default function UserForm({ user, roles, exams = [], overrides = [] }: Props) {
     const isEdit = !!user;
+    const [examOverrides, setExamOverrides] = useState<Record<number, string>>(
+        () => Object.fromEntries(overrides.map(o => [o.exam_id, o.max_attempts != null ? String(o.max_attempts) : '']))
+    );
+    const [savingOverrides, setSavingOverrides] = useState(false);
+    const [overridesMsg, setOverridesMsg] = useState('');
+
+    async function saveExamOverrides() {
+        if (!user) return;
+        setSavingOverrides(true);
+        setOverridesMsg('');
+        try {
+            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '';
+            const payload = exams.map(e => ({
+                exam_id: e.id,
+                max_attempts: examOverrides[e.id] !== '' && examOverrides[e.id] !== undefined ? parseInt(examOverrides[e.id], 10) : null,
+            }));
+            const resp = await fetch(route('admin.users.exam-overrides', user.id), {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' },
+                body: JSON.stringify({ overrides: payload }),
+            });
+            setOverridesMsg(resp.ok ? 'Mentve!' : 'Hiba történt.');
+        } catch {
+            setOverridesMsg('Hiba történt.');
+        } finally {
+            setSavingOverrides(false);
+        }
+    }
     const title = isEdit ? 'Felhasználó szerkesztése' : 'Új felhasználó';
 
     const { data, setData, post, put, processing, errors } = useForm<FormData>({
@@ -182,6 +224,40 @@ export default function UserForm({ user, roles }: Props) {
                         </div>
                     </form>
                 </div>
+
+                {isEdit && exams.length > 0 && (
+                    <div className="card p-6 mt-6">
+                        <h3 className="text-sm font-bold text-slate-700 mb-1">Vizsga kísérletek (felhasználói override)</h3>
+                        <p className="text-xs text-slate-400 mb-4">Ha üresen hagyod, az alap vizsga-beállítás érvényes. Ha számot írsz, az adott felhasználóra ez az érték lesz érvényes.</p>
+                        <div className="space-y-3">
+                            {exams.map(exam => (
+                                <div key={exam.id} className="flex items-center gap-3">
+                                    <span className="flex-1 text-sm text-slate-700 truncate">{exam.title}</span>
+                                    <span className="text-xs text-slate-400 whitespace-nowrap">Alap: {exam.max_attempts ?? 'korlátlan'}</span>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        value={examOverrides[exam.id] ?? ''}
+                                        onChange={e => setExamOverrides(prev => ({ ...prev, [exam.id]: e.target.value }))}
+                                        placeholder="—"
+                                        className="form-input w-20 text-center text-sm"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-3 mt-4">
+                            <button
+                                type="button"
+                                onClick={saveExamOverrides}
+                                disabled={savingOverrides}
+                                className="btn-primary text-sm"
+                            >
+                                {savingOverrides ? 'Mentés...' : 'Override mentése'}
+                            </button>
+                            {overridesMsg && <span className="text-sm text-emerald-600 font-medium">{overridesMsg}</span>}
+                        </div>
+                    </div>
+                )}
             </div>
         </AdminLayout>
     );

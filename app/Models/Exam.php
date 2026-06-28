@@ -9,9 +9,16 @@ class Exam extends Model
 {
     protected $connection = 'tenant';
 
-    protected $fillable = ['title', 'description', 'is_active', 'sort_order'];
+    protected $fillable = [
+        'title', 'description', 'is_active', 'sort_order',
+        'max_attempts', 'cooldown_minutes', 'shuffle_questions', 'shuffle_answers', 'time_limit_minutes',
+    ];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = [
+        'is_active'         => 'boolean',
+        'shuffle_questions' => 'boolean',
+        'shuffle_answers'   => 'boolean',
+    ];
 
     public function steps(): HasMany
     {
@@ -21,5 +28,10 @@ class Exam extends Model
     public function results(): HasMany
     {
         return $this->hasMany(ExamResult::class);
+    }
+
+    public function userOverrides(): HasMany
+    {
+        return $this->hasMany(UserExamOverride::class);
     }
 }

@@ -24,16 +24,24 @@ class ExamController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title'       => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'sort_order'  => 'nullable|integer|min:0',
+            'title'               => 'required|string|max:255',
+            'description'         => 'nullable|string',
+            'sort_order'          => 'nullable|integer|min:0',
+            'max_attempts'        => 'nullable|integer|min:1',
+            'cooldown_minutes'    => 'nullable|integer|min:0',
+            'time_limit_minutes'  => 'nullable|integer|min:1',
         ]);
 
         $exam = Exam::create([
-            'title'       => $request->input('title'),
-            'description' => $request->input('description'),
-            'is_active'   => $request->boolean('is_active', true),
-            'sort_order'  => $request->input('sort_order', 0),
+            'title'               => $request->input('title'),
+            'description'         => $request->input('description'),
+            'is_active'           => $request->boolean('is_active', true),
+            'sort_order'          => $request->input('sort_order', 0),
+            'max_attempts'        => $request->input('max_attempts') ?: null,
+            'cooldown_minutes'    => $request->input('cooldown_minutes', 0),
+            'shuffle_questions'   => $request->boolean('shuffle_questions', false),
+            'shuffle_answers'     => $request->boolean('shuffle_answers', false),
+            'time_limit_minutes'  => $request->input('time_limit_minutes') ?: null,
         ]);
 
         return redirect()->route('admin.exams.steps.index', $exam)
@@ -48,16 +56,24 @@ class ExamController extends Controller
     public function update(Request $request, Exam $exam)
     {
         $request->validate([
-            'title'       => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'sort_order'  => 'nullable|integer|min:0',
+            'title'               => 'required|string|max:255',
+            'description'         => 'nullable|string',
+            'sort_order'          => 'nullable|integer|min:0',
+            'max_attempts'        => 'nullable|integer|min:1',
+            'cooldown_minutes'    => 'nullable|integer|min:0',
+            'time_limit_minutes'  => 'nullable|integer|min:1',
         ]);
 
         $exam->update([
-            'title'       => $request->input('title'),
-            'description' => $request->input('description'),
-            'is_active'   => $request->boolean('is_active'),
-            'sort_order'  => $request->input('sort_order', 0),
+            'title'               => $request->input('title'),
+            'description'         => $request->input('description'),
+            'is_active'           => $request->boolean('is_active'),
+            'sort_order'          => $request->input('sort_order', 0),
+            'max_attempts'        => $request->input('max_attempts') ?: null,
+            'cooldown_minutes'    => $request->input('cooldown_minutes', 0),
+            'shuffle_questions'   => $request->boolean('shuffle_questions', false),
+            'shuffle_answers'     => $request->boolean('shuffle_answers', false),
+            'time_limit_minutes'  => $request->input('time_limit_minutes') ?: null,
         ]);
 
         return redirect()->route('admin.exams.index')

@@ -9,11 +9,16 @@ class ExamResult extends Model
 {
     protected $connection = 'tenant';
 
-    protected $fillable = ['exam_id', 'user_id', 'name', 'email', 'results', 'first_try_count', 'total_steps', 'completed_at'];
+    protected $fillable = [
+        'exam_id', 'user_id', 'name', 'email', 'results',
+        'first_try_count', 'total_steps', 'completed_at',
+        'started_at', 'tab_violations', 'ip_address', 'time_taken_seconds',
+    ];
 
     protected $casts = [
         'results'      => 'array',
         'completed_at' => 'datetime',
+        'started_at'   => 'datetime',
     ];
 
     public function exam(): BelongsTo

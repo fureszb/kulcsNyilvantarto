@@ -139,6 +139,11 @@ export interface Exam {
     pass_score: number;
     steps?: ExamStep[];
     user_result?: ExamResult | null;
+    max_attempts?: number | null;
+    cooldown_minutes?: number;
+    shuffle_questions?: boolean;
+    shuffle_answers?: boolean;
+    time_limit_minutes?: number | null;
 }
 
 export interface ExamStep {
@@ -165,6 +170,10 @@ export interface ExamResult {
     passed: boolean;
     created_at: string;
     answers?: ExamAnswer[];
+    started_at?: string | null;
+    tab_violations?: number;
+    ip_address?: string | null;
+    time_taken_seconds?: number | null;
 }
 
 export interface SecurityDailyReport {

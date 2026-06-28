@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Exam;
 use App\Models\TenantUser;
+use App\Models\UserExamOverride;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -47,7 +49,15 @@ class UserController extends Controller
 
     public function edit(TenantUser $user)
     {
-        return Inertia::render('Admin/Users/Form', ['user' => $user, 'roles' => ['admin', 'user', 'property_manager']]);
+        $exams     = Exam::where('is_active', true)->orderBy('sort_order')->orderBy('id')->get(['id', 'title', 'max_attempts']);
+        $overrides = UserExamOverride::where('user_id', $user->id)->get()->keyBy('exam_id');
+
+        return Inertia::render('Admin/Users/Form', [
+            'user'      => $user,
+            'roles'     => ['admin', 'user', 'property_manager'],
+            'exams'     => $exams,
+            'overrides' => $overrides->map(fn($o) => ['exam_id' => $o->exam_id, 'max_attempts' => $o->max_attempts])->values(),
+        ]);
     }
 
     public function update(Request $request, TenantUser $user)
@@ -75,6 +85,33 @@ class UserController extends Controller
         $user->update($data);
 
         return redirect()->route('admin.users.index')->with('success', 'Felhasználó sikeresen frissítve!');
+    }
+
+    public function updateExamOverrides(Request $request, TenantUser $user)
+    {
+        $request->validate([
+            'overrides'                => 'nullable|array',
+            'overrides.*.exam_id'      => 'required|integer',
+            'overrides.*.max_attempts' => 'nullable|integer|min:1',
+        ]);
+
+        foreach ($request->input('overrides', []) as $item) {
+            $examId      = $item['exam_id'];
+            $maxAttempts = isset($item['max_attempts']) && $item['max_attempts'] !== '' && $item['max_attempts'] !== null
+                ? (int) $item['max_attempts']
+                : null;
+
+            if ($maxAttempts === null) {
+                UserExamOverride::where('user_id', $user->id)->where('exam_id', $examId)->delete();
+            } else {
+                UserExamOverride::updateOrCreate(
+                    ['user_id' => $user->id, 'exam_id' => $examId],
+                    ['max_attempts' => $maxAttempts]
+                );
+            }
+        }
+
+        return response()->json(['success' => true]);
     }
 
     public function destroy(TenantUser $user)

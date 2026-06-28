@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import VideoPlayer from '../../Components/VideoPlayer';
@@ -46,6 +46,11 @@ export default function TrainingShow({ training, stepsData, participantName = ''
     const [currentStep, setCurrentStep] = useState(0);
     const [attemptsPerStep, setAttemptsPerStep] = useState<number[]>(() => steps.map(() => 0));
 
+    // localStorage progress
+    const progressKey = `training-progress-${training.id}`;
+    const [showResume, setShowResume] = useState(false);
+    const savedProgressRef = useRef<{ currentStep: number; attemptsPerStep: number[]; results: ResultEntry[] } | null>(null);
+
     // radio
     const [wrongAnswers, setWrongAnswers] = useState<number[]>([]);
     const [isCorrect, setIsCorrect] = useState(false);
@@ -66,6 +71,22 @@ export default function TrainingShow({ training, stepsData, participantName = ''
 
     // zoom modal
     const [zoomItem, setZoomItem] = useState<{ url: string; type: string } | null>(null);
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem(progressKey);
+            if (!raw) return;
+            const parsed = JSON.parse(raw) as { currentStep: number; attemptsPerStep: number[]; results: ResultEntry[] };
+            if (parsed.currentStep > 0 && parsed.currentStep < steps.length) {
+                savedProgressRef.current = parsed;
+                setShowResume(true);
+            } else {
+                localStorage.removeItem(progressKey);
+            }
+        } catch {
+            localStorage.removeItem(progressKey);
+        }
+    }, []);
 
     useEffect(() => {
         if (!zoomItem) return;
@@ -149,9 +170,15 @@ export default function TrainingShow({ training, stepsData, participantName = ''
         setResults(newResults);
 
         if (currentStep < steps.length - 1) {
+            localStorage.setItem(progressKey, JSON.stringify({
+                currentStep: currentStep + 1,
+                attemptsPerStep,
+                results: newResults,
+            }));
             setCurrentStep((s) => s + 1);
             resetStep();
         } else {
+            localStorage.removeItem(progressKey);
             setCompleted(true);
             submitResult(newResults);
         }
@@ -179,7 +206,19 @@ export default function TrainingShow({ training, stepsData, participantName = ''
         }
     }
 
+    function resumeProgress() {
+        const p = savedProgressRef.current;
+        if (!p) return;
+        setCurrentStep(p.currentStep);
+        setAttemptsPerStep(p.attemptsPerStep);
+        setResults(p.results);
+        setStarted(true);
+        setShowResume(false);
+        resetStep();
+    }
+
     function restart() {
+        localStorage.removeItem(progressKey);
         setCurrentStep(0);
         setStarted(false);
         setCompleted(false);
@@ -194,6 +233,27 @@ export default function TrainingShow({ training, stepsData, participantName = ''
 
     return (
         <>
+        {showResume && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+                <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full">
+                    <div className="w-12 h-12 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-center mb-4">
+                        <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h2 className="text-lg font-extrabold text-slate-900 mb-2">Folytatja az oktatást?</h2>
+                    <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                        Korábban félbehagyta ezt az oktatást a(z) <strong className="text-slate-700">{savedProgressRef.current ? savedProgressRef.current.currentStep + 1 : '?'}. lépésnél</strong>. Szeretné onnan folytatni?
+                    </p>
+                    <div className="flex gap-3">
+                        <button onClick={resumeProgress} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors text-sm">
+                            Folytatás
+                        </button>
+                        <button onClick={() => { localStorage.removeItem(progressKey); setShowResume(false); }} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors text-sm">
+                            Előlről
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
         <AppLayout title={training.title}>
             {/* Hero */}
             <div className="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">

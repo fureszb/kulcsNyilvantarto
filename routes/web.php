@@ -87,7 +87,7 @@ Route::prefix('{tenant}')
             // Vizsgák
             Route::get('/exam',                    [ExamController::class, 'index'])->name('exam.index');
             Route::get('/exam/{exam}',             [ExamController::class, 'show'])->name('exam.show');
-            Route::post('/exam/{exam}/result',     [ExamController::class, 'sendResult'])->name('exam.result');
+            Route::post('/exam/{exam}/result',     [ExamController::class, 'submitAnswers'])->name('exam.result');
 
             // Napi jelentés
             Route::get('/security',                        [SecurityReportController::class, 'index'])->name('security.index');
@@ -153,6 +153,7 @@ Route::prefix('{tenant}')
 
                 // Felhasználók
                 Route::resource('users', UserController::class)->except(['show']);
+                Route::put('users/{user}/exam-overrides', [UserController::class, 'updateExamOverrides'])->name('admin.users.exam-overrides');
 
                 // Profil
                 Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile.edit');
