@@ -72,27 +72,42 @@ function ReplyList({ replies }: { replies: PmMessageReply[] }) {
     );
 }
 
+function silentReload() {
+    (window as Window & { __silentReload?: boolean }).__silentReload = true;
+    router.reload({ only: ['messages'], preserveScroll: true });
+}
+
 export default function MessagesIndex({ messages }: Props) {
     const { props: { auth, tenant } } = usePage<PageProps>();
     const [openReplyId, setOpenReplyId] = useState<number | null>(null);
+    const [pollingEnabled, setPollingEnabled] = useState<boolean>(() => {
+        try { return localStorage.getItem('worker_polling_enabled') !== 'false'; } catch { return true; }
+    });
+
+    function togglePolling() {
+        const next = !pollingEnabled;
+        setPollingEnabled(next);
+        try { localStorage.setItem('worker_polling_enabled', String(next)); } catch {}
+    }
 
     // WebSocket (instant if Reverb reachable)
     useEffect(() => {
         if (!tenant?.slug || !auth.user?.id) return;
         try {
             const channel = getEcho(tenant.slug).private(`tenant.${tenant.slug}.${auth.user.id}`);
-            channel.listen('.new-pm-message', () => router.reload({ only: ['messages'] }));
+            channel.listen('.new-pm-message', () => silentReload());
             return () => { channel.stopListening('.new-pm-message'); };
         } catch { /* WebSocket unavailable, polling fallback below */ }
     }, [tenant?.slug, auth.user?.id]);
 
     // Polling fallback — fires every 5s while tab is visible
     useEffect(() => {
+        if (!pollingEnabled) return;
         const id = setInterval(() => {
-            if (document.visibilityState === 'visible') router.reload({ only: ['messages'] });
+            if (document.visibilityState === 'visible') silentReload();
         }, 5000);
         return () => clearInterval(id);
-    }, []);
+    }, [pollingEnabled]);
 
     return (
         <AppLayout title="PM üzenetek">
@@ -115,6 +130,14 @@ export default function MessagesIndex({ messages }: Props) {
                             <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-1">Property Manager üzenetek</p>
                             <h1 className="text-2xl font-extrabold text-white tracking-tight">PM értesítések</h1>
                             <p className="text-slate-400 text-sm mt-1">Kérések és üzenetek a Property Managertől</p>
+                            <button
+                                type="button"
+                                onClick={togglePolling}
+                                className={`mt-2.5 flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${pollingEnabled ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30' : 'bg-white/5 border-white/10 text-slate-500 hover:bg-white/10'}`}
+                            >
+                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${pollingEnabled ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                                {pollingEnabled ? 'Auto-frissítés: BE' : 'Auto-frissítés: KI'}
+                            </button>
                         </div>
                         <Link
                             href={route('home')}

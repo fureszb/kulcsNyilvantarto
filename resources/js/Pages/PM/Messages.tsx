@@ -213,6 +213,11 @@ function PmReplyForm({ messageId, onDone }: { messageId: number; onDone: () => v
     );
 }
 
+function silentReload() {
+    (window as Window & { __silentReload?: boolean }).__silentReload = true;
+    router.reload({ only: ['messages'], preserveScroll: true });
+}
+
 export default function PmMessages({ messages, workers, filters }: Props) {
     const { props: { auth, tenant } } = usePage<PageProps>();
     const [sendToAll, setSendToAll] = useState(true);
@@ -220,24 +225,34 @@ export default function PmMessages({ messages, workers, filters }: Props) {
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [openReplyId, setOpenReplyId] = useState<number | null>(null);
+    const [pollingEnabled, setPollingEnabled] = useState<boolean>(() => {
+        try { return localStorage.getItem('pm_polling_enabled') !== 'false'; } catch { return true; }
+    });
+
+    function togglePolling() {
+        const next = !pollingEnabled;
+        setPollingEnabled(next);
+        try { localStorage.setItem('pm_polling_enabled', String(next)); } catch {}
+    }
 
     // WebSocket (instant if Reverb reachable)
     useEffect(() => {
         if (!tenant?.slug || !auth.user?.id) return;
         try {
             const channel = getEcho(tenant.slug).private(`tenant.${tenant.slug}.${auth.user.id}`);
-            channel.listen('.new-pm-reply', () => router.reload({ only: ['messages'] }));
+            channel.listen('.new-pm-reply', () => silentReload());
             return () => { channel.stopListening('.new-pm-reply'); };
         } catch { /* WebSocket unavailable, polling fallback below */ }
     }, [tenant?.slug, auth.user?.id]);
 
     // Polling fallback — fires every 5s while tab is visible
     useEffect(() => {
+        if (!pollingEnabled) return;
         const id = setInterval(() => {
-            if (document.visibilityState === 'visible') router.reload({ only: ['messages'] });
+            if (document.visibilityState === 'visible') silentReload();
         }, 5000);
         return () => clearInterval(id);
-    }, []);
+    }, [pollingEnabled]);
 
     const [dateFrom, setDateFrom] = useState(filters?.date_from ?? '');
     const [dateTo, setDateTo]     = useState(filters?.date_to   ?? '');
@@ -313,6 +328,14 @@ export default function PmMessages({ messages, workers, filters }: Props) {
                                     <svg className="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                     {workers.length} aktív felhasználó
                                 </span>
+                                <button
+                                    type="button"
+                                    onClick={togglePolling}
+                                    className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${pollingEnabled ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30' : 'bg-white/5 border-white/10 text-slate-500 hover:bg-white/10'}`}
+                                >
+                                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${pollingEnabled ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                                    {pollingEnabled ? 'Auto-frissítés: BE' : 'Auto-frissítés: KI'}
+                                </button>
                             </div>
                         </div>
                         <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-white/5 border border-white/10 items-center justify-center shrink-0">

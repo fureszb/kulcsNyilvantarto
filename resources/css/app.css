@@ -145,6 +145,7 @@
     transition: opacity 0.2s ease;
 }
 #page-trans-overlay.pt-active { opacity: 0.38; }
+html.no-progress #nprogress { display: none !important; }
 
 /* ═══════════════════════════════════════════════════════════
    7. NOISE TEXTURE — organikus szemcse sötét felületeken

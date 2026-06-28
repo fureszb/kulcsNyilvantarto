@@ -9,6 +9,11 @@ import { createRoot } from 'react-dom/client';
 let ptOverlay: HTMLDivElement | null = null;
 
 router.on('start', () => {
+    if ((window as Window & { __silentReload?: boolean }).__silentReload) {
+        (window as Window & { __silentReload?: boolean }).__silentReload = false;
+        document.documentElement.classList.add('no-progress');
+        return;
+    }
     if (ptOverlay) return;
     ptOverlay = document.createElement('div');
     ptOverlay.id = 'page-trans-overlay';
@@ -17,6 +22,7 @@ router.on('start', () => {
 });
 
 router.on('finish', () => {
+    document.documentElement.classList.remove('no-progress');
     if (!ptOverlay) return;
     const el = ptOverlay;
     ptOverlay = null;
