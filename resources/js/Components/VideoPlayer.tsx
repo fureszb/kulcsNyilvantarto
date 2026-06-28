@@ -8,7 +8,11 @@ interface Props {
     className?: string;
 }
 
-export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh]', loop = true, className = '' }: Props) {
+export default function VideoPlayer({ src: rawSrc, width = 100, maxHeight = 'max-h-[80vh]', loop = true, className = '' }: Props) {
+    // Safari/iOS/WebKit requires byte-range (206) responses for video; Nginx+Traefik strip
+    // Accept-Ranges so /storage/ files break on Apple devices. /stream/ serves via PHP
+    // BinaryFileResponse which handles Range headers natively.
+    const src = rawSrc.replace(/\/storage\//, '/stream/');
     const containerRef  = useRef<HTMLDivElement>(null);
     const videoRef      = useRef<HTMLVideoElement>(null);
     const progressRef   = useRef<HTMLDivElement>(null);

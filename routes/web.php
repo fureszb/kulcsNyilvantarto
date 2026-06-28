@@ -32,6 +32,20 @@ use Illuminate\Support\Facades\Route;
 // Root → szervezetválasztó landing
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
+// Storage file streaming with proper byte-range support (required for Safari/iOS video playback).
+// Nginx or Traefik strip Accept-Ranges from responses; serving through BinaryFileResponse
+// adds correct Range/Accept-Ranges headers that WebKit needs.
+Route::get('/stream/{path}', function (string $path) {
+    $storageRoot = realpath(storage_path('app/public'));
+    $fullPath    = realpath(storage_path('app/public/' . ltrim($path, '/')));
+
+    if (!$fullPath || !$storageRoot || !str_starts_with($fullPath, $storageRoot . DIRECTORY_SEPARATOR)) {
+        abort(404);
+    }
+
+    return response()->file($fullPath, ['Cache-Control' => 'public, max-age=86400']);
+})->where('path', '.*');
+
 // ─── Super Admin ───────────────────────────────────────────────────────────────
 Route::prefix('super-admin')->name('super-admin.')->group(function () {
     Route::get('/login',  [SuperAdmin\AuthController::class, 'showLogin'])->name('login');
