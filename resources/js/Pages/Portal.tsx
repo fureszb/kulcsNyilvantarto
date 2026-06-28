@@ -521,38 +521,69 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                     <span className="text-xs text-slate-400 tabular-nums">{locations.length} helyszín</span>
                 </div>
 
-                <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {locations.map((loc) => (
                         <button
                             key={loc.id}
                             onClick={() => openModal(loc)}
-                            className="group relative text-left rounded-xl border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-200 transition-all duration-200 p-3.5 overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-400/40 shadow-sm hover:shadow-md"
+                            className="group relative text-left rounded-2xl border border-slate-100 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 overflow-hidden"
+                            style={{
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+                                transition: 'box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease',
+                            }}
+                            onMouseEnter={e => {
+                                (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px rgba(59,130,246,0.12), 0 2px 8px rgba(0,0,0,0.06)';
+                                (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                                (e.currentTarget as HTMLElement).style.borderColor = '#bfdbfe';
+                            }}
+                            onMouseLeave={e => {
+                                (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+                                (e.currentTarget as HTMLElement).style.transform = '';
+                                (e.currentTarget as HTMLElement).style.borderColor = '';
+                            }}
                         >
-                            <div className="flex flex-col gap-2">
-                                {/* Icon */}
-                                <div className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
-                                    {loc.logo_path ? (
-                                        <img src={`/storage/${loc.logo_path}`} className="w-full h-full object-contain p-0.5" alt=""/>
-                                    ) : loc.icon ? (
-                                        <span className="text-xl leading-none">{loc.icon}</span>
-                                    ) : (
-                                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                                        </svg>
-                                    )}
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="text-sm font-bold text-slate-800 leading-snug truncate group-hover:text-blue-700 transition-colors">{loc.name}</p>
-                                    <p className="text-xs text-slate-400 mt-0.5">{loc.itemsCount} tétel</p>
-                                </div>
-                                {(loc.description || loc.responsible_person) && (
-                                    <div className="flex items-center gap-1">
-                                        <svg className="w-3 h-3 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                        <span className="text-[10px] text-blue-500 font-medium">Részletek</span>
+                            {/* Top accent bar */}
+                            <div className="h-0.5 w-full bg-gradient-to-r from-blue-500 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200"/>
+
+                            <div className="p-4 flex flex-col gap-3">
+                                {/* Icon + items count row */}
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 overflow-hidden group-hover:bg-blue-100 group-hover:border-blue-200 transition-colors duration-200">
+                                        {loc.logo_path ? (
+                                            <img src={`/storage/${loc.logo_path}`} className="w-full h-full object-contain p-1" alt=""/>
+                                        ) : loc.icon ? (
+                                            <span className="text-xl leading-none">{loc.icon}</span>
+                                        ) : (
+                                            <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                            </svg>
+                                        )}
                                     </div>
-                                )}
+                                    {/* Items badge */}
+                                    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold leading-none whitespace-nowrap group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors duration-200">
+                                        {loc.itemsCount}
+                                        <span className="hidden sm:inline"> db</span>
+                                    </span>
+                                </div>
+
+                                {/* Name */}
+                                <div className="min-w-0">
+                                    <p className="text-sm font-bold text-slate-800 leading-snug line-clamp-2 group-hover:text-blue-700 transition-colors duration-200">{loc.name}</p>
+                                </div>
+
+                                {/* Footer row */}
+                                <div className="flex items-center justify-between mt-auto pt-0.5">
+                                    {(loc.description || loc.responsible_person || loc.email) ? (
+                                        <span className="text-[10px] font-semibold text-blue-400 group-hover:text-blue-600 transition-colors uppercase tracking-wide">Részletek</span>
+                                    ) : (
+                                        <span/>
+                                    )}
+                                    <div className="w-5 h-5 rounded-full bg-slate-100 group-hover:bg-blue-500 flex items-center justify-center transition-colors duration-200 shrink-0">
+                                        <svg className="w-2.5 h-2.5 text-slate-400 group-hover:text-white transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
                         </button>
                     ))}
