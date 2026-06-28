@@ -25,6 +25,7 @@ class LocationController extends Controller
     {
         $validated = $request->validate([
             'name'               => 'required|string|max:255',
+            'description'        => 'nullable|string|max:2000',
             'icon'               => 'nullable|string|max:20',
             'logo'               => 'nullable|image|max:1024',
             'responsible_person' => 'nullable|string|max:255',
@@ -42,6 +43,7 @@ class LocationController extends Controller
 
         Location::create([
             'name'               => $validated['name'],
+            'description'        => $validated['description'] ?? null,
             'icon'               => $icon,
             'logo_path'          => $logoPath,
             'responsible_person' => $validated['responsible_person'] ?? null,
@@ -70,6 +72,7 @@ class LocationController extends Controller
     {
         $validated = $request->validate([
             'name'               => 'required|string|max:255',
+            'description'        => 'nullable|string|max:2000',
             'icon'               => 'nullable|string|max:20',
             'logo'               => 'nullable|image|max:1024',
             'remove_logo'        => 'boolean',
@@ -95,6 +98,7 @@ class LocationController extends Controller
 
         $location->update([
             'name'               => $validated['name'],
+            'description'        => $validated['description'] ?? null,
             'icon'               => $icon,
             'logo_path'          => $logoPath,
             'responsible_person' => $validated['responsible_person'] ?? null,

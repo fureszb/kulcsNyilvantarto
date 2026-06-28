@@ -71,6 +71,20 @@ export default function LocationCreate() {
                         </div>
 
                         <div>
+                            <label className="form-label" htmlFor="description">Leírás <span className="text-xs text-slate-400">(opcionális – megjelenik a kártya modalban)</span></label>
+                            <textarea
+                                id="description"
+                                value={data.description}
+                                onChange={(e) => setData('description', e.target.value)}
+                                className="form-input resize-none"
+                                rows={4}
+                                placeholder="Helyszín leírása, fontos tudnivalók, elérési útmutató..."
+                                maxLength={2000}
+                            />
+                            {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
+                        </div>
+
+                        <div>
                             <label className="form-label">Ikon <span className="text-xs text-slate-400">(opcionális)</span></label>
                             <div className="flex gap-2 mb-3">
                                 <button type="button" onClick={() => switchTab('emoji')} className={iconTab === 'emoji' ? tabActive : tabInactive}>

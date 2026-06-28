@@ -30,9 +30,12 @@ class HomeController extends Controller
             ->orderBy('name')
             ->get()
             ->map(fn($l) => [
-                'id'         => $l->id,
-                'name'       => $l->name,
-                'itemsCount' => $l->items_count,
+                'id'          => $l->id,
+                'name'        => $l->name,
+                'description' => $l->description,
+                'icon'        => $l->icon,
+                'logo_path'   => $l->logo_path,
+                'itemsCount'  => $l->items_count,
             ]);
 
         return Inertia::render('Portal', [

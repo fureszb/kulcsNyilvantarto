@@ -10,7 +10,7 @@ class Location extends Model
 {
     protected $connection = 'tenant';
 
-    protected $fillable = ['name', 'icon', 'logo_path', 'responsible_person', 'email', 'is_active'];
+    protected $fillable = ['name', 'description', 'icon', 'logo_path', 'responsible_person', 'email', 'is_active'];
 
     protected $casts = ['is_active' => 'boolean'];
 
