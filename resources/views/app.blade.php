@@ -7,6 +7,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @routes
+    <script>
+    window.__REVERB_CONFIG__ = {
+        key:     '{{ config("broadcasting.connections.reverb.app_key") }}',
+        wsHost:  '{{ config("reverb.servers.reverb.hostname") }}',
+        wsPort:   {{ (int) config("reverb.apps.apps.0.options.port", 443) }},
+        forceTLS: {{ config("reverb.apps.apps.0.options.scheme", "https") === "https" ? "true" : "false" }}
+    };
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.tsx'])
     @inertiaHead
 </head>
