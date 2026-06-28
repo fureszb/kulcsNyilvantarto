@@ -25,14 +25,18 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
     const [fullscreen,  setFullscreen]  = useState(false);
     const [loading,     setLoading]     = useState(false);
 
-    // autoplay when ≥50% visible
+    // autoplay when ≥50% visible — on iOS play() is blocked without user gesture;
+    // if it rejects we clear the loading state immediately so the play button shows
     useEffect(() => {
         const v = videoRef.current;
         if (!v) return;
         const obs = new IntersectionObserver(
             ([entry]) => {
-                if (entry.intersectionRatio >= 0.5) v.play().catch(() => {});
-                else v.pause();
+                if (entry.intersectionRatio >= 0.5) {
+                    v.play().catch(() => setLoading(false));
+                } else {
+                    v.pause();
+                }
             },
             { threshold: 0.5 }
         );
@@ -53,17 +57,24 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
             if (v.buffered.length) setBuffered(v.buffered.end(v.buffered.length - 1));
         };
         const onDur  = () => setDuration(v.duration);
-        const onWait = () => setLoading(true);
-        const onCan  = () => setLoading(false);
-        const onLoad = () => setLoading(false);
+        // only show spinner when actively buffering during real playback
+        const onWait    = () => setLoading(true);
+        const onCan     = () => setLoading(false);
+        const onLoad    = () => setLoading(false);
+        // iOS: stalled/suspend fire when the browser stops trying to load without user gesture
+        const onStall   = () => setLoading(false);
+        const onSuspend = () => setLoading(false);
+        const onError   = () => setLoading(false);
         const onVol  = () => { setVolume(v.volume); setMuted(v.muted); };
         on('play', onPlay); on('pause', onPause); on('timeupdate', onTime);
         on('durationchange', onDur); on('waiting', onWait); on('canplay', onCan);
         on('volumechange', onVol); on('loadeddata', onLoad);
+        on('stalled', onStall); on('suspend', onSuspend); on('error', onError);
         return () => {
             off('play', onPlay); off('pause', onPause); off('timeupdate', onTime);
             off('durationchange', onDur); off('waiting', onWait); off('canplay', onCan);
             off('volumechange', onVol); off('loadeddata', onLoad);
+            off('stalled', onStall); off('suspend', onSuspend); off('error', onError);
         };
     }, []);
 
@@ -126,7 +137,11 @@ export default function VideoPlayer({ src, width = 100, maxHeight = 'max-h-[80vh
     const togglePlay = () => {
         const v = videoRef.current;
         if (!v) return;
-        playing ? v.pause() : v.play().catch(() => {});
+        if (playing) {
+            v.pause();
+        } else {
+            v.play().catch(() => setLoading(false));
+        }
     };
     const toggleMute = () => { if (videoRef.current) videoRef.current.muted = !videoRef.current.muted; };
     const changeVol  = (e: React.ChangeEvent<HTMLInputElement>) => {
