@@ -249,21 +249,21 @@ export default function StepEdit({ training, step }: Props) {
             correctIdxes.forEach(i => formData.append('correct[]', String(i)));
         }
 
-        if (removeMedia) {
-            formData.append('remove_media', '1');
-        } else if (mediaMode === 'file' && mediaFile) {
+        if (mediaMode === 'file' && mediaFile) {
             formData.append('media', mediaFile);
         } else if (mediaMode === 'url' && mediaUrl) {
             formData.append('media_url', mediaUrl);
+        } else if (removeMedia) {
+            formData.append('remove_media', '1');
         }
         formData.append('media_width', String(mediaWidth));
 
-        if (removeReveal) {
-            formData.append('remove_reveal', '1');
-        } else if (revealMode === 'file' && revealFile) {
+        if (revealMode === 'file' && revealFile) {
             formData.append('reveal_media', revealFile);
         } else if (revealMode === 'url' && revealUrl) {
             formData.append('reveal_url', revealUrl);
+        } else if (removeReveal) {
+            formData.append('remove_reveal', '1');
         }
         formData.append('reveal_media_width', String(revealWidth));
 
