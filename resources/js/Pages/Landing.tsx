@@ -35,7 +35,7 @@ function CortexSplash({ onDone, theme }: { onDone: () => void; theme: Theme }) {
                     fontSize: 'clamp(64px, 12vw, 120px)',
                     fontWeight: 900,
                     letterSpacing: '0.18em',
-                    background: 'linear-gradient(135deg, #1d4ed8 0%, #0ea5e9 60%, #38bdf8 100%)',
+                    background: 'linear-gradient(135deg, #1d4ed8 0%, #0ea5e9 55%, #f59e0b 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
@@ -258,7 +258,7 @@ export default function Landing({ tenants }: Props) {
     const [splashDone, setSplashDone] = useState(false);
     const [theme, setTheme] = useState<Theme>(() => {
         if (typeof window !== 'undefined') {
-            return (localStorage.getItem('landing-theme') as Theme) ?? 'dark';
+            return (localStorage.getItem('landing-theme') as Theme) ?? 'light';
         }
         return 'dark';
     });
