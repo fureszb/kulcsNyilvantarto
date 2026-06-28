@@ -8,7 +8,7 @@ interface Props {
 
 type Theme = 'dark' | 'light';
 
-function CortexSplash({ onDone, theme }: { onDone: () => void; theme: Theme }) {
+function CortexSplash({ onDone }: { onDone: () => void }) {
     const [phase, setPhase] = useState<'in' | 'hold' | 'out'>('in');
 
     useEffect(() => {
@@ -18,12 +18,10 @@ function CortexSplash({ onDone, theme }: { onDone: () => void; theme: Theme }) {
         return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
     }, [onDone]);
 
-    const bg = theme === 'dark' ? '#07091a' : '#f8fafc';
-
     return (
         <div style={{
             position: 'fixed', inset: 0, zIndex: 99999,
-            background: bg,
+            background: '#000',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
             <div style={{
@@ -256,12 +254,12 @@ function SuperAdminCard({ theme }: { theme: Theme }) {
 export default function Landing({ tenants }: Props) {
     const currentYear = new Date().getFullYear();
     const [splashDone, setSplashDone] = useState(false);
-    const [theme, setTheme] = useState<Theme>(() => {
-        if (typeof window !== 'undefined') {
-            return (localStorage.getItem('landing-theme') as Theme) ?? 'light';
-        }
-        return 'dark';
-    });
+    const [theme, setTheme] = useState<Theme>('light');
+
+    useEffect(() => {
+        const stored = localStorage.getItem('landing-theme') as Theme | null;
+        if (stored === 'dark' || stored === 'light') setTheme(stored);
+    }, []);
 
     const toggleTheme = useCallback(() => {
         setTheme(prev => {
@@ -290,7 +288,7 @@ export default function Landing({ tenants }: Props) {
 
     return (
         <>
-            {!splashDone && <CortexSplash onDone={() => setSplashDone(true)} theme={theme} />}
+            {!splashDone && <CortexSplash onDone={() => setSplashDone(true)} />}
 
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
 
@@ -319,48 +317,56 @@ export default function Landing({ tenants }: Props) {
                 }} />
 
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                    {/* Hero */}
-                    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '72px 24px 48px', textAlign: 'center' }}>
-                        <div style={{
-                            width: '68px', height: '68px', borderRadius: '20px', margin: '0 auto 24px',
-                            background: isDark
-                                ? 'linear-gradient(135deg, rgba(29,78,216,0.15), rgba(14,165,233,0.15))'
-                                : 'linear-gradient(135deg, rgba(29,78,216,0.08), rgba(14,165,233,0.08))',
-                            border: `1px solid ${isDark ? 'rgba(14,165,233,0.2)' : 'rgba(14,165,233,0.25)'}`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                            <svg width="34" height="34" fill="none" viewBox="0 0 24 24">
-                                <defs>
-                                    <linearGradient id="hg" x1="0" y1="0" x2="1" y2="1">
-                                        <stop offset="0%" stopColor="#1d4ed8"/>
-                                        <stop offset="100%" stopColor="#0ea5e9"/>
-                                    </linearGradient>
-                                </defs>
-                                <path stroke="url(#hg)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
-                                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                            </svg>
+                    {/* Hero – always dark */}
+                    <div style={{
+                        background: '#07091a',
+                        borderBottom: '1px solid rgba(255,255,255,0.06)',
+                        position: 'relative', overflow: 'hidden',
+                    }}>
+                        {/* Hero ambient blobs */}
+                        <div style={{ position: 'absolute', top: '-20%', right: '-5%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                        <div style={{ position: 'absolute', bottom: '-20%', left: '-5%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(29,78,216,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
+
+                        <div style={{ position: 'relative', maxWidth: '900px', margin: '0 auto', padding: '72px 24px 56px', textAlign: 'center' }}>
+                            <div style={{
+                                width: '68px', height: '68px', borderRadius: '20px', margin: '0 auto 24px',
+                                background: 'linear-gradient(135deg, rgba(29,78,216,0.18), rgba(14,165,233,0.18))',
+                                border: '1px solid rgba(14,165,233,0.22)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                                <svg width="34" height="34" fill="none" viewBox="0 0 24 24">
+                                    <defs>
+                                        <linearGradient id="hg" x1="0" y1="0" x2="1" y2="1">
+                                            <stop offset="0%" stopColor="#1d4ed8"/>
+                                            <stop offset="100%" stopColor="#0ea5e9"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <path stroke="url(#hg)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
+                                        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                                </svg>
+                            </div>
+
+                            <div style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '7px',
+                                background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.18)',
+                                borderRadius: '999px', padding: '4px 14px', marginBottom: '18px',
+                            }}>
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 7px #10b981', flexShrink: 0 }} />
+                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#7dd3fc', letterSpacing: '0.08em' }}>CORTEX OPS SYSTEMS</span>
+                            </div>
+
+                            <h1 style={{
+                                fontSize: 'clamp(34px, 5vw, 54px)', fontWeight: 900, lineHeight: 1.1,
+                                background: 'linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%)',
+                                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                                margin: '0 0 14px', letterSpacing: '-0.02em',
+                            }}>KK Nyilvántartó</h1>
+
+                            <p style={{ color: '#64748b', fontSize: '16px', maxWidth: '380px', margin: '0 auto' }}>
+                                Válassza ki szervezetét a belépéshez
+                            </p>
                         </div>
-
-                        <div style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '7px',
-                            background: isDark ? 'rgba(14,165,233,0.08)' : 'rgba(14,165,233,0.06)',
-                            border: `1px solid ${isDark ? 'rgba(14,165,233,0.18)' : 'rgba(14,165,233,0.2)'}`,
-                            borderRadius: '999px', padding: '4px 14px', marginBottom: '18px',
-                        }}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 7px #10b981', flexShrink: 0 }} />
-                            <span style={{ fontSize: '11px', fontWeight: 700, color: isDark ? '#7dd3fc' : '#0369a1', letterSpacing: '0.08em' }}>CORTEX OPS SYSTEMS</span>
-                        </div>
-
-                        <h1 style={{
-                            fontSize: 'clamp(34px, 5vw, 54px)', fontWeight: 900, lineHeight: 1.1,
-                            background: heroTitle,
-                            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                            margin: '0 0 14px', letterSpacing: '-0.02em',
-                        }}>KK Nyilvántartó</h1>
-
-                        <p style={{ color: subtitleColor, fontSize: '16px', maxWidth: '380px', margin: '0 auto' }}>
-                            Válassza ki szervezetét a belépéshez
-                        </p>
                     </div>
 
                     {/* Cards */}
