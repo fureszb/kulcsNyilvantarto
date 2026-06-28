@@ -71,7 +71,11 @@ class CheckController extends Controller
 
         if (!empty($recipients)) {
             foreach ($recipients as $recipient) {
-                Mail::to($recipient)->send(new CheckCompletedMail($check));
+                try {
+                    Mail::to($recipient)->send(new CheckCompletedMail($check));
+                } catch (\Throwable) {
+                    // mail failure does not abort check submission
+                }
             }
         }
 
