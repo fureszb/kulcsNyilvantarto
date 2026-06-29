@@ -354,9 +354,11 @@ export default function PmLayout({ children, title }: Props) {
             </header>
 
             {/* Main */}
-            <main className={`flex-1 max-w-7xl mx-auto w-full overflow-x-hidden px-4 sm:px-6 lg:px-8 py-8${loaded ? ' pm-loaded app-loaded' : ''}`}>
+            <main className={`flex-1 w-full overflow-x-hidden${loaded ? ' pm-loaded app-loaded' : ''}`}>
                 <div className="app-page-enter">
-                    {children}
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        {children}
+                    </div>
                 </div>
             </main>
 
