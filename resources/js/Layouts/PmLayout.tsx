@@ -115,7 +115,7 @@ export default function PmLayout({ children, title }: Props) {
     ];
 
     return (
-        <div className="min-h-screen overflow-x-hidden bg-slate-50 flex flex-col">
+        <div className={`min-h-screen overflow-x-hidden bg-slate-50 flex flex-col${loaded ? ' pm-loaded app-loaded' : ''}`}>
             {title && <title>{title} – {tenantName}</title>}
 
             {/* PM Page Loader */}
@@ -193,7 +193,7 @@ export default function PmLayout({ children, title }: Props) {
                 </div>
             )}
 
-            {/* Toast notifications */}
+            {/* Toast notifications – fixed, stays outside animated wrapper */}
             <div className="fixed top-4 right-4 z-[998] flex flex-col gap-2 pointer-events-none">
                 {successVisible && flash?.success && (
                     <div className={`pointer-events-auto relative flex items-center gap-3 px-4 py-3.5 bg-white border border-green-200 shadow-xl rounded-2xl min-w-[280px] max-w-sm overflow-hidden ${successLeaving ? 'animate-slide-out-r' : 'animate-slide-in-r'}`}>
@@ -223,6 +223,9 @@ export default function PmLayout({ children, title }: Props) {
                     </div>
                 )}
             </div>
+
+            {/* Animated wrapper: header + main + footer together */}
+            <div className="app-page-enter flex flex-col flex-1">
 
             {/* Header */}
             <header
@@ -354,11 +357,9 @@ export default function PmLayout({ children, title }: Props) {
             </header>
 
             {/* Main */}
-            <main className={`flex-1 w-full overflow-x-hidden${loaded ? ' pm-loaded app-loaded' : ''}`}>
-                <div className="app-page-enter">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                        {children}
-                    </div>
+            <main className="flex-1 w-full overflow-x-hidden">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {children}
                 </div>
             </main>
 
@@ -374,6 +375,8 @@ export default function PmLayout({ children, title }: Props) {
                     <a href="mailto:supportitsecurity@gmail.com" className="text-xs text-slate-600 hover:text-slate-400 transition-colors">supportitsecurity@gmail.com</a>
                 </div>
             </footer>
+
+            </div>{/* /app-page-enter */}
         </div>
     );
 }
