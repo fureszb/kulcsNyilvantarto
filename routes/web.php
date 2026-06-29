@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\PmMessageController;
 use App\Http\Controllers\ShiftNoteController;
+use App\Http\Controllers\Admin\EmergencyContactController;
 use App\Http\Controllers\Admin\ExamController as AdminExamController;
 use App\Http\Controllers\Admin\ExamStepController;
 use App\Http\Controllers\Admin\ItemController;
@@ -190,6 +191,9 @@ Route::prefix('{tenant}')
                 // Beállítások
                 Route::get('/settings',  [SettingController::class, 'edit'])->name('settings.edit');
                 Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+
+                // Értesítési lista
+                Route::resource('emergency-contacts', EmergencyContactController::class)->only(['index', 'store', 'update', 'destroy']);
 
                 // Oktatások
                 Route::resource('trainings', AdminTrainingController::class)->except(['show']);

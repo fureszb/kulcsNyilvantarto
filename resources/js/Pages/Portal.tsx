@@ -26,12 +26,21 @@ interface LocationInfo {
     itemsCount: number;
 }
 
+interface EmergencyContact {
+    id: number;
+    category: string;
+    name: string;
+    phone?: string | null;
+    note?: string | null;
+}
+
 interface Props {
     welcomeName?: string | null;
     checksToday: number;
     trainingsCompleted: number;
     locations: LocationInfo[];
     securityModuleVisible: boolean;
+    emergencyContacts: EmergencyContact[];
 }
 
 interface ModuleDef {
@@ -699,6 +708,132 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
     );
 }
 
+function EmergencyContactsModal({ contacts, onClose }: { contacts: EmergencyContact[]; onClose: () => void }) {
+    const [visible, setVisible] = useState(false);
+    const [closing, setClosing] = useState(false);
+
+    useEffect(() => {
+        requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+        function onKey(e: KeyboardEvent) { if (e.key === 'Escape') doClose(); }
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
+
+    function doClose() {
+        setClosing(true);
+        setVisible(false);
+        setTimeout(onClose, 350);
+    }
+
+    const categories = [...new Set(contacts.map(c => c.category))].sort();
+    const grouped = categories.map(cat => ({
+        category: cat,
+        contacts: contacts.filter(c => c.category === cat),
+    }));
+
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4">
+            <div
+                className="absolute inset-0 transition-opacity duration-300"
+                style={{
+                    background: 'rgba(15,23,42,0.6)',
+                    backdropFilter: 'blur(6px)',
+                    WebkitBackdropFilter: 'blur(6px)',
+                    opacity: visible ? 1 : 0,
+                }}
+                onClick={doClose}
+            />
+            <div
+                className="relative w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col max-h-[85vh]"
+                style={{
+                    transition: 'opacity 0.3s cubic-bezier(.16,1,.3,1), transform 0.35s cubic-bezier(.16,1,.3,1)',
+                    opacity: visible ? 1 : 0,
+                    transform: visible ? 'translateY(0) scale(1)' : 'translateY(32px) scale(0.97)',
+                }}
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center gap-4 px-6 pt-6 pb-4 border-b border-slate-100 shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+                        <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                        </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-0.5">Gyors elérés</p>
+                        <h2 className="text-lg font-extrabold text-slate-900 leading-tight">Értesítési lista</h2>
+                        <p className="text-xs text-slate-400 mt-0.5">Ki kell értesíteni különböző helyzetekben</p>
+                    </div>
+                    <button
+                        onClick={doClose}
+                        className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors shrink-0"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Scrollable body */}
+                <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+                    {contacts.length === 0 ? (
+                        <p className="text-sm text-slate-400 italic text-center py-6">Még nincs megadva értesítendő személy.</p>
+                    ) : (
+                        grouped.map(({ category, contacts: catContacts }) => (
+                            <div key={category}>
+                                <div className="flex items-center gap-2 mb-2.5">
+                                    <div className="h-px flex-1 bg-slate-100"/>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">{category}</span>
+                                    <div className="h-px flex-1 bg-slate-100"/>
+                                </div>
+                                <div className="space-y-2">
+                                    {catContacts.map(contact => (
+                                        <div key={contact.id} className="flex items-center gap-3 py-3 px-4 bg-slate-50 rounded-xl border border-slate-100">
+                                            <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center justify-center shrink-0">
+                                                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                </svg>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-slate-800 leading-tight">{contact.name}</p>
+                                                {contact.note && (
+                                                    <p className="text-xs text-slate-400 italic mt-0.5 leading-snug">{contact.note}</p>
+                                                )}
+                                            </div>
+                                            {contact.phone && (
+                                                <a
+                                                    href={`tel:${contact.phone.replace(/\s/g, '')}`}
+                                                    className="flex items-center gap-1.5 shrink-0 bg-white border border-slate-200 shadow-sm rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-green-50 hover:border-green-200 hover:text-green-700 transition-colors"
+                                                >
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                                    </svg>
+                                                    {contact.phone}
+                                                </a>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="px-6 py-4 border-t border-slate-100 shrink-0 flex justify-end">
+                    <button
+                        onClick={doClose}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-600 hover:text-slate-800 text-sm font-medium transition-colors"
+                    >
+                        Bezárás
+                    </button>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+}
+
 function LiveClock() {
     const [time, setTime] = useState('');
     useEffect(() => {
@@ -735,7 +870,7 @@ function CountUp({ target, duration = 800 }: { target: number; duration?: number
     return <>{val}</>;
 }
 
-export default function Portal({ welcomeName, checksToday, trainingsCompleted, locations, securityModuleVisible }: Props) {
+export default function Portal({ welcomeName, checksToday, trainingsCompleted, locations, securityModuleVisible, emergencyContacts }: Props) {
     const page = usePage<PageProps>();
     const { auth, tenant, nav } = page.props;
     const user       = auth.user;
@@ -745,6 +880,7 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
 
     const [mobileOpen,    setMobileOpen]    = useState(false);
     const [showWelcome,   setShowWelcome]   = useState(!!welcomeName);
+    const [showContactsModal, setShowContactsModal] = useState(false);
     const [welcomeFading, setWelcomeFading] = useState(false);
     const [welcomeEntered, setWelcomeEntered] = useState(false);
     const [animReady,     setAnimReady]     = useState(false);
@@ -1064,6 +1200,35 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                     <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage: NOISE_BG, backgroundSize: '180px 180px', mixBlendMode: 'screen' }}/>
                 </div>
 
+                {emergencyContacts.length > 0 && (
+                    <div className="app-page-enter mb-6" style={{ animationDelay: '60ms' }}>
+                        <button
+                            onClick={() => setShowContactsModal(true)}
+                            className="group w-full flex items-center gap-4 bg-white border border-slate-200 rounded-2xl shadow-sm px-5 py-4 hover:border-red-200 hover:shadow-md transition-all duration-200 text-left"
+                        >
+                            <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0 group-hover:bg-red-100 group-hover:border-red-200 transition-colors duration-200">
+                                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                </svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-slate-800 group-hover:text-red-700 transition-colors duration-200">Értesítési lista</p>
+                                <p className="text-xs text-slate-400 mt-0.5">Kattintson a vészhelyzeti kapcsolatok megtekintéséhez</p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold group-hover:bg-red-50 group-hover:text-red-500 transition-colors duration-200">
+                                    {emergencyContacts.length} kapcsolat
+                                </span>
+                                <div className="w-7 h-7 rounded-full border border-slate-200 bg-slate-50 flex items-center justify-center group-hover:bg-red-500 group-hover:border-red-500 transition-all duration-200">
+                                    <svg className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                )}
+
                 <div className="app-page-enter" style={{ animationDelay: '120ms' }}>
                     <LocationGrid locations={locations} />
                 </div>
@@ -1093,6 +1258,10 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                     </SortableContext>
                 </DndContext>
             </main>
+
+            {showContactsModal && (
+                <EmergencyContactsModal contacts={emergencyContacts} onClose={() => setShowContactsModal(false)} />
+            )}
 
             {/* Footer */}
             <footer className="bg-slate-900 border-t border-white/5 px-4 sm:px-6 lg:px-8 py-5">

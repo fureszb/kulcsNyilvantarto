@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Check;
+use App\Models\EmergencyContact;
 use App\Models\Location;
 use App\Models\Setting;
 use App\Models\Training;
@@ -40,12 +41,22 @@ class HomeController extends Controller
                 'itemsCount'         => $l->items_count,
             ]);
 
+        $emergencyContacts = EmergencyContact::orderBy('category')->orderBy('sort_order')->orderBy('name')->get()
+            ->map(fn($c) => [
+                'id'         => $c->id,
+                'category'   => $c->category,
+                'name'       => $c->name,
+                'phone'      => $c->phone,
+                'note'       => $c->note,
+            ]);
+
         return Inertia::render('Portal', [
             'welcomeName'           => $welcomeName,
             'checksToday'           => $checksToday,
             'trainingsCompleted'    => $trainingsCompleted,
             'locations'             => $locations,
             'securityModuleVisible' => Setting::get('security_module_visible', '1') === '1',
+            'emergencyContacts'     => $emergencyContacts,
         ]);
     }
 
