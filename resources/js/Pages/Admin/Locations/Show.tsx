@@ -8,6 +8,7 @@ interface Item {
     id: number;
     name: string;
     description?: string;
+    type: 'key' | 'card';
     group_id?: number;
     location_id: number;
     group?: ItemGroup;
@@ -45,6 +46,7 @@ interface GroupFormData {
 
 interface ItemFormData {
     name: string;
+    type: string;
     description: string;
     group_id: string;
     [key: string]: unknown;
@@ -136,6 +138,7 @@ function EditGroupForm({ locationId, group, onCancel }: { locationId: number; gr
 function AddItemForm({ locationId, groups, onCancel }: { locationId: number; groups: ItemGroup[]; onCancel: () => void }) {
     const { data, setData, post, processing, errors, reset } = useForm<ItemFormData>({
         name: '',
+        type: 'key',
         description: '',
         group_id: '',
     });
@@ -160,6 +163,18 @@ function AddItemForm({ locationId, groups, onCancel }: { locationId: number; gro
                     autoFocus
                 />
                 {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+            </div>
+            <div className="min-w-28">
+                <select
+                    value={data.type}
+                    onChange={(e) => setData('type', e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                >
+                    <option value="key">Kulcs</option>
+                    <option value="card">Kártya</option>
+                </select>
+                {errors.type && <p className="mt-1 text-xs text-red-600">{errors.type}</p>}
             </div>
             <div className="min-w-36">
                 <select
@@ -194,6 +209,7 @@ function AddItemForm({ locationId, groups, onCancel }: { locationId: number; gro
 function EditItemForm({ locationId, item, groups, onCancel }: { locationId: number; item: Item; groups: ItemGroup[]; onCancel: () => void }) {
     const { data, setData, put, processing, errors } = useForm<ItemFormData>({
         name: item.name,
+        type: item.type ?? 'key',
         description: item.description ?? '',
         group_id: item.group_id ? String(item.group_id) : '',
     });
@@ -217,6 +233,18 @@ function EditItemForm({ locationId, item, groups, onCancel }: { locationId: numb
                     autoFocus
                 />
                 {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+            </div>
+            <div className="min-w-28">
+                <select
+                    value={data.type}
+                    onChange={(e) => setData('type', e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                >
+                    <option value="key">Kulcs</option>
+                    <option value="card">Kártya</option>
+                </select>
+                {errors.type && <p className="mt-1 text-xs text-red-600">{errors.type}</p>}
             </div>
             <div className="min-w-36">
                 <select
