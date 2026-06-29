@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CheckItem;
 use App\Models\Item;
 use App\Models\Location;
 use Illuminate\Http\Request;
@@ -39,6 +40,7 @@ class ItemController extends Controller
 
     public function destroy(Location $location, Item $item)
     {
+        CheckItem::where('item_id', $item->id)->delete();
         $item->delete();
         return redirect()->route('admin.locations.show', $location)->with('success', 'Tétel törölve!');
     }
