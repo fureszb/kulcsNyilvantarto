@@ -14,7 +14,17 @@ class NewShiftNote implements ShouldBroadcastNow
 
     public function __construct(
         public readonly string $tenantSlug,
+        public readonly string $authorName = '',
+        public readonly int $senderUserId = 0,
     ) {}
+
+    public function broadcastWith(): array
+    {
+        return [
+            'authorName'   => $this->authorName,
+            'senderUserId' => $this->senderUserId,
+        ];
+    }
 
     public function broadcastOn(): array
     {

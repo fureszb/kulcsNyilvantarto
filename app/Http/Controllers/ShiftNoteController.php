@@ -60,7 +60,7 @@ class ShiftNoteController extends Controller
 
         $tenant = app('tenant');
         if ($tenant?->slug) {
-            broadcast(new NewShiftNote($tenant->slug));
+            broadcast(new NewShiftNote($tenant->slug, $user->name, $user->id));
         }
 
         $tenantName = $tenant?->name ?? 'KK Nyilvántartó';

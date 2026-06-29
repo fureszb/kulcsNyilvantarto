@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { router, useForm, Link, usePage } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { getEcho } from '../../echo';
@@ -55,6 +56,33 @@ function silentReload() {
     router.reload({ only: ['notes'], preserveScroll: true });
 }
 
+function playNotificationSound() {
+    try {
+        type ACtx = typeof AudioContext;
+        const Ctx = (window.AudioContext || (window as Window & { webkitAudioContext?: ACtx }).webkitAudioContext) as ACtx | undefined;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const t = ctx.currentTime;
+        [
+            { freq: 880,  start: 0,    dur: 0.28, vol: 0.18 },
+            { freq: 1109, start: 0.20, dur: 0.30, vol: 0.13 },
+        ].forEach(({ freq, start, dur, vol }) => {
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            g.gain.setValueAtTime(0, t + start);
+            g.gain.linearRampToValueAtTime(vol, t + start + 0.015);
+            g.gain.exponentialRampToValueAtTime(0.001, t + start + dur);
+            osc.connect(g); g.connect(ctx.destination);
+            osc.start(t + start); osc.stop(t + start + dur);
+        });
+        setTimeout(() => ctx.close(), 700);
+    } catch {}
+}
+
+interface NoteToast { author: string; key: number; }
+
 export default function NotesIndex({ notes, user, filterDate }: Props) {
     const { props: { tenant } } = usePage<PageProps>();
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -65,6 +93,37 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
     const [pollingEnabled, setPollingEnabled] = useState<boolean>(() => {
         try { return localStorage.getItem('notes_polling_enabled') !== 'false'; } catch { return true; }
     });
+
+    const [toast, setToast] = useState<NoteToast | null>(null);
+    const [toastVisible, setToastVisible] = useState(false);
+    const progressRef = useRef<HTMLDivElement>(null);
+    const toastDismissRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        if (!toast) return;
+        setToastVisible(false);
+        const el = progressRef.current;
+        if (el) {
+            el.style.transition = 'none';
+            el.style.width = '100%';
+            el.getBoundingClientRect();
+            el.style.transition = 'width 5s linear';
+            el.style.width = '0%';
+        }
+        const rafId = requestAnimationFrame(() => requestAnimationFrame(() => setToastVisible(true)));
+        if (toastDismissRef.current) clearTimeout(toastDismissRef.current);
+        toastDismissRef.current = setTimeout(() => {
+            setToastVisible(false);
+            setTimeout(() => setToast(null), 400);
+        }, 5000);
+        return () => cancelAnimationFrame(rafId);
+    }, [toast?.key]);
+
+    function dismissToast() {
+        if (toastDismissRef.current) clearTimeout(toastDismissRef.current);
+        setToastVisible(false);
+        setTimeout(() => setToast(null), 400);
+    }
 
     function togglePolling() {
         const next = !pollingEnabled;
@@ -82,7 +141,12 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
         if (!tenant?.slug) return;
         try {
             const channel = getEcho(tenant.slug).private(`tenant.${tenant.slug}`);
-            channel.listen('.new-shift-note', () => silentReload());
+            channel.listen('.new-shift-note', (evt: { authorName?: string; senderUserId?: number }) => {
+                silentReload();
+                if (evt.senderUserId === user.id) return;
+                playNotificationSound();
+                setToast({ author: evt.authorName ?? 'Kolléga', key: Date.now() });
+            });
             return () => { channel.stopListening('.new-shift-note'); };
         } catch { /* polling fallback */ }
     }, [tenant?.slug]);
@@ -134,6 +198,7 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
     }
 
     return (
+        <>
         <AppLayout title="Váltóüzenetek">
             <div className="max-w-7xl mx-auto space-y-6">
 
@@ -512,5 +577,44 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
 
             </div>
         </AppLayout>
+        {toast && createPortal(
+            <div
+                className="fixed top-4 right-4 z-[9999] w-80 rounded-2xl overflow-hidden shadow-2xl"
+                style={{
+                    background: 'rgba(15,23,42,0.97)',
+                    border: '1px solid rgba(20,184,166,0.25)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    transform: toastVisible ? 'translateX(0) scale(1)' : 'translateX(calc(100% + 1.5rem)) scale(0.95)',
+                    opacity: toastVisible ? 1 : 0,
+                    transition: 'transform 0.4s cubic-bezier(.16,1,.3,1), opacity 0.35s ease',
+                }}
+            >
+                <div className="flex items-start gap-3 px-4 py-3.5">
+                    <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                        <svg className="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-bold text-teal-400 uppercase tracking-wider mb-0.5">Váltóüzenet</p>
+                        <p className="text-sm font-semibold text-white leading-snug">{toast.author} bejegyzést rögzített</p>
+                    </div>
+                    <button
+                        onClick={dismissToast}
+                        className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-500 hover:text-white transition-colors shrink-0"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div className="h-[3px]" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                    <div ref={progressRef} className="h-full bg-teal-500" style={{ width: '100%' }}/>
+                </div>
+            </div>,
+            document.body
+        )}
+        </>
     );
 }
