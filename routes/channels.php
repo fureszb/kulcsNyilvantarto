@@ -10,5 +10,6 @@ Broadcast::channel('tenant.{slug}.{userId}', function ($user, string $slug, int 
 
 Broadcast::channel('tenant.{slug}', function ($user, string $slug) {
     if (!$user) return false;
+    if ($user->isPropertyManager()) return false;
     return app('tenant')?->slug === $slug;
 });
