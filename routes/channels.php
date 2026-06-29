@@ -7,3 +7,8 @@ Broadcast::channel('tenant.{slug}.{userId}', function ($user, string $slug, int 
     if (!$user) return false;
     return (int) $user->id === $userId && app('tenant')?->slug === $slug;
 });
+
+Broadcast::channel('tenant.{slug}', function ($user, string $slug) {
+    if (!$user) return false;
+    return app('tenant')?->slug === $slug;
+});

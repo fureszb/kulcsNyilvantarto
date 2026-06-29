@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NewShiftNote;
 use App\Models\ActivityLog;
 use App\Models\ShiftNote;
 use Illuminate\Http\Request;
@@ -52,6 +53,11 @@ class ShiftNoteController extends Controller
             'note_date' => $today,
             'content'   => mb_substr($request->content, 0, 500),
         ]);
+
+        $tenantSlug = app('tenant')?->slug;
+        if ($tenantSlug) {
+            broadcast(new NewShiftNote($tenantSlug));
+        }
 
         return back()->with('success', 'Üzenet rögzítve.');
     }
