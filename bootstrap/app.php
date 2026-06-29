@@ -54,6 +54,11 @@ return Application::configure(basePath: dirname(__DIR__))
             if (! ($e instanceof \Illuminate\Session\TokenMismatchException)) {
                 return null;
             }
+            // Login form POST: session lejárt közben → redirect a login oldalra hibaüzenettel
+            if ($request->isMethod('POST') && $request->is('*/login')) {
+                return redirect($request->url())
+                    ->with('error', 'A munkamenet lejárt. Kérem próbálkozzon újra.');
+            }
             if ($request->header('X-Inertia')) {
                 // Full-page reload session-írás nélkül (session lehet sérült)
                 return \Inertia\Inertia::location(url()->previous() ?: '/');
