@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\NewPmMessage;
+use App\Mail\NewPmMessageMail;
 use App\Models\ActivityLog;
 use App\Models\Check;
 use App\Models\Exam;
@@ -18,6 +19,7 @@ use App\Models\TrainingResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class PropertyManagerController extends Controller
@@ -157,6 +159,27 @@ class PropertyManagerController extends Controller
             tenantSlug: $slug,
             recipientIds: $userIds,
         ))->toOthers();
+
+        $tenantName = app('tenant')?->name ?? 'KK Nyilvántartó';
+        $loginUrl   = route('login');
+
+        TenantUser::whereIn('id', $userIds)
+            ->where('role', '!=', 'property_manager')
+            ->whereNotNull('email')
+            ->get()
+            ->each(function (TenantUser $recipient) use ($sender, $message, $tenantName, $loginUrl) {
+                try {
+                    Mail::to($recipient->email)->send(new NewPmMessageMail(
+                        senderName:      $sender->name,
+                        messageContent:  $message->content,
+                        recipientName:   $recipient->name,
+                        tenantName:      $tenantName,
+                        loginUrl:        $loginUrl,
+                    ));
+                } catch (\Throwable $e) {
+                    Log::error('NewPmMessageMail failed: ' . $e->getMessage());
+                }
+            });
 
         $recipientCount = $sendToAll ? null : count($request->input('user_ids', []));
         $recipientLabel = $sendToAll ? 'mindenkinek' : "{$recipientCount} felhasználónak";

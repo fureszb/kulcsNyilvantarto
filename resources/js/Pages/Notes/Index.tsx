@@ -147,14 +147,16 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
                         <div>
                             <p className="text-xs font-bold text-teal-400 uppercase tracking-widest mb-1.5">Privát csatorna · Csak kollégák</p>
                             <h1 className="text-2xl font-extrabold text-white tracking-tight sm:text-3xl">Váltóüzenetek</h1>
-                            <button
-                                type="button"
-                                onClick={togglePolling}
-                                className={`mt-2.5 flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${pollingEnabled ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30' : 'bg-white/5 border-white/10 text-slate-500 hover:bg-white/10'}`}
-                            >
-                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${pollingEnabled ? 'bg-emerald-400' : 'bg-slate-600'}`} />
-                                {pollingEnabled ? 'Auto-frissítés: BE' : 'Auto-frissítés: KI'}
-                            </button>
+                            {user.is_admin && (
+                                <button
+                                    type="button"
+                                    onClick={togglePolling}
+                                    className={`mt-2.5 flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${pollingEnabled ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30' : 'bg-white/5 border-white/10 text-slate-500 hover:bg-white/10'}`}
+                                >
+                                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${pollingEnabled ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                                    {pollingEnabled ? 'Auto-frissítés: BE' : 'Auto-frissítés: KI'}
+                                </button>
+                            )}
                             <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-3 text-sm text-slate-400">
                                 <span className="flex items-center gap-1.5">
                                     <svg className="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

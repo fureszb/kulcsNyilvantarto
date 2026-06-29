@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Events\NewShiftNote;
+use App\Mail\NewShiftNoteMail;
 use App\Models\ActivityLog;
 use App\Models\ShiftNote;
+use App\Models\TenantUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class ShiftNoteController extends Controller
@@ -54,10 +58,31 @@ class ShiftNoteController extends Controller
             'content'   => mb_substr($request->content, 0, 500),
         ]);
 
-        $tenantSlug = app('tenant')?->slug;
-        if ($tenantSlug) {
-            broadcast(new NewShiftNote($tenantSlug));
+        $tenant = app('tenant');
+        if ($tenant?->slug) {
+            broadcast(new NewShiftNote($tenant->slug));
         }
+
+        $tenantName = $tenant?->name ?? 'KK Nyilvántartó';
+        $loginUrl   = route('login');
+
+        TenantUser::where('is_active', true)
+            ->where('role', '!=', 'property_manager')
+            ->where('id', '!=', $user->id)
+            ->whereNotNull('email')
+            ->get()
+            ->each(function (TenantUser $recipient) use ($user, $request, $tenantName, $loginUrl) {
+                try {
+                    Mail::to($recipient->email)->send(new NewShiftNoteMail(
+                        authorName:   $user->name,
+                        noteContent:  $request->content,
+                        tenantName:   $tenantName,
+                        loginUrl:     $loginUrl,
+                    ));
+                } catch (\Throwable $e) {
+                    Log::error('NewShiftNoteMail failed: ' . $e->getMessage());
+                }
+            });
 
         return back()->with('success', 'Üzenet rögzítve.');
     }
