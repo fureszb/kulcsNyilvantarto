@@ -147,6 +147,10 @@
 #page-trans-overlay.pt-active { opacity: 0.38; }
 html.no-progress #nprogress { display: none !important; }
 
+/* PM layout: csak fade-in, nincs slide/scale */
+@keyframes pmPageEnter { from { opacity: 0; } to { opacity: 1; } }
+.pm-layout .app-page-enter { animation-name: pmPageEnter; animation-duration: 0.45s; }
+
 /* ═══════════════════════════════════════════════════════════
    7. NOISE TEXTURE — organikus szemcse sötét felületeken
 ═══════════════════════════════════════════════════════════ */

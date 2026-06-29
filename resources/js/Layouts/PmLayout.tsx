@@ -115,7 +115,7 @@ export default function PmLayout({ children, title }: Props) {
     ];
 
     return (
-        <div className={`min-h-screen overflow-x-hidden bg-slate-50 flex flex-col${loaded ? ' pm-loaded app-loaded' : ''}`}>
+        <div className={`pm-layout min-h-screen overflow-x-hidden bg-[#0f172a] flex flex-col${loaded ? ' pm-loaded app-loaded' : ''}`}>
             {title && <title>{title} – {tenantName}</title>}
 
             {/* PM Page Loader */}
@@ -357,7 +357,7 @@ export default function PmLayout({ children, title }: Props) {
             </header>
 
             {/* Main */}
-            <main className="flex-1 w-full overflow-x-hidden">
+            <main className="flex-1 w-full overflow-x-hidden bg-slate-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {children}
                 </div>
