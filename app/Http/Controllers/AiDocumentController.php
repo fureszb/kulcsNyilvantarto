@@ -16,6 +16,9 @@ class AiDocumentController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
+        // A tudásbázis cégszintű — kizárólag a tenant admin kezelheti
+        abort_unless(Auth::guard('tenant')->user()->isAdmin(), 403);
+
         // 'mimes:docx' a MIME-guesser miatt zip/octet-stream-ként dobná el a
         // docx-et, tartalom-sniffelés Windowson megbízhatatlan. A kiterjesztést
         // itt ellenőrizzük; a tartalmat a RAG szolgáltatás parserei validálják
@@ -54,7 +57,8 @@ class AiDocumentController extends Controller
     public function destroy(AiDocument $document): RedirectResponse
     {
         $user = Auth::guard('tenant')->user();
-        abort_unless($document->user_id === $user->id, 403);
+        // Cégszintű tudásbázis: bármely tenant admin törölhet bármely dokumentumot
+        abort_unless($user->isAdmin(), 403);
 
         $tenant = app('tenant');
 
@@ -62,7 +66,6 @@ class AiDocumentController extends Controller
             // A FastAPI query paramként várja az azonosítókat, nem body-ban
             $query = http_build_query([
                 'tenant_id' => $tenant->slug,
-                'user_id' => (string) $user->id,
             ]);
             Http::withHeaders([
                 'X-Internal-Token' => config('services.rag.token'),

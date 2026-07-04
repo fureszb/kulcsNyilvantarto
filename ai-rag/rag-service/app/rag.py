@@ -39,6 +39,31 @@ SYSTEM_PROMPT = (
     "a feltöltött dokumentumok alapján nem tudok válaszolni.'"
 )
 
+# Dolgozói nézet: a tudásbázis fájljai nem láthatók — sem fájlnevet, sem
+# dokumentumlistát nem közlünk, a válasz forrásmegjelölés nélkül készül
+SYSTEM_PROMPT_NO_SOURCES = (
+    "Te egy vállalati tudásbázis-asszisztens vagy. KIZÁRÓLAG a megadott "
+    "KONTEXTUS alapján válaszolj. Ne találj ki információt, ne használd a "
+    "saját tudásodat, ne spekulálj.\n"
+    "- Válaszolj természetes, nyelvtanilag helyes magyarsággal, közérthetően.\n"
+    "- SOHA ne említs fájlneveket, dokumentumneveket vagy forrásmegjelölést "
+    "a válaszban — a tudásbázis fájljai a felhasználó számára nem láthatók. "
+    "Fogalmazz így: 'a vállalati szabályzat szerint...'.\n"
+    "- A kérdést jóhiszeműen értelmezd: az elírásokat, köznyelvi "
+    "megfogalmazásokat és rokon értelmű szavakat ismerd fel (pl. a "
+    "'vagyonőr', 'őr', 'biztonsági őr', 'portás' ugyanarra utalhat; a "
+    "'mennyit keres' a fizetésre kérdez rá).\n"
+    "- Ha több forrásrészlet is releváns, mindet olvasd végig, és a "
+    "kérdéshez legpontosabban illeszkedő részből válaszolj. Időpontokat, "
+    "számokat, neveket szó szerint vegyél át a forrásból.\n"
+    "- Számításnál kizárólag a kérdésben és a kontextusban szereplő "
+    "adatokat használd. Hiányzó adatot SOHA ne feltételezz — ilyenkor "
+    "közöld a rendelkezésre álló tényeket, és jelezd, milyen adat hiányzik.\n"
+    "- KIZÁRÓLAG akkor, ha a kérdésre tényleg semmilyen válasz nem "
+    "adható a kontextus alapján, válaszold pontosan ezt: 'Erre a kérdésre "
+    "a vállalati tudásbázis alapján nem tudok válaszolni.'"
+)
+
 
 def _mentioned_filenames(texts: list[str], filenames: list[str]) -> list[str]:
     """Mely feltöltött fájlokat említi a kérdés (vagy a friss előzmény)?
@@ -55,14 +80,15 @@ def _mentioned_filenames(texts: list[str], filenames: list[str]) -> list[str]:
 
 
 async def retrieve_context(
-    *, tenant_id: str, user_id: str, question: str,
+    *, tenant_id: str, question: str,
     history: list[dict], filenames: list[str],
 ) -> list[dict]:
-    """Top-K releváns chunk — KÖTELEZŐ tenant+user izolációs szűrővel.
+    """Top-K releváns chunk — KÖTELEZŐ tenant-izolációs szűrővel.
 
-    A filter a szerveroldalon, a Laravel session-ből származó azonosítókkal
-    épül. Ez a függvény az egyetlen retrieval-útvonal: szűrő nélküli keresés
-    a szolgáltatásban nem létezik.
+    A tudásbázis cégszintű (tenantonként központi, az admin tölti fel);
+    a tenant_id a szerveroldalon, a Laravel tenant-kontextusából származik.
+    Ez a függvény az egyetlen retrieval-útvonal: tenant-szűrő nélküli
+    keresés a szolgáltatásban nem létezik.
     """
     # Követő kérdések ("mikor kelt ez a dokumentum?") — az utolsó user-üzenet
     # bevonása a lekérdezésbe és a fájlnév-felismerésbe
@@ -71,7 +97,6 @@ async def retrieve_context(
 
     must = [
         models.FieldCondition(key="tenant_id", match=models.MatchValue(value=tenant_id)),
-        models.FieldCondition(key="user_id", match=models.MatchValue(value=user_id)),
     ]
 
     # Ha a kérdés konkrét fájlt említ, arra szűkítünk — megengedőbb küszöbbel
@@ -103,20 +128,26 @@ async def retrieve_context(
 
 
 def build_prompt(
-    question: str, contexts: list[dict], history: list[dict], filenames: list[str]
+    question: str, contexts: list[dict], history: list[dict],
+    filenames: list[str], with_sources: bool,
 ) -> list[dict]:
     context_block = "\n\n---\n\n".join(
         f"[Forrás: {c['filename']}]\n{c['text']}" for c in contexts
     )
     doc_list = "\n".join(f"- {fn}" for fn in filenames) or "- (nincs)"
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    system = SYSTEM_PROMPT if with_sources else (
+        SYSTEM_PROMPT_NO_SOURCES
+    )
+    messages = [{"role": "system", "content": system}]
     # Rövid előzmény (max 6 üzenet) a többfordulós beszélgetéshez
     messages.extend(history[-6:])
+    # A dokumentumlista csak forrás-jogosultsággal (admin) kerül a promptba
+    doc_block = f"Elérhető dokumentumok:\n{doc_list}\n\n" if with_sources else ""
     messages.append(
         {
             "role": "user",
             "content": (
-                f"Elérhető dokumentumok:\n{doc_list}\n\n"
+                f"{doc_block}"
                 f"KONTEXTUS:\n{context_block}\n\nKÉRDÉS: {question}"
             ),
         }
@@ -125,32 +156,37 @@ def build_prompt(
 
 
 async def stream_answer(
-    *, tenant_id: str, user_id: str, question: str,
-    history: list[dict], filenames: list[str],
+    *, tenant_id: str, question: str,
+    history: list[dict], filenames: list[str], with_sources: bool,
 ) -> AsyncIterator[dict]:
-    """SSE eseményfolyam: sources → token* → done | error."""
+    """SSE eseményfolyam: [sources] → token* → done | error.
+
+    with_sources=False (dolgozói nézet): sem sources esemény, sem
+    fájlnév-említés a válaszban — a tudásbázis fájljai rejtettek.
+    """
     contexts = await retrieve_context(
-        tenant_id=tenant_id, user_id=user_id, question=question,
+        tenant_id=tenant_id, question=question,
         history=history, filenames=filenames,
     )
 
     if not contexts:
         yield {"event": "token", "data": (
-            "Erre a kérdésre a feltöltött dokumentumok alapján nem tudok válaszolni."
+            "Erre a kérdésre a vállalati tudásbázis alapján nem tudok válaszolni."
         )}
         yield {"event": "done", "data": ""}
         return
 
-    yield {
-        "event": "sources",
-        "data": json.dumps(
-            sorted({c["filename"] for c in contexts}), ensure_ascii=False
-        ),
-    }
+    if with_sources:
+        yield {
+            "event": "sources",
+            "data": json.dumps(
+                sorted({c["filename"] for c in contexts}), ensure_ascii=False
+            ),
+        }
 
     payload = {
         "model": settings.ollama_llm_model,
-        "messages": build_prompt(question, contexts, history, filenames),
+        "messages": build_prompt(question, contexts, history, filenames, with_sources),
         "stream": True,
         "options": {"temperature": 0.1, "num_ctx": 16384},
     }

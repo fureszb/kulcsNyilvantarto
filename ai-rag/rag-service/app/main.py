@@ -65,10 +65,11 @@ async def ingest(
 
 class ChatRequest(BaseModel):
     tenant_id: str = Field(min_length=1, max_length=64)
-    user_id: str = Field(min_length=1, max_length=64)
+    user_id: str = Field(min_length=1, max_length=64)  # naplózáshoz; a szűrés tenant-szintű
     question: str = Field(min_length=1, max_length=4000)
     history: list[dict] = Field(default_factory=list, max_length=20)
     filenames: list[str] = Field(default_factory=list, max_length=500)
+    with_sources: bool = True  # False: dolgozói nézet, fájlnevek rejtve
 
 
 @app.post("/chat/stream", dependencies=[Depends(verify_internal_token)])
@@ -77,10 +78,10 @@ async def chat_stream(req: ChatRequest) -> EventSourceResponse:
         try:
             async for event in stream_answer(
                 tenant_id=req.tenant_id,
-                user_id=req.user_id,
                 question=req.question,
                 history=req.history,
                 filenames=req.filenames,
+                with_sources=req.with_sources,
             ):
                 yield event
         except Exception:
@@ -91,8 +92,6 @@ async def chat_stream(req: ChatRequest) -> EventSourceResponse:
 
 
 @app.delete("/documents/{document_id}", dependencies=[Depends(verify_internal_token)])
-async def remove_document(document_id: str, tenant_id: str, user_id: str) -> dict:
-    await delete_document(
-        tenant_id=tenant_id, user_id=user_id, document_id=document_id
-    )
+async def remove_document(document_id: str, tenant_id: str) -> dict:
+    await delete_document(tenant_id=tenant_id, document_id=document_id)
     return {"status": "deleted"}

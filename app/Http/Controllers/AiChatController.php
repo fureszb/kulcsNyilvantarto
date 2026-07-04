@@ -18,15 +18,21 @@ class AiChatController extends Controller
     public function show(): Response
     {
         $user = Auth::guard('tenant')->user();
+        $isAdmin = $user->isAdmin();
 
         return Inertia::render('Ai/Chat', [
-            'documents' => AiDocument::where('user_id', $user->id)
-                ->latest()
-                ->get(['id', 'original_name', 'status', 'chunk_count', 'size_bytes', 'error_message', 'created_at']),
+            // A tudásbázis cégszintű — a fájllistát csak az admin látja
+            'documents' => $isAdmin
+                ? AiDocument::latest()
+                    ->get(['id', 'original_name', 'status', 'chunk_count', 'size_bytes', 'error_message', 'created_at'])
+                : [],
             'sessions' => AiChatSession::where('user_id', $user->id)
                 ->latest('updated_at')
                 ->limit(50)
                 ->get(['id', 'title', 'updated_at']),
+            'isAdmin' => $isAdmin,
+            // A dolgozó csak azt tudja, van-e egyáltalán tudásbázis (fájlnevek nélkül)
+            'kbReady' => AiDocument::where('status', 'ready')->exists(),
         ]);
     }
 
@@ -35,12 +41,19 @@ class AiChatController extends Controller
         $user = Auth::guard('tenant')->user();
         abort_unless($session->user_id === $user->id, 403);
 
+        $messages = $session->messages()
+            ->orderBy('id')
+            ->get(['role', 'content', 'sources']);
+
+        // Forrásokat csak admin láthat
+        if (!$user->isAdmin()) {
+            $messages->each(fn ($m) => $m->sources = null);
+        }
+
         return response()->json([
             'id' => $session->id,
             'title' => $session->title,
-            'messages' => $session->messages()
-                ->orderBy('id')
-                ->get(['role', 'content', 'sources']),
+            'messages' => $messages,
         ]);
     }
 
@@ -87,12 +100,13 @@ class AiChatController extends Controller
             'content' => $validated['question'],
         ]);
 
-        $filenames = AiDocument::where('user_id', $user->id)
-            ->where('status', 'ready')
+        // Cégszintű tudásbázis: minden kész dokumentum a keresés alapja
+        $filenames = AiDocument::where('status', 'ready')
             ->pluck('original_name')
             ->all();
+        $withSources = $user->isAdmin();
 
-        return response()->stream(function () use ($validated, $tenant, $user, $session, $filenames) {
+        return response()->stream(function () use ($validated, $tenant, $user, $session, $filenames, $withSources) {
             // Első SSE esemény: a session azonosító, hogy a kliens folytathassa
             echo "event: session\ndata: {$session->id}\n\n";
             if (ob_get_level() > 0) {
@@ -113,6 +127,9 @@ class AiChatController extends Controller
                         'question' => $validated['question'],
                         'history' => $validated['history'] ?? [],
                         'filenames' => $filenames,
+                        // Dolgozói nézetben a FastAPI sem sources eseményt,
+                        // sem fájlnév-említést nem ad a válaszban
+                        'with_sources' => $withSources,
                     ]);
             } catch (\Throwable) {
                 echo "event: error\ndata: Az AI szolgáltatás jelenleg nem érhető el.\n\n";

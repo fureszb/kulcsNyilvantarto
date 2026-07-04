@@ -75,7 +75,7 @@ async def ingest_document(
     chunks = [f"[Fájl: {filename}]\n{c}" for c in chunks]
 
     # 2) Re-ingest esetén a régi vektorok törlése (idempotencia)
-    await delete_document(tenant_id=tenant_id, user_id=user_id, document_id=document_id)
+    await delete_document(tenant_id=tenant_id, document_id=document_id)
 
     # 3) Batch embedding + upsert
     inserted = 0
@@ -88,7 +88,8 @@ async def ingest_document(
                     id=str(uuid.uuid4()),
                     vector=vec,
                     payload={
-                        # IZOLÁCIÓS KULCSOK — minden lekérdezés ezekre szűr
+                        # IZOLÁCIÓS KULCS — minden lekérdezés tenant_id-re szűr
+                        # (a tudásbázis cégszintű; a user_id a feltöltő admin)
                         "tenant_id": tenant_id,
                         "user_id": user_id,
                         "document_id": document_id,
@@ -106,16 +107,16 @@ async def ingest_document(
     return inserted
 
 
-async def delete_document(*, tenant_id: str, user_id: str, document_id: str) -> None:
-    """Egy dokumentum összes vektorának törlése — tenant+user szűréssel,
-    hogy idegen tenant dokumentuma véletlenül se legyen törölhető."""
+async def delete_document(*, tenant_id: str, document_id: str) -> None:
+    """Egy dokumentum összes vektorának törlése — tenant szűréssel,
+    hogy idegen tenant dokumentuma véletlenül se legyen törölhető.
+    (A jogosultság-ellenőrzés — csak admin törölhet — a Laravel oldalon van.)"""
     await qdrant.delete(
         collection_name=settings.qdrant_collection,
         points_selector=models.FilterSelector(
             filter=models.Filter(
                 must=[
                     models.FieldCondition(key="tenant_id", match=models.MatchValue(value=tenant_id)),
-                    models.FieldCondition(key="user_id", match=models.MatchValue(value=user_id)),
                     models.FieldCondition(key="document_id", match=models.MatchValue(value=document_id)),
                 ]
             )

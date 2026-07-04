@@ -23,6 +23,8 @@ interface ChatSession {
 interface Props {
     documents: AiDoc[];
     sessions: ChatSession[];
+    isAdmin: boolean;
+    kbReady: boolean;
 }
 
 interface ChatMessage {
@@ -48,7 +50,7 @@ function getXsrfToken(): string {
     return decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? '');
 }
 
-export default function AiChat({ documents, sessions }: Props) {
+export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [question, setQuestion] = useState('');
     const [streaming, setStreaming] = useState(false);
@@ -62,8 +64,8 @@ export default function AiChat({ documents, sessions }: Props) {
 
     const [uploadPercent, setUploadPercent] = useState<number | null>(null);
 
-    const hasReadyDocs = documents.some(d => d.status === 'ready');
-    const hasInFlight = documents.some(d => d.status === 'pending' || d.status === 'processing');
+    const hasReadyDocs = kbReady || documents.some(d => d.status === 'ready');
+    const hasInFlight = isAdmin && documents.some(d => d.status === 'pending' || d.status === 'processing');
 
     // Feldolgozás alatt lévő dokumentumok státuszának frissítése
     useEffect(() => {
@@ -240,16 +242,19 @@ export default function AiChat({ documents, sessions }: Props) {
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-slate-900">AI Asszisztens</h1>
                 <p className="text-sm text-slate-500 mt-1">
-                    Töltsön fel dokumentumokat, majd kérdezzen rájuk — az asszisztens kizárólag az Ön saját dokumentumai alapján válaszol.
+                    {isAdmin
+                        ? 'Töltse fel a vállalati dokumentumokat a központi tudásbázisba — a kollégák ezekből kérdezhetnek.'
+                        : 'Kérdezzen az asszisztenstől — a vállalati tudásbázis alapján válaszol.'}
                 </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Dokumentumok */}
+                {/* Dokumentumok — cégszintű tudásbázis, csak admin kezeli/látja */}
                 <div className="lg:col-span-1">
+                    {isAdmin && (
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                            <h2 className="text-sm font-semibold text-slate-700">Tudásbázis</h2>
+                            <h2 className="text-sm font-semibold text-slate-700">Központi tudásbázis</h2>
                             <label className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${uploadPercent !== null ? 'bg-slate-200 text-slate-400 cursor-wait' : 'bg-blue-600 text-white hover:bg-blue-500'}`}>
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                                 Feltöltés
@@ -317,9 +322,10 @@ export default function AiChat({ documents, sessions }: Props) {
                             })}
                         </ul>
                     </div>
+                    )}
 
                     {/* Beszélgetések */}
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-6">
+                    <div className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden ${isAdmin ? 'mt-6' : ''}`}>
                         <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
                             <h2 className="text-sm font-semibold text-slate-700">Beszélgetések</h2>
                             <button
@@ -378,11 +384,15 @@ export default function AiChat({ documents, sessions }: Props) {
                                     </div>
                                     <p className="text-sm font-medium text-slate-600">
                                         {hasReadyDocs
-                                            ? 'Kérdezzen a feltöltött dokumentumokból!'
-                                            : 'Először töltsön fel legalább egy dokumentumot.'}
+                                            ? 'Kérdezzen a vállalati tudásbázisból!'
+                                            : isAdmin
+                                                ? 'Először töltsön fel legalább egy dokumentumot.'
+                                                : 'A tudásbázis még üres — kérje meg az adminisztrátort a dokumentumok feltöltésére.'}
                                     </p>
                                     <p className="text-xs text-slate-400 mt-1">
-                                        Az asszisztens kizárólag az Ön dokumentumai alapján válaszol, a válaszok forrásmegjelöléssel érkeznek.
+                                        {isAdmin
+                                            ? 'Az asszisztens kizárólag a feltöltött dokumentumok alapján válaszol, forrásmegjelöléssel.'
+                                            : 'Az asszisztens kizárólag a vállalati tudásbázis alapján válaszol.'}
                                     </p>
                                 </div>
                             )}
@@ -401,7 +411,7 @@ export default function AiChat({ documents, sessions }: Props) {
                                                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                                             </span>
                                         )}
-                                        {msg.sources && msg.sources.length > 0 && (
+                                        {isAdmin && msg.sources && msg.sources.length > 0 && (
                                             <div className="mt-2 pt-2 border-t border-slate-200 flex flex-wrap gap-1">
                                                 {msg.sources.map(src => (
                                                     <span key={src} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px] text-slate-500">
@@ -428,7 +438,7 @@ export default function AiChat({ documents, sessions }: Props) {
                                 type="text"
                                 value={question}
                                 onChange={e => setQuestion(e.target.value)}
-                                placeholder={hasReadyDocs ? 'Írja be a kérdését…' : 'Előbb töltsön fel dokumentumot…'}
+                                placeholder={hasReadyDocs ? 'Írja be a kérdését…' : isAdmin ? 'Előbb töltsön fel dokumentumot…' : 'A tudásbázis még üres…'}
                                 maxLength={4000}
                                 disabled={streaming || !hasReadyDocs}
                                 className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 disabled:bg-slate-50 disabled:text-slate-400"
