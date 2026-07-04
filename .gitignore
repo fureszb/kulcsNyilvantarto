@@ -28,3 +28,4 @@ Thumbs.db
 /storage/database/
 *.sqlite
 /eloadas.md
+__pycache__/
