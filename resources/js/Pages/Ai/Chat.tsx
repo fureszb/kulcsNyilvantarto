@@ -562,6 +562,26 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         const history = messages.slice(-6).map(m => ({ role: m.role, content: m.content }));
         setMessages(prev => [...prev, { role: 'user', content: q }, { role: 'assistant', content: '' }]);
 
+        // Fázis frissítése — csak ELŐRE léphet, és csak amíg nincs válasz-token.
+        // A szerver phase-eseményei és a lokális időzítők is ezen mennek át.
+        const bumpPhase = (p: number) => {
+            setMessages(prev => {
+                const next = [...prev];
+                const last = next[next.length - 1];
+                if (last?.role === 'assistant' && !last.content && (last.phase ?? 1) < p) {
+                    next[next.length - 1] = { ...last, phase: p };
+                }
+                return next;
+            });
+        };
+        // Lokális léptetés fallbacknek: buffelő transport (pl. php artisan serve,
+        // egyes proxyk) alatt a szerver-események csak a válasz végén érnek ide —
+        // enélkül a jelző végig az 1. fázison állna. A valós esemény felülírja.
+        const phaseTimers = [
+            setTimeout(() => bumpPhase(2), 1300),
+            setTimeout(() => bumpPhase(3), 2800),
+        ];
+
         const controller = new AbortController();
         abortRef.current = controller;
 
@@ -608,13 +628,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                             setActiveSessionId(id);
                         }
                     } else if (payload.t === 'phase') {
-                        const phase = Number(payload.d);
-                        setMessages(prev => {
-                            const next = [...prev];
-                            const last = next[next.length - 1];
-                            next[next.length - 1] = { ...last, phase };
-                            return next;
-                        });
+                        bumpPhase(Number(payload.d));
                     } else if (payload.t === 'token') {
                         const token = String(payload.d ?? '');
                         fullAnswer += token;
@@ -672,6 +686,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                 }
             }
         } finally {
+            phaseTimers.forEach(clearTimeout);
             setStreaming(false);
             abortRef.current = null;
             // Beszélgetéslista frissítése (új session címe / sorrend)
