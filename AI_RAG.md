@@ -229,7 +229,7 @@ networks:
     driver: bridge
 ```
 
-> **Megjegyzés (magyar nyelvű dokumentumok):** a `bge-m3` embedding modell többnyelvű, magyarra is erős. Ha a válaszminőség magyarul gyenge lenne a `llama3.1:8b`-vel, a `qwen2.5:7b-instruct-q5_K_M` jó alternatíva — csak az env változót kell cserélni.
+> **Megjegyzés (modellválasztás, éles teszt alapján):** a `bge-m3` embedding többnyelvű, magyarra is erős. LLM-nek a `qwen2.5:14b-instruct-q4_K_M` a nyertes (táblázat-kikeresés stabil, hallucináció-csapdákon 100%, ~9 GB VRAM). 8–12 GB VRAM-nál `qwen2.5:7b-instruct-q5_K_M`; a `llama3.1:8b` magyarja szebb, de táblázatoknál megbízhatatlanul olvas.
 
 ### `ai-rag/rag-service/Dockerfile`
 
