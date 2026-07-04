@@ -131,6 +131,10 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const recognitionRef = useRef<any>(null);
 
+    // Felolvasás (TTS) kapcsoló — a gépelt kérdésekre adott választ is felolvassa
+    const [ttsEnabled, setTtsEnabled] = useState(false);
+    const ttsEnabledRef = useRef(false);
+
     const hasReadyDocs = kbReady || documents.some(d => d.status === 'ready');
     const hasInFlight = isAdmin && documents.some(d => d.status === 'pending' || d.status === 'processing');
 
@@ -360,6 +364,22 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         stopVoice();
     }
 
+    /** Felolvasás ki/be — a gépelt kérdésekre adott választ is felolvassa.
+     *  Bekapcsoláskor rövid megerősítés (egyben az audio "unlock"-ja mobilon,
+     *  mert felhasználói gesztusból indul). */
+    function toggleTts() {
+        const next = !ttsEnabledRef.current;
+        ttsEnabledRef.current = next;
+        setTtsEnabled(next);
+        if (next) {
+            if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
+            void speak('Felolvasás bekapcsolva.');
+        } else {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+        }
+    }
+
     function startVoice() {
         if (!speechSupported) {
             setChatError('Ez a böngésző nem támogatja a hangfelismerést — használjon Chrome vagy Edge böngészőt.');
@@ -553,6 +573,12 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
             abortRef.current = null;
             // Beszélgetéslista frissítése (új session címe / sorrend)
             router.reload({ only: ['sessions'] });
+        }
+
+        // Felolvasás, ha a hangszóró be van kapcsolva (gépelt kérdésnél is).
+        // A mikrofon-loop (voiceOn) maga kezeli a felolvasást — ott ne duplázzunk.
+        if (fullAnswer && ttsEnabledRef.current && !voiceOnRef.current) {
+            void speak(stripForSpeech(fullAnswer));
         }
         return fullAnswer;
     }
@@ -800,6 +826,29 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                         )}
 
                         <form onSubmit={ask} className="border-t border-slate-100 p-3 flex gap-2 bg-white">
+                            {/* Felolvasás ki/be — a válaszokat hangosan is felolvassa */}
+                            <button
+                                type="button"
+                                onClick={toggleTts}
+                                aria-label={ttsEnabled ? 'Felolvasás kikapcsolása' : 'Válaszok felolvasása'}
+                                aria-pressed={ttsEnabled}
+                                title={ttsEnabled ? 'Felolvasás kikapcsolása' : 'Válaszok felolvasása'}
+                                className={`flex items-center justify-center w-11 h-11 rounded-xl border transition-all duration-200 cursor-pointer shrink-0 ${
+                                    ttsEnabled
+                                        ? 'bg-blue-50 border-blue-300 text-blue-600'
+                                        : 'bg-white border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50'
+                                }`}
+                            >
+                                {ttsEnabled ? (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072M19.07 4.93a10 10 0 010 14.14M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l4-4m0 4l-4-4"/>
+                                    </svg>
+                                )}
+                            </button>
                             <button
                                 type="button"
                                 onClick={() => (voiceStatus === 'idle' ? startVoice() : stopVoice())}
