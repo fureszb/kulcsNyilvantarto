@@ -123,6 +123,14 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
 
     const [uploadPercent, setUploadPercent] = useState<number | null>(null);
 
+    // Hang-asszisztens állapot
+    type VoiceStatus = 'idle' | 'greeting' | 'listening' | 'thinking' | 'speaking';
+    const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('idle');
+    const [voiceTranscript, setVoiceTranscript] = useState('');
+    const voiceOnRef = useRef(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recognitionRef = useRef<any>(null);
+
     const hasReadyDocs = kbReady || documents.some(d => d.status === 'ready');
     const hasInFlight = isAdmin && documents.some(d => d.status === 'pending' || d.status === 'processing');
 
@@ -139,7 +147,12 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    useEffect(() => () => abortRef.current?.abort(), []);
+    useEffect(() => () => {
+        abortRef.current?.abort();
+        voiceOnRef.current = false;
+        try { recognitionRef.current?.abort(); } catch { /* már leállt */ }
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    }, []);
 
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0] ?? null;
@@ -204,13 +217,142 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         });
     }
 
-    async function ask(e: React.FormEvent) {
+    // ── Hang-asszisztens (Web Speech API: felismerés + felolvasás) ─────────
+    const speechSupported =
+        typeof window !== 'undefined' &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) &&
+        'speechSynthesis' in window;
+
+    function pickHungarianVoice(): SpeechSynthesisVoice | null {
+        return window.speechSynthesis.getVoices()
+            .find(v => v.lang.toLowerCase().startsWith('hu')) ?? null;
+    }
+
+    function speak(text: string): Promise<void> {
+        return new Promise(resolve => {
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'hu-HU';
+            const voice = pickHungarianVoice();
+            if (voice) u.voice = voice;
+            u.rate = 1.05;
+            let done = false;
+            const finish = () => { if (!done) { done = true; clearTimeout(guard); resolve(); } };
+            u.onend = finish;
+            u.onerror = finish;
+            // Biztonsági timeout: ha a böngésző TTS-e nem jelez vissza,
+            // a hang-loop akkor se akadjon meg (~13 karakter/mp + ráhagyás)
+            const guard = setTimeout(finish, Math.min(60000, 3000 + text.length * 80));
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(u);
+        });
+    }
+
+    /** Markdown → felolvasható tiszta szöveg */
+    function stripForSpeech(md: string): string {
+        return md
+            .replace(/```[\s\S]*?```/g, ' ')
+            .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+            .replace(/[*_#`>~|]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    /** Egy kérdés meghallgatása; a felismert szöveggel (vagy null-lal) tér vissza. */
+    function listenOnce(): Promise<string | null> {
+        return new Promise(resolve => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            const rec = new SR();
+            recognitionRef.current = rec;
+            rec.lang = 'hu-HU';
+            rec.interimResults = true;
+            rec.continuous = false;
+            let finalText = '';
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            rec.onresult = (ev: any) => {
+                let interim = '';
+                for (let i = ev.resultIndex; i < ev.results.length; i++) {
+                    const t = ev.results[i][0].transcript;
+                    if (ev.results[i].isFinal) finalText += t;
+                    else interim += t;
+                }
+                setVoiceTranscript(finalText || interim);
+            };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            rec.onerror = (ev: any) => {
+                if (ev.error === 'not-allowed') {
+                    setChatError('A mikrofon használata nincs engedélyezve a böngészőben.');
+                }
+                resolve(null);
+            };
+            rec.onend = () => resolve(finalText.trim() || null);
+            rec.start();
+        });
+    }
+
+    async function voiceLoop() {
+        setVoiceStatus('greeting');
+        await speak('Üdvözlöm! Miben segíthetek? Hallgatom a kérdését.');
+
+        while (voiceOnRef.current) {
+            setVoiceStatus('listening');
+            setVoiceTranscript('');
+            const q = await listenOnce();
+            if (!voiceOnRef.current) break;
+
+            if (!q) {
+                setVoiceStatus('speaking');
+                await speak('Nem hallottam kérdést. A mikrofon gombbal bármikor újra próbálkozhat.');
+                break;
+            }
+
+            setVoiceStatus('thinking');
+            const answer = await submitQuestion(q);
+            if (!voiceOnRef.current) break;
+
+            if (answer) {
+                setVoiceStatus('speaking');
+                await speak(stripForSpeech(answer));
+            }
+        }
+        stopVoice();
+    }
+
+    function startVoice() {
+        if (!speechSupported) {
+            setChatError('Ez a böngésző nem támogatja a hangfelismerést — használjon Chrome vagy Edge böngészőt.');
+            return;
+        }
+        if (streaming || voiceOnRef.current) return;
+        setChatError(null);
+        voiceOnRef.current = true;
+        window.speechSynthesis.getVoices(); // hangok előtöltése
+        void voiceLoop();
+    }
+
+    function stopVoice() {
+        voiceOnRef.current = false;
+        try { recognitionRef.current?.abort(); } catch { /* már leállt */ }
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        setVoiceStatus('idle');
+        setVoiceTranscript('');
+    }
+
+    function ask(e: React.FormEvent) {
         e.preventDefault();
         const q = question.trim();
         if (!q || streaming) return;
-
-        setChatError(null);
         setQuestion('');
+        void submitQuestion(q);
+    }
+
+    /** Kérdés elküldése; a teljes válaszszöveggel tér vissza (hang-módhoz). */
+    async function submitQuestion(q: string): Promise<string> {
+        if (!q || streaming) return '';
+
+        let fullAnswer = '';
+        setChatError(null);
         setStreaming(true);
 
         const history = messages.slice(-6).map(m => ({ role: m.role, content: m.content }));
@@ -265,6 +407,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                             return next;
                         });
                     } else if (event === 'token') {
+                        fullAnswer += data;
                         setMessages(prev => {
                             const next = [...prev];
                             const last = next[next.length - 1];
@@ -302,6 +445,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
             // Beszélgetéslista frissítése (új session címe / sorrend)
             router.reload({ only: ['sessions'] });
         }
+        return fullAnswer;
     }
 
     return (
@@ -313,11 +457,12 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                     </svg>
                 </div>
                 <div>
-                <p className="text-sm text-slate-500 mt-1">
-                    {isAdmin
-                        ? 'Töltse fel a vállalati dokumentumokat a központi tudásbázisba — a kollégák ezekből kérdezhetnek.'
-                        : 'Kérdezzen az asszisztenstől — a vállalati tudásbázis alapján válaszol.'}
-                </p>
+                    <h1 className="text-2xl font-bold text-slate-900">AI Asszisztens</h1>
+                    <p className="text-sm text-slate-500 mt-1">
+                        {isAdmin
+                            ? 'Töltse fel a vállalati dokumentumokat a központi tudásbázisba — a kollégák ezekből kérdezhetnek.'
+                            : 'Kérdezzen az asszisztenstől — a vállalati tudásbázis alapján válaszol.'}
+                    </p>
                 </div>
             </div>
 
@@ -521,7 +666,51 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                             <div ref={bottomRef} />
                         </div>
 
+                        {voiceStatus !== 'idle' && (
+                            <div className="ai-msg-in border-t border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2.5 flex items-center gap-3" role="status" aria-live="polite">
+                                <span className="ai-voice-bars flex items-end gap-[3px] h-4" aria-hidden="true">
+                                    <span/><span/><span/><span/><span/>
+                                </span>
+                                <span className="text-xs font-semibold text-blue-700">
+                                    {voiceStatus === 'greeting' && 'Köszöntés…'}
+                                    {voiceStatus === 'listening' && 'Hallgatom a kérdését…'}
+                                    {voiceStatus === 'thinking' && 'Gondolkodom…'}
+                                    {voiceStatus === 'speaking' && 'Válasz felolvasása…'}
+                                </span>
+                                {voiceTranscript && (
+                                    <span className="text-xs text-slate-600 italic truncate flex-1">„{voiceTranscript}”</span>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={stopVoice}
+                                    className="ml-auto text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors cursor-pointer shrink-0"
+                                >
+                                    Leállítás
+                                </button>
+                            </div>
+                        )}
+
                         <form onSubmit={ask} className="border-t border-slate-100 p-3 flex gap-2 bg-white">
+                            <button
+                                type="button"
+                                onClick={() => (voiceStatus === 'idle' ? startVoice() : stopVoice())}
+                                disabled={!hasReadyDocs || streaming}
+                                aria-label={voiceStatus === 'idle' ? 'Hang-asszisztens indítása' : 'Hang-asszisztens leállítása'}
+                                title={voiceStatus === 'idle' ? 'Hang-asszisztens indítása' : 'Hang-asszisztens leállítása'}
+                                className={`relative flex items-center justify-center w-11 h-11 rounded-xl border transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0 ${
+                                    voiceStatus !== 'idle'
+                                        ? 'bg-gradient-to-br from-rose-500 to-red-600 border-rose-400 text-white shadow-md shadow-rose-500/30 ai-mic-active'
+                                        : 'bg-white border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50'
+                                }`}
+                            >
+                                {voiceStatus !== 'idle' ? (
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m-4 0h8M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/>
+                                    </svg>
+                                )}
+                            </button>
                             <input
                                 type="text"
                                 value={question}
