@@ -160,6 +160,8 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         try { recognitionRef.current?.abort(); } catch { /* már leállt */ }
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         audioRef.current?.pause();
+        try { audioSrcRef.current?.stop(); } catch { /* már leállt */ }
+        void audioCtxRef.current?.close();
         if (ttsToastTimer.current) clearTimeout(ttsToastTimer.current);
     }, []);
 
@@ -248,6 +250,22 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
     }
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const audioCtxRef = useRef<AudioContext | null>(null);
+    const audioSrcRef = useRef<AudioBufferSourceNode | null>(null);
+
+    /** Felhasználói gesztusból hívva feloldja a hanglejátszást (mobil autoplay).
+     *  A gesztus alatt elindított AudioContext KÉSŐBB is játszhat le hangot —
+     *  akkor is, amikor a gombnyomás "transient activation"-je már lejárt
+     *  (pl. 20 mp gondolkodás után jön a válasz felolvasása). */
+    function ensureAudioUnlocked() {
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+            if (!Ctx) return;
+            if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+            void audioCtxRef.current.resume();
+        } catch { /* marad a HTMLAudio útvonal */ }
+    }
 
     /** Elsődleges: helyi neurális TTS (Piper, női hang) — hibánál böngésző-TTS. */
     async function speak(text: string): Promise<void> {
@@ -265,7 +283,27 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         await speakWithBrowser(text);
     }
 
-    function playAudioBlob(blob: Blob): Promise<void> {
+    async function playAudioBlob(blob: Blob): Promise<void> {
+        // Elsődleges: WebAudio a gesztusból feloldott AudioContext-tel —
+        // mobil autoplay-szabály mellett is megszólal, amikor a HTMLAudio
+        // play()-e már NotAllowedError-rel elbukna.
+        const ctx = audioCtxRef.current;
+        if (ctx) {
+            try {
+                if (ctx.state === 'suspended') await ctx.resume();
+                if (ctx.state === 'running') {
+                    const audioBuf = await ctx.decodeAudioData(await blob.arrayBuffer());
+                    return await new Promise<void>(resolve => {
+                        const src = ctx.createBufferSource();
+                        src.buffer = audioBuf;
+                        src.connect(ctx.destination);
+                        audioSrcRef.current = src;
+                        src.onended = () => { audioSrcRef.current = null; resolve(); };
+                        src.start();
+                    });
+                }
+            } catch { /* HTMLAudio fallback lentebb */ }
+        }
         return new Promise((resolve, reject) => {
             const url = URL.createObjectURL(blob);
             const audio = new Audio(url);
@@ -319,6 +357,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
             const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             let rec: any; // eslint-disable-line @typescript-eslint/no-explicit-any
             let settled = false;
+            let guard: ReturnType<typeof setTimeout>;
             const done = (val: string | null) => {
                 if (settled) return;
                 settled = true;
@@ -326,14 +365,22 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                 resolve(val);
             };
             // Ha a start() csendben elbukik (mobil böngésző nem indítja újra),
-            // ez a timeout garantálja, hogy a loop ne ragadjon "Hallgatom"-ban
-            const guard = setTimeout(() => done(null), 15000);
+            // ez a timeout garantálja, hogy a loop ne ragadjon "Hallgatom"-ban.
+            // FONTOS: amint a felismerés TÉNYLEG elindult (onstart), a guardot
+            // meghosszabbítjuk — különben élő hallgatást lőne le, miközben a
+            // felhasználó épp megszólalna ("néha figyel, néha nem").
+            const armGuard = (ms: number) => {
+                clearTimeout(guard);
+                guard = setTimeout(() => done(null), ms);
+            };
+            armGuard(15000); // az indulás megerősítéséig
 
             try { rec = new SR(); } catch { done(null); return; }
             recognitionRef.current = rec;
             rec.lang = 'hu-HU';
             rec.interimResults = true;
             rec.continuous = false;
+            rec.onstart = () => armGuard(45000); // elindult — bő plafon egy körre
             let finalText = '';
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             rec.onresult = (ev: any) => {
@@ -371,9 +418,11 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
 
         let emptyRounds = 0;
         while (voiceOnRef.current) {
-            // Előző felismerés biztos lezárása + kis szünet, hogy a felolvasás
-            // audio-erőforrása felszabaduljon, mielőtt a mikrofon újraindul
+            // Előző felismerés + esetleg beragadt felolvasás biztos lezárása,
+            // majd kis szünet, hogy az audio-erőforrás felszabaduljon,
+            // mielőtt a mikrofon újraindul
             try { recognitionRef.current?.abort(); } catch { /* nincs aktív */ }
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             await sleep(350);
             if (!voiceOnRef.current) break;
 
@@ -420,11 +469,14 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         if (ttsToastTimer.current) clearTimeout(ttsToastTimer.current);
         ttsToastTimer.current = setTimeout(() => setTtsToast(null), 3000);
         if (next) {
+            ensureAudioUnlocked(); // gesztusból — a későbbi felolvasásokhoz
             if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
             void speak('Felolvasás bekapcsolva.');
         } else {
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+            try { audioSrcRef.current?.stop(); } catch { /* már leállt */ }
+            audioSrcRef.current = null;
         }
     }
 
@@ -436,6 +488,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         if (streaming || voiceOnRef.current) return;
         setChatError(null);
         voiceOnRef.current = true;
+        ensureAudioUnlocked(); // gesztusból — a válasz-felolvasás ne némuljon el
         window.speechSynthesis.getVoices(); // hangok előtöltése
         void voiceLoop();
     }
@@ -445,6 +498,8 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         try { recognitionRef.current?.abort(); } catch { /* már leállt */ }
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+        try { audioSrcRef.current?.stop(); } catch { /* már leállt */ }
+        audioSrcRef.current = null;
         setVoiceStatus('idle');
         setVoiceTranscript('');
     }
