@@ -45,7 +45,11 @@ async def embed_texts(texts: list[str], client: httpx.AsyncClient) -> list[list[
     """Ollama /api/embed — natívan batch-képes."""
     resp = await client.post(
         f"{settings.ollama_base_url}/api/embed",
-        json={"model": settings.ollama_embed_model, "input": texts},
+        json={
+            "model": settings.ollama_embed_model,
+            "input": texts,
+            "keep_alive": settings.ollama_keep_alive,
+        },
         timeout=300.0,
     )
     resp.raise_for_status()

@@ -225,8 +225,17 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         'speechSynthesis' in window;
 
     function pickHungarianVoice(): SpeechSynthesisVoice | null {
-        return window.speechSynthesis.getVoices()
-            .find(v => v.lang.toLowerCase().startsWith('hu')) ?? null;
+        const voices = window.speechSynthesis.getVoices()
+            .filter(v => v.lang.toLowerCase().startsWith('hu'));
+        if (!voices.length) return null;
+        // Női, természetes hang előnyben: Edge "Noémi (Natural)" > egyéb
+        // neurális/online hangok > Google magyar > bármi magyar
+        const score = (v: SpeechSynthesisVoice) =>
+            (/no[eé]mi/i.test(v.name) ? 8 : 0) +
+            (/natural|neural|online/i.test(v.name) ? 4 : 0) +
+            (/female|nő/i.test(v.name) ? 2 : 0) +
+            (/google/i.test(v.name) ? 1 : 0);
+        return [...voices].sort((a, b) => score(b) - score(a))[0];
     }
 
     function speak(text: string): Promise<void> {
@@ -235,7 +244,8 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
             u.lang = 'hu-HU';
             const voice = pickHungarianVoice();
             if (voice) u.voice = voice;
-            u.rate = 1.05;
+            u.rate = 1.0;   // természetes tempó
+            u.pitch = 1.05; // kissé melegebb hangszín
             let done = false;
             const finish = () => { if (!done) { done = true; clearTimeout(guard); resolve(); } };
             u.onend = finish;
@@ -293,7 +303,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
 
     async function voiceLoop() {
         setVoiceStatus('greeting');
-        await speak('Üdvözlöm! Miben segíthetek? Hallgatom a kérdését.');
+        await speak('Üdvözlöm, örülök, hogy hall! Miben segíthetek ma? Hallgatom a kérdését.');
 
         while (voiceOnRef.current) {
             setVoiceStatus('listening');
@@ -303,7 +313,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
 
             if (!q) {
                 setVoiceStatus('speaking');
-                await speak('Nem hallottam kérdést. A mikrofon gombbal bármikor újra próbálkozhat.');
+                await speak('Sajnos most nem hallottam kérdést. Ha szeretné, a mikrofon gombbal bármikor újra megszólíthat!');
                 break;
             }
 
@@ -347,11 +357,49 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         void submitQuestion(q);
     }
 
+    /** Megszakadt stream után a szerveren mentett válasz lekérése.
+     *  (Mobil/proxy környezetben a stream elakadhat, de a válasz a
+     *  sessionbe mentve elkészül — innen visszatölthető.) */
+    async function recoverAnswer(sessionId: number | null, q: string): Promise<string> {
+        if (!sessionId) return '';
+        for (let attempt = 0; attempt < 40; attempt++) {
+            await new Promise(r => setTimeout(r, 3000));
+            try {
+                const res = await fetch(route('ai.sessions.show', { session: sessionId }), {
+                    headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': getXsrfToken() },
+                });
+                if (!res.ok) continue;
+                const data = await res.json();
+                const msgs = data.messages as { role: string; content: string; sources: string[] | null }[];
+                for (let j = msgs.length - 1; j > 0; j--) {
+                    if (msgs[j].role === 'assistant' && msgs[j - 1].role === 'user' && msgs[j - 1].content === q) {
+                        const found = msgs[j];
+                        setMessages(prev => {
+                            const next = [...prev];
+                            const last = next[next.length - 1];
+                            if (last?.role === 'assistant') {
+                                next[next.length - 1] = {
+                                    role: 'assistant',
+                                    content: found.content,
+                                    sources: found.sources ?? undefined,
+                                };
+                            }
+                            return next;
+                        });
+                        return found.content;
+                    }
+                }
+            } catch { /* következő próbálkozás */ }
+        }
+        return '';
+    }
+
     /** Kérdés elküldése; a teljes válaszszöveggel tér vissza (hang-módhoz). */
     async function submitQuestion(q: string): Promise<string> {
         if (!q || streaming) return '';
 
         let fullAnswer = '';
+        let sessionIdLocal: number | null = activeSessionId;
         setChatError(null);
         setStreaming(true);
 
@@ -397,7 +445,10 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
 
                     if (event === 'session') {
                         const id = parseInt(data, 10);
-                        if (!Number.isNaN(id)) setActiveSessionId(id);
+                        if (!Number.isNaN(id)) {
+                            sessionIdLocal = id;
+                            setActiveSessionId(id);
+                        }
                     } else if (event === 'phase') {
                         const phase = parseInt(data, 10);
                         setMessages(prev => {
@@ -429,15 +480,31 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                     }
                 }
             }
+            // A stream válasz nélkül zárult (mobil/proxy elnyelte az eseményeket)
+            // — a szerveren mentett válasz visszatöltése
+            if (!fullAnswer) {
+                fullAnswer = await recoverAnswer(sessionIdLocal, q);
+                if (!fullAnswer) {
+                    const e = new Error('A válasz megszakadt. Kérjük, próbálja újra.');
+                    e.name = 'RecoveryFailed';
+                    throw e;
+                }
+            }
         } catch (err) {
             if ((err as Error).name !== 'AbortError') {
-                setChatError((err as Error).message);
-                // Üres asszisztens-buborék eltávolítása hiba esetén
-                setMessages(prev =>
-                    prev[prev.length - 1]?.role === 'assistant' && prev[prev.length - 1].content === ''
-                        ? prev.slice(0, -1)
-                        : prev
-                );
+                // Hálózati hiba — hátha a válasz közben elkészült a szerveren
+                // (RecoveryFailed esetén már megpróbáltuk, nem ismételjük)
+                if (!fullAnswer && (err as Error).name !== 'RecoveryFailed') {
+                    fullAnswer = await recoverAnswer(sessionIdLocal, q);
+                }
+                if (!fullAnswer) {
+                    setChatError((err as Error).message);
+                    setMessages(prev =>
+                        prev[prev.length - 1]?.role === 'assistant' && prev[prev.length - 1].content === ''
+                            ? prev.slice(0, -1)
+                            : prev
+                    );
+                }
             }
         } finally {
             setStreaming(false);
@@ -715,15 +782,15 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                                 type="text"
                                 value={question}
                                 onChange={e => setQuestion(e.target.value)}
-                                placeholder={hasReadyDocs ? 'Írja be a kérdését…' : isAdmin ? 'Előbb töltsön fel dokumentumot…' : 'A tudásbázis még üres…'}
+                                placeholder={voiceStatus !== 'idle' ? 'Hang-asszisztens aktív…' : streaming ? 'Az asszisztens gondolkodik…' : hasReadyDocs ? 'Írja be a kérdését…' : isAdmin ? 'Előbb töltsön fel dokumentumot…' : 'A tudásbázis még üres…'}
                                 maxLength={4000}
-                                disabled={streaming || !hasReadyDocs}
+                                disabled={streaming || !hasReadyDocs || voiceStatus !== 'idle'}
                                 aria-label="Kérdés az AI asszisztensnek"
                                 className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 focus:shadow-md focus:shadow-blue-500/10 disabled:bg-slate-50 disabled:text-slate-400"
                             />
                             <button
                                 type="submit"
-                                disabled={streaming || !question.trim() || !hasReadyDocs}
+                                disabled={streaming || !question.trim() || !hasReadyDocs || voiceStatus !== 'idle'}
                                 className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white text-sm font-semibold shadow-md shadow-blue-600/25 transition-all duration-200 hover:from-blue-500 hover:to-blue-600 hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-px active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
                             >
                                 {streaming ? (

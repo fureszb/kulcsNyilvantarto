@@ -214,6 +214,7 @@ async def stream_answer(
         "model": settings.ollama_llm_model,
         "messages": build_prompt(question, contexts, history, filenames, with_sources),
         "stream": True,
+        "keep_alive": settings.ollama_keep_alive,
         "options": {"temperature": 0.1, "num_ctx": 16384},
     }
 

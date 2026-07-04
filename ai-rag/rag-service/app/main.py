@@ -1,17 +1,52 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
+from .config import settings
 from .ingestion import delete_document, ensure_collection, ingest_document
 from .rag import stream_answer
 from .security import verify_internal_token
 
 logger = logging.getLogger("rag")
+
+
+async def _warmup_models() -> None:
+    """Embedding + LLM betöltése a VRAM-ba induláskor, hogy az első kérdés
+    ne fizesse meg a 20-40 mp-es modellbetöltést."""
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                f"{settings.ollama_base_url}/api/embed",
+                json={
+                    "model": settings.ollama_embed_model,
+                    "input": ["bemelegítés"],
+                    "keep_alive": settings.ollama_keep_alive,
+                },
+                timeout=600.0,
+            )
+            await client.post(
+                f"{settings.ollama_base_url}/api/chat",
+                json={
+                    "model": settings.ollama_llm_model,
+                    "messages": [{"role": "user", "content": "Szia"}],
+                    "stream": False,
+                    "keep_alive": settings.ollama_keep_alive,
+                    # Ugyanaz a num_ctx, mint az éles kéréseknél — különben az
+                    # első kérdésnél az eltérő kontextusméret újratöltést okoz
+                    "options": {"num_predict": 1, "num_ctx": 16384},
+                },
+                timeout=600.0,
+            )
+        logger.info("Modell-bemelegítés kész (embed + LLM a VRAM-ban)")
+    except Exception:
+        logger.warning("Modell-bemelegítés sikertelen — az első kérdés lassabb lesz")
 
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".xlsx", ".txt"}
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB — Laravel oldalon is érvényesítve
@@ -20,7 +55,9 @@ MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB — Laravel oldalon is érvényesí
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await ensure_collection()
+    warmup = asyncio.create_task(_warmup_models())
     yield
+    warmup.cancel()
 
 
 app = FastAPI(title="RAG Service", docs_url=None, redoc_url=None, lifespan=lifespan)

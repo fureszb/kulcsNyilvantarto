@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     qdrant_collection: str = "enterprise_docs"
     ollama_llm_model: str = "llama3.1:8b-instruct-q5_K_M"
     ollama_embed_model: str = "bge-m3"
+    # A modellek maradjanak a VRAM-ban — enélkül 5 perc tétlenség után
+    # kiürülnek, és a következő kérdés 20-40 mp modellbetöltéssel indul
+    ollama_keep_alive: str = "24h"
 
     # Chunking — kisebb chunk = témafókuszáltabb embedding, pontosabb rangsor
     chunk_size: int = 600
