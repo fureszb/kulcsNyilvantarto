@@ -134,6 +134,9 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
     // Felolvasás (TTS) kapcsoló — a gépelt kérdésekre adott választ is felolvassa
     const [ttsEnabled, setTtsEnabled] = useState(false);
     const ttsEnabledRef = useRef(false);
+    // Rövid toast a felolvasás be/kikapcsolásáról (~3 mp)
+    const [ttsToast, setTtsToast] = useState<{ on: boolean; key: number } | null>(null);
+    const ttsToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const hasReadyDocs = kbReady || documents.some(d => d.status === 'ready');
     const hasInFlight = isAdmin && documents.some(d => d.status === 'pending' || d.status === 'processing');
@@ -157,6 +160,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         try { recognitionRef.current?.abort(); } catch { /* már leállt */ }
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         audioRef.current?.pause();
+        if (ttsToastTimer.current) clearTimeout(ttsToastTimer.current);
     }, []);
 
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -279,7 +283,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
             u.lang = 'hu-HU';
             const voice = pickHungarianVoice();
             if (voice) u.voice = voice;
-            u.rate = 1.0;   // természetes tempó
+            u.rate = 1.12;  // kissé gyorsabb tempó
             u.pitch = 1.05; // kissé melegebb hangszín
             let done = false;
             const finish = () => { if (!done) { done = true; clearTimeout(guard); resolve(); } };
@@ -411,6 +415,10 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         const next = !ttsEnabledRef.current;
         ttsEnabledRef.current = next;
         setTtsEnabled(next);
+        // Toast ~3 mp-re
+        setTtsToast({ on: next, key: Date.now() });
+        if (ttsToastTimer.current) clearTimeout(ttsToastTimer.current);
+        ttsToastTimer.current = setTimeout(() => setTtsToast(null), 3000);
         if (next) {
             if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
             void speak('Felolvasás bekapcsolva.');
@@ -625,6 +633,27 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
 
     return (
         <AppLayout title="AI Asszisztens">
+            {/* Toast: felolvasás be/kikapcsolva (~3 mp) */}
+            {ttsToast && (
+                <div
+                    key={ttsToast.key}
+                    className="ai-toast fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-xl shadow-lg border bg-slate-900/95 border-white/10 text-white backdrop-blur"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <span className={`flex items-center justify-center w-6 h-6 rounded-lg shrink-0 ${ttsToast.on ? 'bg-blue-500' : 'bg-slate-600'}`}>
+                        {ttsToast.on ? (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072M19.07 4.93a10 10 0 010 14.14M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                        ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l4-4m0 4l-4-4"/></svg>
+                        )}
+                    </span>
+                    <span className="text-sm font-medium">
+                        {ttsToast.on ? 'Felolvasás bekapcsolva' : 'Felolvasás kikapcsolva'}
+                    </span>
+                </div>
+            )}
+
             <div className="mb-6 flex items-start gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25 shrink-0" aria-hidden="true">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

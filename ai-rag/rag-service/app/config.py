@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     # Helyi neurális TTS (Piper) — magyar női hang
     piper_model_path: str = "/srv/tts/hu_HU-anna-medium.onnx"
     tts_max_chars: int = 4000
+    # Beszédtempó: kisebb = gyorsabb (1.0 a modell alapértéke)
+    tts_length_scale: float = 0.9
 
     # Chunking — kisebb chunk = témafókuszáltabb embedding, pontosabb rangsor
     chunk_size: int = 600

@@ -32,7 +32,12 @@ def _synthesize_blocking(text: str) -> bytes:
     voice = _get_voice()
     buf = io.BytesIO()
     with wave.open(buf, "wb") as wav_file:
-        voice.synthesize(text, wav_file, sentence_silence=0.25)
+        voice.synthesize(
+            text,
+            wav_file,
+            length_scale=settings.tts_length_scale,
+            sentence_silence=0.25,
+        )
     return buf.getvalue()
 
 

@@ -344,6 +344,19 @@ html.no-progress #nprogress { display: none !important; }
     .ai-phase-shimmer { animation: none; color: #1d4ed8; }
 }
 
+/* ── Felolvasás toast: be + automatikus kifutás ~3 mp alatt ── */
+@keyframes aiToast {
+    0%   { opacity: 0; transform: translate(-50%, -10px); }
+    10%  { opacity: 1; transform: translate(-50%, 0); }
+    88%  { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -8px); }
+}
+.ai-toast { animation: aiToast 3s ease forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+    .ai-toast { animation: none; }
+}
+
 /* ── Hang-asszisztens: mikrofonpulzálás + equalizer sávok ──── */
 @keyframes aiMicRing {
     0%   { box-shadow: 0 0 0 0 rgba(244,63,94,0.4); }
