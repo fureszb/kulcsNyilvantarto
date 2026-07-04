@@ -68,6 +68,7 @@ class ChatRequest(BaseModel):
     user_id: str = Field(min_length=1, max_length=64)
     question: str = Field(min_length=1, max_length=4000)
     history: list[dict] = Field(default_factory=list, max_length=20)
+    filenames: list[str] = Field(default_factory=list, max_length=500)
 
 
 @app.post("/chat/stream", dependencies=[Depends(verify_internal_token)])
@@ -79,6 +80,7 @@ async def chat_stream(req: ChatRequest) -> EventSourceResponse:
                 user_id=req.user_id,
                 question=req.question,
                 history=req.history,
+                filenames=req.filenames,
             ):
                 yield event
         except Exception:

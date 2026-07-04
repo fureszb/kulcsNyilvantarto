@@ -15,8 +15,10 @@ class Settings(BaseSettings):
     embed_batch_size: int = 32
 
     # Retrieval
-    top_k: int = 5
-    score_threshold: float = 0.35
+    top_k: int = 6
+    score_threshold: float = 0.3
+    # Fájlnévre szűrt keresésnél megengedőbb küszöb — a doksi már azonosított
+    filename_score_threshold: float = 0.1
 
     # Memória-védelem parseolásnál
     max_cell_chars: int = 2000           # xlsx cellánkénti plafon

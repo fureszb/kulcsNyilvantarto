@@ -70,6 +70,10 @@ async def ingest_document(
     if not chunks:
         return 0
 
+    # Fájlnév-prefix minden chunkban: így a fájlnevet említő kérdések
+    # ("mit tartalmaz a licensz.txt?") embedding-szinten is találatot adnak
+    chunks = [f"[Fájl: {filename}]\n{c}" for c in chunks]
+
     # 2) Re-ingest esetén a régi vektorok törlése (idempotencia)
     await delete_document(tenant_id=tenant_id, user_id=user_id, document_id=document_id)
 

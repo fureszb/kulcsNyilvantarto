@@ -50,6 +50,12 @@ class AiChatController extends Controller
                         'user_id' => (string) $user->id,
                         'question' => $validated['question'],
                         'history' => $validated['history'] ?? [],
+                        // A feldolgozott dokumentumok listája — fájlnév-alapú
+                        // kereséshez és a "miről kérdezhetek" válaszokhoz
+                        'filenames' => AiDocument::where('user_id', $user->id)
+                            ->where('status', 'ready')
+                            ->pluck('original_name')
+                            ->all(),
                     ]);
             } catch (\Throwable) {
                 echo "event: error\ndata: Az AI szolgáltatás jelenleg nem érhető el.\n\n";

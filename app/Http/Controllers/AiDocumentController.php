@@ -55,12 +55,14 @@ class AiDocumentController extends Controller
         $tenant = app('tenant');
 
         try {
-            Http::withHeaders([
-                'X-Internal-Token' => config('services.rag.token'),
-            ])->timeout(30)->delete(config('services.rag.url') . "/documents/{$document->id}", [
+            // A FastAPI query paramként várja az azonosítókat, nem body-ban
+            $query = http_build_query([
                 'tenant_id' => $tenant->slug,
                 'user_id' => (string) $user->id,
-            ])->throw();
+            ]);
+            Http::withHeaders([
+                'X-Internal-Token' => config('services.rag.token'),
+            ])->timeout(30)->delete(config('services.rag.url') . "/documents/{$document->id}?{$query}")->throw();
         } catch (\Throwable $e) {
             Log::error('RAG dokumentum törlés sikertelen: ' . $e->getMessage());
             return back()->with('error', 'A dokumentum törlése jelenleg nem lehetséges. Próbálja újra később.');
