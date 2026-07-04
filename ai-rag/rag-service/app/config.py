@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     # kiürülnek, és a következő kérdés 20-40 mp modellbetöltéssel indul
     ollama_keep_alive: str = "24h"
 
+    # Helyi neurális TTS (Piper) — magyar női hang
+    piper_model_path: str = "/srv/tts/hu_HU-anna-medium.onnx"
+    tts_max_chars: int = 4000
+
     # Chunking — kisebb chunk = témafókuszáltabb embedding, pontosabb rangsor
     chunk_size: int = 600
     chunk_overlap: int = 100

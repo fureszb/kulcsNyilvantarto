@@ -5,7 +5,7 @@ import logging
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Response, UploadFile
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
@@ -13,6 +13,7 @@ from .config import settings
 from .ingestion import delete_document, ensure_collection, ingest_document
 from .rag import stream_answer
 from .security import verify_internal_token
+from .tts import synthesize
 
 logger = logging.getLogger("rag")
 
@@ -132,3 +133,18 @@ async def chat_stream(req: ChatRequest) -> EventSourceResponse:
 async def remove_document(document_id: str, tenant_id: str) -> dict:
     await delete_document(tenant_id=tenant_id, document_id=document_id)
     return {"status": "deleted"}
+
+
+class TtsRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=4000)
+
+
+@app.post("/tts", dependencies=[Depends(verify_internal_token)])
+async def tts(req: TtsRequest) -> Response:
+    """Szöveg → WAV (Piper, magyar női hang)."""
+    try:
+        audio = await synthesize(req.text[: settings.tts_max_chars])
+    except Exception:
+        logger.exception("TTS hiba")
+        raise HTTPException(500, "A hangszintézis nem érhető el.")
+    return Response(content=audio, media_type="audio/wav")

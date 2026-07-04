@@ -133,6 +133,9 @@ Route::prefix('{tenant}')
                 ->name('ai.chat.stream');
             Route::post('/ai/documents',             [AiDocumentController::class, 'store'])->name('ai.documents.store');
             Route::delete('/ai/documents/{document}',[AiDocumentController::class, 'destroy'])->name('ai.documents.destroy');
+            Route::post('/ai/tts',                   [AiChatController::class, 'tts'])
+                ->middleware('throttle:30,1')
+                ->name('ai.tts');
             Route::get('/ai/sessions/{session}',     [AiChatController::class, 'showSession'])->name('ai.sessions.show');
             Route::delete('/ai/sessions/{session}',  [AiChatController::class, 'destroySession'])->name('ai.sessions.destroy');
 

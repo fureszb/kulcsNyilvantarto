@@ -152,6 +152,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         voiceOnRef.current = false;
         try { recognitionRef.current?.abort(); } catch { /* már leállt */ }
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        audioRef.current?.pause();
     }, []);
 
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -238,7 +239,37 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         return [...voices].sort((a, b) => score(b) - score(a))[0];
     }
 
-    function speak(text: string): Promise<void> {
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    /** Elsődleges: helyi neurális TTS (Piper, női hang) — hibánál böngésző-TTS. */
+    async function speak(text: string): Promise<void> {
+        try {
+            const res = await fetch(route('ai.tts'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getXsrfToken() },
+                body: JSON.stringify({ text: text.slice(0, 4000) }),
+            });
+            if (!res.ok) throw new Error('tts unavailable');
+            const blob = await res.blob();
+            await playAudioBlob(blob);
+            return;
+        } catch { /* fallback: böngésző-TTS */ }
+        await speakWithBrowser(text);
+    }
+
+    function playAudioBlob(blob: Blob): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            audioRef.current = audio;
+            const cleanup = () => { URL.revokeObjectURL(url); audioRef.current = null; };
+            audio.onended = () => { cleanup(); resolve(); };
+            audio.onerror = () => { cleanup(); reject(new Error('playback failed')); };
+            audio.play().catch(err => { cleanup(); reject(err); });
+        });
+    }
+
+    function speakWithBrowser(text: string): Promise<void> {
         return new Promise(resolve => {
             const u = new SpeechSynthesisUtterance(text);
             u.lang = 'hu-HU';
@@ -345,6 +376,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         voiceOnRef.current = false;
         try { recognitionRef.current?.abort(); } catch { /* már leállt */ }
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
         setVoiceStatus('idle');
         setVoiceTranscript('');
     }

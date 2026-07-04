@@ -171,6 +171,26 @@ class AiChatController extends Controller
         ]);
     }
 
+    public function tts(Request $request): \Illuminate\Http\Response
+    {
+        $validated = $request->validate([
+            'text' => ['required', 'string', 'max:4000'],
+        ]);
+
+        $response = Http::withHeaders([
+                'X-Internal-Token' => config('services.rag.token'),
+            ])
+            ->timeout(60)
+            ->post(config('services.rag.url') . '/tts', ['text' => $validated['text']]);
+
+        abort_if($response->failed(), 503, 'A hangszintézis nem érhető el.');
+
+        return response($response->body(), 200, [
+            'Content-Type' => 'audio/wav',
+            'Cache-Control' => 'no-store',
+        ]);
+    }
+
     private function persistAssistantMessage(AiChatSession $session, string $raw): void
     {
         $answer = '';
