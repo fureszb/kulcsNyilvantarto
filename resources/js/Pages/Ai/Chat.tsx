@@ -431,6 +431,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         if (!q || streaming) return '';
 
         let fullAnswer = '';
+        let doneReceived = false;
         let sessionIdLocal: number | null = activeSessionId;
         setChatError(null);
         setStreaming(true);
@@ -510,16 +511,21 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                                 return next;
                             });
                         }
+                    } else if (payload.t === 'done') {
+                        doneReceived = true;
                     } else if (payload.t === 'error') {
                         throw new Error(String(payload.d || 'Belső hiba történt.'));
                     }
                 }
             }
-            // A stream válasz nélkül zárult (mobil/proxy elnyelte az eseményeket)
-            // — a szerveren mentett válasz visszatöltése
-            if (!fullAnswer) {
-                fullAnswer = await recoverAnswer(sessionIdLocal, q);
-                if (!fullAnswer) {
+            // A stream 'done' nélkül zárult → megszakadt (mobil/proxy) vagy
+            // az eseményeket elnyelte. A szerver a teljes választ elmentette
+            // (ignore_user_abort) — visszatöltjük, akár részleges a szöveg.
+            if (!doneReceived) {
+                const recovered = await recoverAnswer(sessionIdLocal, q);
+                if (recovered) {
+                    fullAnswer = recovered;
+                } else if (!fullAnswer) {
                     const e = new Error('A válasz megszakadt. Kérjük, próbálja újra.');
                     e.name = 'RecoveryFailed';
                     throw e;
@@ -529,8 +535,9 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
             if ((err as Error).name !== 'AbortError') {
                 // Hálózati hiba — hátha a válasz közben elkészült a szerveren
                 // (RecoveryFailed esetén már megpróbáltuk, nem ismételjük)
-                if (!fullAnswer && (err as Error).name !== 'RecoveryFailed') {
-                    fullAnswer = await recoverAnswer(sessionIdLocal, q);
+                if (!doneReceived && (err as Error).name !== 'RecoveryFailed') {
+                    const recovered = await recoverAnswer(sessionIdLocal, q);
+                    if (recovered) fullAnswer = recovered;
                 }
                 if (!fullAnswer) {
                     setChatError((err as Error).message);

@@ -106,6 +106,11 @@ class AiChatController extends Controller
             ->all();
         $withSources = $user->isAdmin();
 
+        // A kliens lecsatlakozása (mobil, proxy-timeout) NE szakítsa meg a
+        // FastAPI-válasz beolvasását — különben csak részleges válasz mentődne,
+        // és a kliens sem tudná később visszatölteni a teljeset.
+        @ignore_user_abort(true);
+
         return response()->stream(function () use ($validated, $tenant, $user, $session, $filenames, $withSources) {
             // Első SSE esemény: a session azonosító, hogy a kliens folytathassa.
             // A típus a data JSON-jában utazik — így az SSE-keretezést
@@ -147,23 +152,29 @@ class AiChatController extends Controller
 
             $body = $response->toPsrResponse()->getBody();
             $raw = '';
+            $clientGone = false;
 
+            // Végig beolvassuk a FastAPI teljes válaszát (a mentéshez), akkor is,
+            // ha a kliens közben lecsatlakozott — csak neki nem streamelünk tovább.
             while (!$body->eof()) {
                 $chunk = $body->read(1024);
-                if ($chunk !== '') {
-                    $raw .= $chunk;
+                if ($chunk === '') {
+                    continue;
+                }
+                $raw .= $chunk;
+                if (!$clientGone) {
                     echo $chunk;
                     if (ob_get_level() > 0) {
                         ob_flush();
                     }
                     flush();
-                }
-                if (connection_aborted()) {
-                    break;
+                    if (connection_aborted()) {
+                        $clientGone = true; // innentől csak beolvasunk + mentünk
+                    }
                 }
             }
 
-            // A stream végén az asszisztens-válasz mentése (megszakadásnál a részleges is)
+            // A stream végén a teljes asszisztens-válasz mentése
             $this->persistAssistantMessage($session, $raw);
         }, 200, [
             'Content-Type' => 'text/event-stream',
