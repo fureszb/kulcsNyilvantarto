@@ -14,14 +14,14 @@ services:
       OLLAMA_NUM_PARALLEL: "4"
       OLLAMA_MAX_LOADED_MODELS: "2"     # LLM + embedding modell egyszerre
       OLLAMA_KEEP_ALIVE: "24h"          # ne unloadolja a modelleket
-    # GPU-gyorsítás (NVIDIA): komment nélkül aktív, CPU-n hagyd kikommentezve.
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
+    # GPU-gyorsítás (NVIDIA)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "ollama", "ls"]
       interval: 30s
