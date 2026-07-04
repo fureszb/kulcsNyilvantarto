@@ -267,8 +267,13 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         } catch { /* marad a HTMLAudio útvonal */ }
     }
 
+    // Az utoljára felolvasott szöveg — a mikrofon saját-hang-visszahallásának
+    // kiszűréséhez (pl. a "Felolvasás bekapcsolva" ne menjen el kérdésként)
+    const lastSpokenRef = useRef('');
+
     /** Elsődleges: helyi neurális TTS (Piper, női hang) — hibánál böngésző-TTS. */
     async function speak(text: string): Promise<void> {
+        lastSpokenRef.current = text;
         try {
             const res = await fetch(route('ai.tts'), {
                 method: 'POST',
@@ -346,6 +351,17 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
     }
 
     const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+    /** A felismert szöveg a saját felolvasásunk visszhangja-e?
+     *  (A mikrofon a hangszóróból hallhatja a köszöntést/választ.) */
+    function isEchoOfOwnSpeech(recognized: string): boolean {
+        const norm = (s: string) => s.toLowerCase().replace(/[.,!?…'"”„]/g, ' ').replace(/\s+/g, ' ').trim();
+        const q = norm(recognized);
+        const spoken = norm(lastSpokenRef.current);
+        if (!q || !spoken) return false;
+        // Rövid felismerés, ami szerepel az utoljára mondott szövegben → visszhang
+        return q.length <= 60 && spoken.includes(q);
+    }
 
     /** Egy kérdés meghallgatása. Visszatérés:
      *  - felismert szöveg, vagy
@@ -433,6 +449,13 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
 
             if (q === '__DENIED__') break;
 
+            // Saját felolvasás visszhangja (pl. "Bekapcsolva") → eldobjuk,
+            // üres körként kezeljük, nem megy el kérdésként
+            if (q && isEchoOfOwnSpeech(q)) {
+                setVoiceTranscript('');
+                continue;
+            }
+
             if (!q) {
                 // Üres kör: NEM lépünk ki, újra hallgatunk (max 3 üres kör)
                 emptyRounds++;
@@ -471,7 +494,9 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         if (next) {
             ensureAudioUnlocked(); // gesztusból — a későbbi felolvasásokhoz
             if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
-            void speak('Felolvasás bekapcsolva.');
+            // Hang-mód (hallgatás) közben NEM mondjuk ki a megerősítést —
+            // a mikrofon kérdésként hallaná vissza; a toast elég jelzés
+            if (!voiceOnRef.current) void speak('Felolvasás bekapcsolva.');
         } else {
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
