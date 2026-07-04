@@ -16,11 +16,15 @@ class AiDocumentController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
+        // 'mimes:docx' a MIME-guesser miatt zip/octet-stream-ként dobná el a
+        // docx-et, tartalom-sniffelés Windowson megbízhatatlan. A kiterjesztést
+        // itt ellenőrizzük; a tartalmat a RAG szolgáltatás parserei validálják
+        // (hibás fájl → 'failed' státusz).
         $request->validate([
-            'file' => ['required', 'file', 'max:20480', 'mimes:pdf,docx,xlsx,txt'],
+            'file' => ['required', 'file', 'max:20480', 'extensions:pdf,docx,xlsx,txt'],
         ], [
             'file.max' => 'A fájl túl nagy (max 20 MB).',
-            'file.mimes' => 'Csak PDF, DOCX, XLSX és TXT tölthető fel.',
+            'file.extensions' => 'Csak PDF, DOCX, XLSX és TXT tölthető fel.',
         ]);
 
         $tenant = app('tenant');

@@ -48,6 +48,10 @@ def load_xlsx(data: bytes) -> Iterator[str]:
     """read_only + iter_rows: az openpyxl soronként streamel, nem tölti be
     a teljes munkafüzetet a memóriába. Cellánkénti karakterplafon védi a
     degenerált (óriás szöveget tartalmazó) cellák elleni esetet.
+
+    Az adatsorokat "Fejléc: érték | Fejléc: érték" párokká alakítjuk — az LLM
+    nyers tab-elválasztott soroknál elcsúszik az oszlopokon, a felcímkézett
+    pároknál nem.
     """
     from openpyxl import load_workbook
 
@@ -55,14 +59,29 @@ def load_xlsx(data: bytes) -> Iterator[str]:
     try:
         for ws in wb.worksheets:
             yield f"[Munkalap: {ws.title}]"
+            headers: list[str] | None = None
             for row in ws.iter_rows(values_only=True):
                 cells = [
-                    str(v)[: settings.max_cell_chars]
+                    str(v)[: settings.max_cell_chars].strip() if v is not None else ""
                     for v in row
-                    if v is not None and str(v).strip()
                 ]
-                if cells:
-                    yield "\t".join(cells)
+                if not any(cells):
+                    continue
+                if headers is None:
+                    # Az első nem üres sor a fejléc
+                    headers = cells
+                    continue
+                filled = [(i, c) for i, c in enumerate(cells) if c]
+                # Kevés kitöltött cella (pl. megjegyzés-sor): fejléc-címke nélkül,
+                # különben félrevezető párosítás születne
+                if len(filled) <= 2:
+                    yield " — ".join(c for _, c in filled)
+                    continue
+                pairs = []
+                for i, c in filled:
+                    header = headers[i] if i < len(headers) and headers[i] else f"{i + 1}. oszlop"
+                    pairs.append(f"{header}: {c}")
+                yield " | ".join(pairs)
     finally:
         wb.close()
 

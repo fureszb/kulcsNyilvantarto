@@ -22,6 +22,9 @@ SYSTEM_PROMPT = (
     "- Ha a felhasználó arról kérdez, milyen dokumentumok érhetők el vagy "
     "miről kérdezhet, sorold fel az 'Elérhető dokumentumok' listát és "
     "röviden a kontextusban látható tartalmukat.\n"
+    "- Ha több forrásrészlet is releváns, mindet olvasd végig, és a "
+    "kérdéshez legpontosabban illeszkedő részből válaszolj. Időpontokat, "
+    "számokat, neveket szó szerint vegyél át a forrásból.\n"
     "- KIZÁRÓLAG akkor, ha a kérdésre tényleg semmilyen válasz nem "
     "adható a kontextus alapján, válaszold pontosan ezt: 'Erre a kérdésre "
     "a feltöltött dokumentumok alapján nem tudok válaszolni.'"
@@ -140,7 +143,7 @@ async def stream_answer(
         "model": settings.ollama_llm_model,
         "messages": build_prompt(question, contexts, history, filenames),
         "stream": True,
-        "options": {"temperature": 0.1, "num_ctx": 8192},
+        "options": {"temperature": 0.1, "num_ctx": 16384},
     }
 
     async with httpx.AsyncClient(timeout=httpx.Timeout(300.0, connect=10.0)) as client:

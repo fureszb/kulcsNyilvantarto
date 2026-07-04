@@ -9,13 +9,13 @@ class Settings(BaseSettings):
     ollama_llm_model: str = "llama3.1:8b-instruct-q5_K_M"
     ollama_embed_model: str = "bge-m3"
 
-    # Chunking
-    chunk_size: int = 1000
-    chunk_overlap: int = 150
+    # Chunking — kisebb chunk = témafókuszáltabb embedding, pontosabb rangsor
+    chunk_size: int = 600
+    chunk_overlap: int = 100
     embed_batch_size: int = 32
 
     # Retrieval
-    top_k: int = 6
+    top_k: int = 8
     score_threshold: float = 0.3
     # Fájlnévre szűrt keresésnél megengedőbb küszöb — a doksi már azonosított
     filename_score_threshold: float = 0.1
