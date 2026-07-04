@@ -124,7 +124,8 @@ async def chat_stream(req: ChatRequest) -> EventSourceResponse:
                 yield event
         except Exception:
             logger.exception("Chat stream hiba: tenant=%s", req.tenant_id)
-            yield {"event": "error", "data": "Belső hiba történt."}
+            from .rag import sse_event
+            yield sse_event("error", "Belső hiba történt.")
 
     return EventSourceResponse(generator())
 

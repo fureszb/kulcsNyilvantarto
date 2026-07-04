@@ -171,6 +171,17 @@ def build_prompt(
     return messages
 
 
+def sse_event(t: str, d) -> dict:
+    """Önhordozó SSE esemény: a típus a data JSON-jában utazik.
+
+    Egyes proxyk (pl. ngrok inspection) újraírják az SSE keretezést —
+    eldobják az event: sorokat és összevonják az eseményeket. A data-sorok
+    viszont érintetlenek maradnak, ezért minden információt oda teszünk;
+    a kliens soronként, a keretezéstől függetlenül parseol.
+    """
+    return {"event": t, "data": json.dumps({"t": t, "d": d}, ensure_ascii=False)}
+
+
 async def stream_answer(
     *, tenant_id: str, question: str,
     history: list[dict], filenames: list[str], with_sources: bool,
@@ -184,31 +195,25 @@ async def stream_answer(
     with_sources=False (dolgozói nézet): sem sources esemény, sem
     fájlnév-említés a válaszban — a tudásbázis fájljai rejtettek.
     """
-    yield {"event": "phase", "data": "1"}
+    yield sse_event("phase", 1)
     query_vec = await embed_query(question=question, history=history)
 
-    yield {"event": "phase", "data": "2"}
+    yield sse_event("phase", 2)
     contexts = await search_chunks(
         tenant_id=tenant_id, question=question, query_vec=query_vec,
         history=history, filenames=filenames,
     )
 
     if not contexts:
-        yield {"event": "token", "data": (
-            "Erre a kérdésre a vállalati tudásbázis alapján nem tudok válaszolni."
-        )}
-        yield {"event": "done", "data": ""}
+        yield sse_event("token",
+            "Erre a kérdésre a vállalati tudásbázis alapján nem tudok válaszolni.")
+        yield sse_event("done", "")
         return
 
     if with_sources:
-        yield {
-            "event": "sources",
-            "data": json.dumps(
-                sorted({c["filename"] for c in contexts}), ensure_ascii=False
-            ),
-        }
+        yield sse_event("sources", sorted({c["filename"] for c in contexts}))
 
-    yield {"event": "phase", "data": "3"}
+    yield sse_event("phase", 3)
 
     payload = {
         "model": settings.ollama_llm_model,
@@ -229,8 +234,8 @@ async def stream_answer(
                 data = json.loads(line)
                 token = data.get("message", {}).get("content", "")
                 if token:
-                    yield {"event": "token", "data": token}
+                    yield sse_event("token", token)
                 if data.get("done"):
                     break
 
-    yield {"event": "done", "data": ""}
+    yield sse_event("done", "")

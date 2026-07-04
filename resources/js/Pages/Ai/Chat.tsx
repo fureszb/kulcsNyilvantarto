@@ -466,49 +466,52 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                 if (done) break;
                 buffer += decoder.decode(value, { stream: true });
 
-                // A sorvég lehet \n vagy \r\n (sse-starlette \r\n-t küld)
-                const events = buffer.split(/\r?\n\r?\n/);
-                buffer = events.pop() ?? '';
+                // Minden data-sor önhordozó JSON ({t: típus, d: adat}) —
+                // soronként parseolunk, így az SSE-keretezést átíró proxyk
+                // (pl. ngrok inspection) sem tudják szétzilálni a streamet
+                const lines = buffer.split(/\r?\n/);
+                buffer = lines.pop() ?? '';
 
-                for (const raw of events) {
-                    const event = raw.match(/^event: (.+?)\r?$/m)?.[1] ?? 'message';
-                    // Többsoros data mezők összefűzése (SSE spec)
-                    const data = [...raw.matchAll(/^data: (.*?)\r?$/gm)].map(m => m[1]).join('\n');
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    let payload: { t: string; d: unknown };
+                    try { payload = JSON.parse(line.slice(6)); } catch { continue; }
 
-                    if (event === 'session') {
-                        const id = parseInt(data, 10);
+                    if (payload.t === 'session') {
+                        const id = Number(payload.d);
                         if (!Number.isNaN(id)) {
                             sessionIdLocal = id;
                             setActiveSessionId(id);
                         }
-                    } else if (event === 'phase') {
-                        const phase = parseInt(data, 10);
+                    } else if (payload.t === 'phase') {
+                        const phase = Number(payload.d);
                         setMessages(prev => {
                             const next = [...prev];
                             const last = next[next.length - 1];
                             next[next.length - 1] = { ...last, phase };
                             return next;
                         });
-                    } else if (event === 'token') {
-                        fullAnswer += data;
+                    } else if (payload.t === 'token') {
+                        const token = String(payload.d ?? '');
+                        fullAnswer += token;
                         setMessages(prev => {
                             const next = [...prev];
                             const last = next[next.length - 1];
-                            next[next.length - 1] = { ...last, content: last.content + data };
+                            next[next.length - 1] = { ...last, content: last.content + token };
                             return next;
                         });
-                    } else if (event === 'sources') {
-                        try {
-                            const sources = JSON.parse(data) as string[];
+                    } else if (payload.t === 'sources') {
+                        if (Array.isArray(payload.d)) {
+                            const sources = payload.d as string[];
                             setMessages(prev => {
                                 const next = [...prev];
                                 const last = next[next.length - 1];
                                 next[next.length - 1] = { ...last, sources };
                                 return next;
                             });
-                        } catch { /* nem kritikus */ }
-                    } else if (event === 'error') {
-                        throw new Error(data || 'Belső hiba történt.');
+                        }
+                    } else if (payload.t === 'error') {
+                        throw new Error(String(payload.d || 'Belső hiba történt.'));
                     }
                 }
             }

@@ -107,8 +107,10 @@ class AiChatController extends Controller
         $withSources = $user->isAdmin();
 
         return response()->stream(function () use ($validated, $tenant, $user, $session, $filenames, $withSources) {
-            // Első SSE esemény: a session azonosító, hogy a kliens folytathassa
-            echo "event: session\ndata: {$session->id}\n\n";
+            // Első SSE esemény: a session azonosító, hogy a kliens folytathassa.
+            // A típus a data JSON-jában utazik — így az SSE-keretezést
+            // átíró proxyk (pl. ngrok) sem tudják szétzilálni.
+            echo 'data: ' . json_encode(['t' => 'session', 'd' => $session->id]) . "\n\n";
             if (ob_get_level() > 0) {
                 ob_flush();
             }
@@ -132,13 +134,13 @@ class AiChatController extends Controller
                         'with_sources' => $withSources,
                     ]);
             } catch (\Throwable) {
-                echo "event: error\ndata: Az AI szolgáltatás jelenleg nem érhető el.\n\n";
+                echo 'data: ' . json_encode(['t' => 'error', 'd' => 'Az AI szolgáltatás jelenleg nem érhető el.'], JSON_UNESCAPED_UNICODE) . "\n\n";
                 flush();
                 return;
             }
 
             if ($response->failed()) {
-                echo "event: error\ndata: Az AI szolgáltatás jelenleg nem érhető el.\n\n";
+                echo 'data: ' . json_encode(['t' => 'error', 'd' => 'Az AI szolgáltatás jelenleg nem érhető el.'], JSON_UNESCAPED_UNICODE) . "\n\n";
                 flush();
                 return;
             }
@@ -196,19 +198,18 @@ class AiChatController extends Controller
         $answer = '';
         $sources = null;
 
-        // SSE parse — a sorvég lehet \n vagy \r\n (sse-starlette \r\n-t küld)
-        foreach (preg_split('/\r?\n\r?\n/', $raw) as $event) {
-            if (!preg_match('/^event: (\w+)\r?$/m', $event, $m)) {
+        // Minden data-sor önhordozó JSON ({"t": típus, "d": adat}) —
+        // soronként parseolható, az SSE-keretezéstől függetlenül
+        preg_match_all('/^data: (.*?)\r?$/m', $raw, $dm);
+        foreach ($dm[1] as $line) {
+            $payload = json_decode($line, true);
+            if (!is_array($payload) || !isset($payload['t'])) {
                 continue;
             }
-            preg_match_all('/^data: (.*?)\r?$/m', $event, $dm);
-            $data = implode("\n", $dm[1]);
-
-            if ($m[1] === 'token') {
-                $answer .= $data;
-            } elseif ($m[1] === 'sources') {
-                $decoded = json_decode($data, true);
-                $sources = is_array($decoded) ? $decoded : null;
+            if ($payload['t'] === 'token') {
+                $answer .= $payload['d'] ?? '';
+            } elseif ($payload['t'] === 'sources') {
+                $sources = is_array($payload['d'] ?? null) ? $payload['d'] : null;
             }
         }
 
