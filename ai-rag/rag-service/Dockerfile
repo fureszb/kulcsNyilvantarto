@@ -10,9 +10,13 @@ WORKDIR /srv
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Piper magyar női hang (hu_HU-anna-medium, ~63 MB) — build-time letöltés
+# Piper magyar hangok — build-time letöltés, env-ből választható (PIPER_MODEL_PATH)
+# Lehallgatható minták: https://rhasspy.github.io/piper-samples/ (hu_HU szekció)
+# anna (nő, medium) | imre (férfi, medium) | berta (nő, x_low — gyengébb minőség)
 ADD https://huggingface.co/rhasspy/piper-voices/resolve/main/hu/hu_HU/anna/medium/hu_HU-anna-medium.onnx /srv/tts/hu_HU-anna-medium.onnx
 ADD https://huggingface.co/rhasspy/piper-voices/resolve/main/hu/hu_HU/anna/medium/hu_HU-anna-medium.onnx.json /srv/tts/hu_HU-anna-medium.onnx.json
+ADD https://huggingface.co/rhasspy/piper-voices/resolve/main/hu/hu_HU/imre/medium/hu_HU-imre-medium.onnx /srv/tts/hu_HU-imre-medium.onnx
+ADD https://huggingface.co/rhasspy/piper-voices/resolve/main/hu/hu_HU/imre/medium/hu_HU-imre-medium.onnx.json /srv/tts/hu_HU-imre-medium.onnx.json
 RUN chmod 644 /srv/tts/*
 
 COPY app ./app

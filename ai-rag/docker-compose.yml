@@ -94,6 +94,8 @@ services:
       QDRANT_COLLECTION: ${QDRANT_COLLECTION:-enterprise_docs}
       OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-llama3.1:8b-instruct-q5_K_M}
       OLLAMA_EMBED_MODEL: ${OLLAMA_EMBED_MODEL:-bge-m3}
+      # TTS hangprofil: hu_HU-anna-medium (nő) | hu_HU-imre-medium (férfi)
+      PIPER_MODEL_PATH: ${PIPER_MODEL_PATH:-/srv/tts/hu_HU-anna-medium.onnx}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

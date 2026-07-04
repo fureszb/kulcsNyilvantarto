@@ -433,6 +433,10 @@ html.no-progress #nprogress { display: none !important; }
     width: 100%; margin: 0.6em 0;
     border-collapse: collapse;
     font-size: 0.92em;
+    /* Mobilon a széles táblázat a buborékon belül görgethető, nem törik szét */
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 .ai-md th, .ai-md td {
     border: 1px solid #e2e8f0;
