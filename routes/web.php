@@ -133,6 +133,8 @@ Route::prefix('{tenant}')
                 ->name('ai.chat.stream');
             Route::post('/ai/documents',             [AiDocumentController::class, 'store'])->name('ai.documents.store');
             Route::delete('/ai/documents/{document}',[AiDocumentController::class, 'destroy'])->name('ai.documents.destroy');
+            Route::get('/ai/sessions/{session}',     [AiChatController::class, 'showSession'])->name('ai.sessions.show');
+            Route::delete('/ai/sessions/{session}',  [AiChatController::class, 'destroySession'])->name('ai.sessions.destroy');
 
             // Profil
             Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

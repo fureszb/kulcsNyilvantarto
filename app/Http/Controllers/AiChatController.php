@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiChatSession;
 use App\Models\AiDocument;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -20,7 +23,35 @@ class AiChatController extends Controller
             'documents' => AiDocument::where('user_id', $user->id)
                 ->latest()
                 ->get(['id', 'original_name', 'status', 'chunk_count', 'size_bytes', 'error_message', 'created_at']),
+            'sessions' => AiChatSession::where('user_id', $user->id)
+                ->latest('updated_at')
+                ->limit(50)
+                ->get(['id', 'title', 'updated_at']),
         ]);
+    }
+
+    public function showSession(AiChatSession $session): JsonResponse
+    {
+        $user = Auth::guard('tenant')->user();
+        abort_unless($session->user_id === $user->id, 403);
+
+        return response()->json([
+            'id' => $session->id,
+            'title' => $session->title,
+            'messages' => $session->messages()
+                ->orderBy('id')
+                ->get(['role', 'content', 'sources']),
+        ]);
+    }
+
+    public function destroySession(AiChatSession $session): RedirectResponse
+    {
+        $user = Auth::guard('tenant')->user();
+        abort_unless($session->user_id === $user->id, 403);
+
+        $session->delete(); // üzenetek cascade-del törlődnek
+
+        return back()->with('success', 'Beszélgetés törölve.');
     }
 
     public function stream(Request $request): StreamedResponse
@@ -30,6 +61,7 @@ class AiChatController extends Controller
             'history' => ['sometimes', 'array', 'max:20'],
             'history.*.role' => ['required_with:history', 'in:user,assistant'],
             'history.*.content' => ['required_with:history', 'string', 'max:8000'],
+            'session_id' => ['sometimes', 'nullable', 'integer'],
         ]);
 
         // Az izolációs azonosítók KIZÁRÓLAG a szerveroldali kontextusból
@@ -37,7 +69,37 @@ class AiChatController extends Controller
         $tenant = app('tenant');
         $user = Auth::guard('tenant')->user();
 
-        return response()->stream(function () use ($validated, $tenant, $user) {
+        // Session: meglévő folytatása (csak a sajátja!) vagy új nyitása
+        $session = null;
+        if (!empty($validated['session_id'])) {
+            $session = AiChatSession::where('user_id', $user->id)
+                ->find($validated['session_id']);
+        }
+        if (!$session) {
+            $session = AiChatSession::create([
+                'user_id' => $user->id,
+                'title' => mb_substr($validated['question'], 0, 80),
+            ]);
+        }
+
+        $session->messages()->create([
+            'role' => 'user',
+            'content' => $validated['question'],
+        ]);
+
+        $filenames = AiDocument::where('user_id', $user->id)
+            ->where('status', 'ready')
+            ->pluck('original_name')
+            ->all();
+
+        return response()->stream(function () use ($validated, $tenant, $user, $session, $filenames) {
+            // Első SSE esemény: a session azonosító, hogy a kliens folytathassa
+            echo "event: session\ndata: {$session->id}\n\n";
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
+            flush();
+
             try {
                 $response = Http::withHeaders([
                         'X-Internal-Token' => config('services.rag.token'),
@@ -50,12 +112,7 @@ class AiChatController extends Controller
                         'user_id' => (string) $user->id,
                         'question' => $validated['question'],
                         'history' => $validated['history'] ?? [],
-                        // A feldolgozott dokumentumok listája — fájlnév-alapú
-                        // kereséshez és a "miről kérdezhetek" válaszokhoz
-                        'filenames' => AiDocument::where('user_id', $user->id)
-                            ->where('status', 'ready')
-                            ->pluck('original_name')
-                            ->all(),
+                        'filenames' => $filenames,
                     ]);
             } catch (\Throwable) {
                 echo "event: error\ndata: Az AI szolgáltatás jelenleg nem érhető el.\n\n";
@@ -70,10 +127,12 @@ class AiChatController extends Controller
             }
 
             $body = $response->toPsrResponse()->getBody();
+            $raw = '';
 
             while (!$body->eof()) {
                 $chunk = $body->read(1024);
                 if ($chunk !== '') {
+                    $raw .= $chunk;
                     echo $chunk;
                     if (ob_get_level() > 0) {
                         ob_flush();
@@ -84,11 +143,46 @@ class AiChatController extends Controller
                     break;
                 }
             }
+
+            // A stream végén az asszisztens-válasz mentése (megszakadásnál a részleges is)
+            $this->persistAssistantMessage($session, $raw);
         }, 200, [
             'Content-Type' => 'text/event-stream',
             'Cache-Control' => 'no-cache, no-transform',
             'Connection' => 'keep-alive',
             'X-Accel-Buffering' => 'no', // nginx: bufferelés kikapcsolása
         ]);
+    }
+
+    private function persistAssistantMessage(AiChatSession $session, string $raw): void
+    {
+        $answer = '';
+        $sources = null;
+
+        // SSE parse — a sorvég lehet \n vagy \r\n (sse-starlette \r\n-t küld)
+        foreach (preg_split('/\r?\n\r?\n/', $raw) as $event) {
+            if (!preg_match('/^event: (\w+)\r?$/m', $event, $m)) {
+                continue;
+            }
+            preg_match_all('/^data: (.*?)\r?$/m', $event, $dm);
+            $data = implode("\n", $dm[1]);
+
+            if ($m[1] === 'token') {
+                $answer .= $data;
+            } elseif ($m[1] === 'sources') {
+                $decoded = json_decode($data, true);
+                $sources = is_array($decoded) ? $decoded : null;
+            }
+        }
+
+        if ($answer !== '') {
+            $session->messages()->create([
+                'role' => 'assistant',
+                'content' => $answer,
+                'sources' => $sources,
+            ]);
+        }
+
+        $session->touch();
     }
 }

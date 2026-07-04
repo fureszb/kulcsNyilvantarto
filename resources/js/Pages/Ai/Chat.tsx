@@ -14,8 +14,15 @@ interface AiDoc {
     created_at: string;
 }
 
+interface ChatSession {
+    id: number;
+    title: string;
+    updated_at: string;
+}
+
 interface Props {
     documents: AiDoc[];
+    sessions: ChatSession[];
 }
 
 interface ChatMessage {
@@ -41,11 +48,13 @@ function getXsrfToken(): string {
     return decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? '');
 }
 
-export default function AiChat({ documents }: Props) {
+export default function AiChat({ documents, sessions }: Props) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [question, setQuestion] = useState('');
     const [streaming, setStreaming] = useState(false);
     const [chatError, setChatError] = useState<string | null>(null);
+    const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
+    const [loadingSessionId, setLoadingSessionId] = useState<number | null>(null);
     const abortRef = useRef<AbortController | null>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -86,6 +95,45 @@ export default function AiChat({ documents }: Props) {
         });
     }
 
+    async function loadSession(id: number) {
+        if (streaming) return;
+        setLoadingSessionId(id);
+        setChatError(null);
+        try {
+            const res = await fetch(route('ai.sessions.show', { session: id }), {
+                headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': getXsrfToken() },
+            });
+            if (!res.ok) throw new Error('A beszélgetés betöltése sikertelen.');
+            const data = await res.json();
+            setMessages(data.messages.map((m: { role: 'user' | 'assistant'; content: string; sources: string[] | null }) => ({
+                role: m.role,
+                content: m.content,
+                sources: m.sources ?? undefined,
+            })));
+            setActiveSessionId(id);
+        } catch (err) {
+            setChatError((err as Error).message);
+        } finally {
+            setLoadingSessionId(null);
+        }
+    }
+
+    function newChat() {
+        if (streaming) return;
+        setMessages([]);
+        setActiveSessionId(null);
+        setChatError(null);
+    }
+
+    function deleteSession(s: ChatSession, e: React.MouseEvent) {
+        e.stopPropagation();
+        if (!confirm(`Törli a(z) "${s.title}" beszélgetést?`)) return;
+        router.delete(route('ai.sessions.destroy', { session: s.id }), {
+            preserveScroll: true,
+            onSuccess: () => { if (activeSessionId === s.id) newChat(); },
+        });
+    }
+
     function deleteDocument(doc: AiDoc) {
         if (!confirm(`Biztosan törli a(z) "${doc.original_name}" dokumentumot?`)) return;
         setDeletingId(doc.id);
@@ -118,7 +166,7 @@ export default function AiChat({ documents }: Props) {
                     'Accept': 'text/event-stream',
                     'X-XSRF-TOKEN': getXsrfToken(),
                 },
-                body: JSON.stringify({ question: q, history }),
+                body: JSON.stringify({ question: q, history, session_id: activeSessionId }),
                 signal: controller.signal,
             });
 
@@ -144,7 +192,10 @@ export default function AiChat({ documents }: Props) {
                     // Többsoros data mezők összefűzése (SSE spec)
                     const data = [...raw.matchAll(/^data: (.*?)\r?$/gm)].map(m => m[1]).join('\n');
 
-                    if (event === 'token') {
+                    if (event === 'session') {
+                        const id = parseInt(data, 10);
+                        if (!Number.isNaN(id)) setActiveSessionId(id);
+                    } else if (event === 'token') {
                         setMessages(prev => {
                             const next = [...prev];
                             const last = next[next.length - 1];
@@ -179,6 +230,8 @@ export default function AiChat({ documents }: Props) {
         } finally {
             setStreaming(false);
             abortRef.current = null;
+            // Beszélgetéslista frissítése (új session címe / sorrend)
+            router.reload({ only: ['sessions'] });
         }
     }
 
@@ -262,6 +315,54 @@ export default function AiChat({ documents }: Props) {
                                     </li>
                                 );
                             })}
+                        </ul>
+                    </div>
+
+                    {/* Beszélgetések */}
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-6">
+                        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                            <h2 className="text-sm font-semibold text-slate-700">Beszélgetések</h2>
+                            <button
+                                onClick={newChat}
+                                disabled={streaming}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors disabled:opacity-50"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
+                                Új beszélgetés
+                            </button>
+                        </div>
+                        <ul className="divide-y divide-slate-100 max-h-[300px] overflow-y-auto">
+                            {sessions.length === 0 && (
+                                <li className="px-4 py-6 text-center text-sm text-slate-400">
+                                    Még nincs mentett beszélgetés.
+                                </li>
+                            )}
+                            {sessions.map(s => (
+                                <li
+                                    key={s.id}
+                                    onClick={() => loadSession(s.id)}
+                                    className={`px-4 py-2.5 flex items-center gap-2 cursor-pointer transition-colors ${
+                                        activeSessionId === s.id ? 'bg-blue-50' : 'hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <svg className={`w-4 h-4 shrink-0 ${activeSessionId === s.id ? 'text-blue-500' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                    <div className="min-w-0 flex-1">
+                                        <p className={`text-sm truncate ${activeSessionId === s.id ? 'font-semibold text-blue-700' : 'text-slate-700'}`} title={s.title}>
+                                            {loadingSessionId === s.id ? 'Betöltés…' : s.title}
+                                        </p>
+                                        <p className="text-[11px] text-slate-400">
+                                            {new Date(s.updated_at).toLocaleString('hu-HU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={e => deleteSession(s, e)}
+                                        className="p-1.5 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                                        title="Beszélgetés törlése"
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                 </div>
