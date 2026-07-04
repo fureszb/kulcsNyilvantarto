@@ -303,12 +303,29 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
             .trim();
     }
 
-    /** Egy kérdés meghallgatása; a felismert szöveggel (vagy null-lal) tér vissza. */
+    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+    /** Egy kérdés meghallgatása. Visszatérés:
+     *  - felismert szöveg, vagy
+     *  - null (üres kör / átmeneti hiba → új kört próbálunk), vagy
+     *  - '__DENIED__' (mikrofon-engedély megtagadva → loop leáll). */
     function listenOnce(): Promise<string | null> {
         return new Promise(resolve => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-            const rec = new SR();
+            let rec: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+            let settled = false;
+            const done = (val: string | null) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(guard);
+                resolve(val);
+            };
+            // Ha a start() csendben elbukik (mobil böngésző nem indítja újra),
+            // ez a timeout garantálja, hogy a loop ne ragadjon "Hallgatom"-ban
+            const guard = setTimeout(() => done(null), 15000);
+
+            try { rec = new SR(); } catch { done(null); return; }
             recognitionRef.current = rec;
             rec.lang = 'hu-HU';
             rec.interimResults = true;
@@ -326,13 +343,21 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
             };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             rec.onerror = (ev: any) => {
-                if (ev.error === 'not-allowed') {
+                if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
                     setChatError('A mikrofon használata nincs engedélyezve a böngészőben.');
+                    done('__DENIED__');
+                } else {
+                    // no-speech, aborted, network — átmeneti, új kört próbálunk
+                    done(null);
                 }
-                resolve(null);
             };
-            rec.onend = () => resolve(finalText.trim() || null);
-            rec.start();
+            rec.onend = () => done(finalText.trim() || null);
+            try {
+                rec.start();
+            } catch {
+                // "already started" / InvalidStateError — új kör a következő ciklusban
+                done(null);
+            }
         });
     }
 
@@ -340,17 +365,32 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         setVoiceStatus('greeting');
         await speak('Üdvözlöm, örülök, hogy hall! Miben segíthetek ma? Hallgatom a kérdését.');
 
+        let emptyRounds = 0;
         while (voiceOnRef.current) {
+            // Előző felismerés biztos lezárása + kis szünet, hogy a felolvasás
+            // audio-erőforrása felszabaduljon, mielőtt a mikrofon újraindul
+            try { recognitionRef.current?.abort(); } catch { /* nincs aktív */ }
+            await sleep(350);
+            if (!voiceOnRef.current) break;
+
             setVoiceStatus('listening');
             setVoiceTranscript('');
             const q = await listenOnce();
             if (!voiceOnRef.current) break;
 
+            if (q === '__DENIED__') break;
+
             if (!q) {
-                setVoiceStatus('speaking');
-                await speak('Sajnos most nem hallottam kérdést. Ha szeretné, a mikrofon gombbal bármikor újra megszólíthat!');
-                break;
+                // Üres kör: NEM lépünk ki, újra hallgatunk (max 3 üres kör)
+                emptyRounds++;
+                if (emptyRounds >= 3) {
+                    setVoiceStatus('speaking');
+                    await speak('Nem hallottam kérdést. A mikrofon gombbal bármikor újra megszólíthat.');
+                    break;
+                }
+                continue;
             }
+            emptyRounds = 0;
 
             setVoiceStatus('thinking');
             const answer = await submitQuestion(q);
