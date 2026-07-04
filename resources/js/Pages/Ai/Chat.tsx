@@ -1,6 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
 import { router } from '@inertiajs/react';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import AppLayout from '../../Layouts/AppLayout';
+
+marked.setOptions({ breaks: true, gfm: true });
+
+// Az asszisztens Markdownban válaszol (félkövér, dőlt, felsorolás, táblázat…)
+// — biztonságosan renderelve (XSS ellen DOMPurify)
+function renderMarkdown(content: string): { __html: string } {
+    const html = marked.parse(content, { async: false }) as string;
+    return {
+        __html: DOMPurify.sanitize(html, {
+            ALLOWED_TAGS: [
+                'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'del', 'mark',
+                'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'hr',
+                'h1', 'h2', 'h3', 'h4', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a',
+            ],
+            ALLOWED_ATTR: ['href', 'target', 'rel'],
+        }),
+    };
+}
 
 declare function route(name: string, params?: unknown): string;
 
@@ -463,18 +483,20 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                                                 </svg>
                                             </div>
                                         )}
-                                        <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap break-words ${
+                                        <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm break-words ${
                                             msg.role === 'user'
-                                                ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-md shadow-md shadow-blue-600/20'
+                                                ? 'whitespace-pre-wrap bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-md shadow-md shadow-blue-600/20'
                                                 : 'bg-white border border-slate-200 text-slate-800 rounded-bl-md shadow-sm'
                                         }`}>
                                             {isThinking ? (
                                                 <PhaseIndicator phase={msg.phase ?? 1} />
-                                            ) : (
+                                            ) : msg.role === 'assistant' ? (
                                                 <>
-                                                    {msg.content}
+                                                    <div className="ai-md" dangerouslySetInnerHTML={renderMarkdown(msg.content)} />
                                                     {isStreamingThis && <span className="ai-caret" aria-hidden="true" />}
                                                 </>
+                                            ) : (
+                                                msg.content
                                             )}
                                             {isAdmin && msg.sources && msg.sources.length > 0 && (
                                                 <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1">
