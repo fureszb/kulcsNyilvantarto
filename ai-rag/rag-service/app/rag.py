@@ -79,21 +79,32 @@ def _mentioned_filenames(texts: list[str], filenames: list[str]) -> list[str]:
     return hits
 
 
-async def retrieve_context(
-    *, tenant_id: str, question: str,
+async def embed_query(
+    *, question: str, history: list[dict],
+) -> list[float]:
+    """1. fázis: a kérdés (+ friss előzmény) beágyazása.
+
+    Követő kérdések ("mikor kelt ez a dokumentum?") — az utolsó user-üzenet
+    bevonása a lekérdezésbe.
+    """
+    last_user = [m["content"] for m in history if m.get("role") == "user"][-1:]
+    query_text = question if not last_user else f"{last_user[0]}\n{question}"
+    async with httpx.AsyncClient() as client:
+        return (await embed_texts([query_text], client))[0]
+
+
+async def search_chunks(
+    *, tenant_id: str, question: str, query_vec: list[float],
     history: list[dict], filenames: list[str],
 ) -> list[dict]:
-    """Top-K releváns chunk — KÖTELEZŐ tenant-izolációs szűrővel.
+    """2. fázis: top-K releváns chunk — KÖTELEZŐ tenant-izolációs szűrővel.
 
     A tudásbázis cégszintű (tenantonként központi, az admin tölti fel);
     a tenant_id a szerveroldalon, a Laravel tenant-kontextusából származik.
     Ez a függvény az egyetlen retrieval-útvonal: tenant-szűrő nélküli
     keresés a szolgáltatásban nem létezik.
     """
-    # Követő kérdések ("mikor kelt ez a dokumentum?") — az utolsó user-üzenet
-    # bevonása a lekérdezésbe és a fájlnév-felismerésbe
     last_user = [m["content"] for m in history if m.get("role") == "user"][-1:]
-    query_text = question if not last_user else f"{last_user[0]}\n{question}"
 
     must = [
         models.FieldCondition(key="tenant_id", match=models.MatchValue(value=tenant_id)),
@@ -109,9 +120,6 @@ async def retrieve_context(
             )
         )
         threshold = settings.filename_score_threshold
-
-    async with httpx.AsyncClient() as client:
-        query_vec = (await embed_texts([query_text], client))[0]
 
     result = await qdrant.query_points(
         collection_name=settings.qdrant_collection,
@@ -159,13 +167,21 @@ async def stream_answer(
     *, tenant_id: str, question: str,
     history: list[dict], filenames: list[str], with_sources: bool,
 ) -> AsyncIterator[dict]:
-    """SSE eseményfolyam: [sources] → token* → done | error.
+    """SSE eseményfolyam: phase* → [sources] → token* → done | error.
+
+    A phase események a tényleges feldolgozási lépéseket jelzik:
+    1 = kérdés feldolgozása (embedding), 2 = keresés a dokumentumokban,
+    3 = válasz megfogalmazása (LLM).
 
     with_sources=False (dolgozói nézet): sem sources esemény, sem
     fájlnév-említés a válaszban — a tudásbázis fájljai rejtettek.
     """
-    contexts = await retrieve_context(
-        tenant_id=tenant_id, question=question,
+    yield {"event": "phase", "data": "1"}
+    query_vec = await embed_query(question=question, history=history)
+
+    yield {"event": "phase", "data": "2"}
+    contexts = await search_chunks(
+        tenant_id=tenant_id, question=question, query_vec=query_vec,
         history=history, filenames=filenames,
     )
 
@@ -183,6 +199,8 @@ async def stream_answer(
                 sorted({c["filename"] for c in contexts}), ensure_ascii=False
             ),
         }
+
+    yield {"event": "phase", "data": "3"}
 
     payload = {
         "model": settings.ollama_llm_model,

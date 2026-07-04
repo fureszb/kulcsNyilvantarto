@@ -31,6 +31,45 @@ interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
     sources?: string[];
+    phase?: number; // 1-3: gondolkodási fázis, amíg nincs válasz-token
+}
+
+const PHASES = [
+    'Kérdés feldolgozása',
+    'Keresés a dokumentumokban',
+    'Válasz megfogalmazása',
+];
+
+function PhaseIndicator({ phase }: { phase: number }) {
+    return (
+        <div className="py-1 space-y-2.5" role="status" aria-live="polite">
+            {PHASES.map((label, i) => {
+                const step = i + 1;
+                const done = phase > step;
+                const active = phase === step;
+                return (
+                    <div key={label} className="ai-phase-step flex items-center gap-2.5" style={{ animationDelay: `${i * 80}ms` }}>
+                        <span className={`relative flex items-center justify-center w-5 h-5 rounded-full shrink-0 transition-colors duration-300 ${
+                            done ? 'bg-blue-500' : active ? 'bg-blue-100' : 'bg-slate-100'
+                        }`}>
+                            {done ? (
+                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            ) : (
+                                <span className={`w-2 h-2 rounded-full ${active ? 'bg-blue-500 ai-phase-dot-active' : 'bg-slate-300'}`}/>
+                            )}
+                        </span>
+                        <span className={`text-xs font-medium transition-colors duration-300 ${
+                            done ? 'text-slate-400 line-through decoration-slate-300' : active ? 'ai-phase-shimmer' : 'text-slate-300'
+                        }`}>
+                            {step}. {label}
+                        </span>
+                    </div>
+                );
+            })}
+        </div>
+    );
 }
 
 const STATUS_LABEL: Record<AiDoc['status'], { text: string; cls: string }> = {
@@ -197,6 +236,14 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                     if (event === 'session') {
                         const id = parseInt(data, 10);
                         if (!Number.isNaN(id)) setActiveSessionId(id);
+                    } else if (event === 'phase') {
+                        const phase = parseInt(data, 10);
+                        setMessages(prev => {
+                            const next = [...prev];
+                            const last = next[next.length - 1];
+                            next[next.length - 1] = { ...last, phase };
+                            return next;
+                        });
                     } else if (event === 'token') {
                         setMessages(prev => {
                             const next = [...prev];
@@ -239,20 +286,26 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
 
     return (
         <AppLayout title="AI Asszisztens">
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-slate-900">AI Asszisztens</h1>
+            <div className="mb-6 flex items-start gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25 shrink-0" aria-hidden="true">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+                <div>
                 <p className="text-sm text-slate-500 mt-1">
                     {isAdmin
                         ? 'Töltse fel a vállalati dokumentumokat a központi tudásbázisba — a kollégák ezekből kérdezhetnek.'
                         : 'Kérdezzen az asszisztenstől — a vállalati tudásbázis alapján válaszol.'}
                 </p>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Dokumentumok — cégszintű tudásbázis, csak admin kezeli/látja */}
                 <div className="lg:col-span-1">
                     {isAdmin && (
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="ai-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
                             <h2 className="text-sm font-semibold text-slate-700">Központi tudásbázis</h2>
                             <label className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${uploadPercent !== null ? 'bg-slate-200 text-slate-400 cursor-wait' : 'bg-blue-600 text-white hover:bg-blue-500'}`}>
@@ -325,7 +378,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                     )}
 
                     {/* Beszélgetések */}
-                    <div className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden ${isAdmin ? 'mt-6' : ''}`}>
+                    <div className={`ai-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden ${isAdmin ? 'mt-6' : ''}`}>
                         <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
                             <h2 className="text-sm font-semibold text-slate-700">Beszélgetések</h2>
                             <button
@@ -375,12 +428,12 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
 
                 {/* Chat */}
                 <div className="lg:col-span-2">
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[560px]">
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[560px] overflow-hidden">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-slate-50/80 to-white">
                             {messages.length === 0 && (
                                 <div className="h-full flex flex-col items-center justify-center text-center px-6">
-                                    <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-3">
-                                        <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                                    <div className="ai-float w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/25">
+                                        <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
                                     </div>
                                     <p className="text-sm font-medium text-slate-600">
                                         {hasReadyDocs
@@ -397,33 +450,46 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                                 </div>
                             )}
 
-                            {messages.map((msg, i) => (
-                                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap break-words ${
-                                        msg.role === 'user'
-                                            ? 'bg-blue-600 text-white rounded-br-md'
-                                            : 'bg-slate-100 text-slate-800 rounded-bl-md'
-                                    }`}>
-                                        {msg.content || (
-                                            <span className="inline-flex gap-1 items-center py-1">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-                                            </span>
-                                        )}
-                                        {isAdmin && msg.sources && msg.sources.length > 0 && (
-                                            <div className="mt-2 pt-2 border-t border-slate-200 flex flex-wrap gap-1">
-                                                {msg.sources.map(src => (
-                                                    <span key={src} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px] text-slate-500">
-                                                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                                        {src}
-                                                    </span>
-                                                ))}
+                            {messages.map((msg, i) => {
+                                const isLast = i === messages.length - 1;
+                                const isThinking = msg.role === 'assistant' && !msg.content;
+                                const isStreamingThis = streaming && isLast && msg.role === 'assistant' && !!msg.content;
+                                return (
+                                    <div key={i} className={`ai-msg-in flex items-end gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                        {msg.role === 'assistant' && (
+                                            <div className={`w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 ${isThinking || isStreamingThis ? 'ai-avatar-thinking' : ''}`} aria-hidden="true">
+                                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                                </svg>
                                             </div>
                                         )}
+                                        <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap break-words ${
+                                            msg.role === 'user'
+                                                ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-md shadow-md shadow-blue-600/20'
+                                                : 'bg-white border border-slate-200 text-slate-800 rounded-bl-md shadow-sm'
+                                        }`}>
+                                            {isThinking ? (
+                                                <PhaseIndicator phase={msg.phase ?? 1} />
+                                            ) : (
+                                                <>
+                                                    {msg.content}
+                                                    {isStreamingThis && <span className="ai-caret" aria-hidden="true" />}
+                                                </>
+                                            )}
+                                            {isAdmin && msg.sources && msg.sources.length > 0 && (
+                                                <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1">
+                                                    {msg.sources.map((src, si) => (
+                                                        <span key={src} className="ai-chip-in inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-medium text-blue-600" style={{ animationDelay: `${si * 60}ms` }}>
+                                                            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                            {src}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
 
                             {chatError && (
                                 <div className="flex justify-center">
@@ -433,7 +499,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                             <div ref={bottomRef} />
                         </div>
 
-                        <form onSubmit={ask} className="border-t border-slate-100 p-3 flex gap-2">
+                        <form onSubmit={ask} className="border-t border-slate-100 p-3 flex gap-2 bg-white">
                             <input
                                 type="text"
                                 value={question}
@@ -441,12 +507,13 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                                 placeholder={hasReadyDocs ? 'Írja be a kérdését…' : isAdmin ? 'Előbb töltsön fel dokumentumot…' : 'A tudásbázis még üres…'}
                                 maxLength={4000}
                                 disabled={streaming || !hasReadyDocs}
-                                className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 disabled:bg-slate-50 disabled:text-slate-400"
+                                aria-label="Kérdés az AI asszisztensnek"
+                                className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 focus:shadow-md focus:shadow-blue-500/10 disabled:bg-slate-50 disabled:text-slate-400"
                             />
                             <button
                                 type="submit"
                                 disabled={streaming || !question.trim() || !hasReadyDocs}
-                                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white text-sm font-semibold shadow-md shadow-blue-600/25 transition-all duration-200 hover:from-blue-500 hover:to-blue-600 hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-px active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
                             >
                                 {streaming ? (
                                     <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>

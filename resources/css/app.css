@@ -260,3 +260,86 @@ html.no-progress #nprogress { display: none !important; }
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     border-bottom: 1px solid rgba(255,255,255,0.06);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   12. AI CHAT — üzenetek, fázisjelző, animációk
+═══════════════════════════════════════════════════════════ */
+@keyframes aiMsgIn {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+}
+.ai-msg-in { animation: aiMsgIn 0.35s cubic-bezier(.16,1,.3,1) both; }
+
+@keyframes aiChipIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+.ai-chip-in { animation: aiChipIn 0.3s ease-out both; }
+
+/* Fázisjelző: aktív lépés lüktető pontja */
+@keyframes aiPhaseDot {
+    0%, 100% { transform: scale(1);   box-shadow: 0 0 0 0 rgba(59,130,246,0.45); }
+    50%      { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(59,130,246,0); }
+}
+.ai-phase-dot-active { animation: aiPhaseDot 1.4s ease-in-out infinite; }
+
+/* Fázis címke shimmer az aktív lépésen */
+@keyframes aiPhaseShimmer {
+    from { background-position: 200% center; }
+    to   { background-position: -200% center; }
+}
+.ai-phase-shimmer {
+    background: linear-gradient(90deg, #1d4ed8 20%, #60a5fa 40%, #93c5fd 50%, #60a5fa 60%, #1d4ed8 80%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: aiPhaseShimmer 2.2s linear infinite;
+}
+
+/* Fázis lépések belépése */
+@keyframes aiPhaseStepIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: none; }
+}
+.ai-phase-step { animation: aiPhaseStepIn 0.3s ease-out both; }
+
+/* Asszisztens avatar finom lebegése generálás közben */
+@keyframes aiAvatarPulse {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-2px); }
+}
+.ai-avatar-thinking { animation: aiAvatarPulse 1.6s ease-in-out infinite; }
+
+/* Villogó kurzor a streamelt szöveg végén */
+@keyframes aiCaretBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.ai-caret {
+    display: inline-block;
+    width: 2px; height: 1em;
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    background: #3b82f6;
+    border-radius: 1px;
+    animation: aiCaretBlink 0.9s step-end infinite;
+}
+
+/* Üres állapot ikon lebegése */
+@keyframes aiFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+}
+.ai-float { animation: aiFloat 3.2s ease-in-out infinite; }
+
+/* Kártya hover-emelés */
+.ai-card {
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.ai-card:hover {
+    box-shadow: 0 8px 30px -8px rgba(15, 23, 42, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ai-msg-in, .ai-chip-in, .ai-phase-step { animation-duration: 0.01ms; animation-iteration-count: 1; }
+    .ai-phase-dot-active, .ai-avatar-thinking, .ai-float, .ai-caret { animation: none; }
+    .ai-phase-shimmer { animation: none; color: #1d4ed8; }
+}
