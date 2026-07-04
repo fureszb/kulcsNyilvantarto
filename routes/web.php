@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AiChatController;
+use App\Http\Controllers\AiDocumentController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\PmMessageController;
 use App\Http\Controllers\ShiftNoteController;
@@ -123,6 +125,14 @@ Route::prefix('{tenant}')
             // PM üzenetek megtekintése (user + admin)
             Route::get('/messages', [PmMessageController::class, 'index'])->name('messages.index');
             Route::post('/messages/{message}/reply', [PmMessageController::class, 'storeReply'])->name('messages.reply');
+
+            // AI asszisztens (RAG chat + dokumentumok)
+            Route::get('/ai',                        [AiChatController::class, 'show'])->name('ai.chat');
+            Route::post('/ai/chat/stream',           [AiChatController::class, 'stream'])
+                ->middleware('throttle:20,1')
+                ->name('ai.chat.stream');
+            Route::post('/ai/documents',             [AiDocumentController::class, 'store'])->name('ai.documents.store');
+            Route::delete('/ai/documents/{document}',[AiDocumentController::class, 'destroy'])->name('ai.documents.destroy');
 
             // Profil
             Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
