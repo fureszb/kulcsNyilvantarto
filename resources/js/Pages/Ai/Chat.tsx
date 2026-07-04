@@ -135,13 +135,14 @@ export default function AiChat({ documents }: Props) {
                 if (done) break;
                 buffer += decoder.decode(value, { stream: true });
 
-                const events = buffer.split('\n\n');
+                // A sorvég lehet \n vagy \r\n (sse-starlette \r\n-t küld)
+                const events = buffer.split(/\r?\n\r?\n/);
                 buffer = events.pop() ?? '';
 
                 for (const raw of events) {
-                    const event = raw.match(/^event: (.+)$/m)?.[1] ?? 'message';
+                    const event = raw.match(/^event: (.+?)\r?$/m)?.[1] ?? 'message';
                     // Többsoros data mezők összefűzése (SSE spec)
-                    const data = [...raw.matchAll(/^data: (.*)$/gm)].map(m => m[1]).join('\n');
+                    const data = [...raw.matchAll(/^data: (.*?)\r?$/gm)].map(m => m[1]).join('\n');
 
                     if (event === 'token') {
                         setMessages(prev => {

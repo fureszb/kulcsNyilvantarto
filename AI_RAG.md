@@ -1163,10 +1163,18 @@ async function askQuestion(question: string, history: Msg[], onToken: (t: string
 ```bash
 # 1. Infrastruktúra
 cd ai-rag && cp .env.example .env   # tokent generálni: openssl rand -hex 32
-docker compose up -d --build        # az ollama-init letölti a modelleket
+
+# 1/a. Linux szerver (konténeres Ollama, NVIDIA GPU vagy CPU):
+docker compose --profile bundled-ollama up -d --build   # az ollama-init letölti a modelleket
+
+# 1/b. Windows + AMD GPU (fejlesztői gép): natív Ollama a hoszton
+#    ai-rag/.env: OLLAMA_BASE_URL=http://host.docker.internal:11434
+ollama serve                        # külön terminálban / szolgáltatásként
+ollama pull bge-m3 && ollama pull llama3.1:8b-instruct-q5_K_M
+docker compose up -d --build        # csak qdrant + redis + rag-api
 
 # 2. Laravel
 #    .env: QUEUE_CONNECTION=redis + RAG_* változók
-php artisan tenants:migrate-all     # ai_documents tábla minden tenant DB-be
-php artisan queue:work redis --timeout=900   # worker (Supervisor/Coolify alatt)
+php artisan tenant:migrate-all      # ai_documents tábla minden tenant DB-be
+php artisan queue:work --timeout=900   # worker (Supervisor/Coolify alatt)
 ```

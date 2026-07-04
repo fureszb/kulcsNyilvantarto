@@ -1,9 +1,14 @@
 name: kulcs-ai-rag
 
 services:
+  # Konténeres Ollama — csak Linux szerveren (NVIDIA GPU vagy CPU).
+  # Windows + AMD GPU esetén NE ezt használd: futtass natív Windows Ollamát,
+  # és állítsd az OLLAMA_BASE_URL=http://host.docker.internal:11434 értéket.
+  # Indítás ezzel a szolgáltatással: docker compose --profile bundled-ollama up -d
   ollama:
     image: ollama/ollama:latest
     container_name: rag-ollama
+    profiles: [bundled-ollama]
     restart: unless-stopped
     volumes:
       - ollama_models:/root/.ollama
@@ -14,14 +19,14 @@ services:
       OLLAMA_NUM_PARALLEL: "4"
       OLLAMA_MAX_LOADED_MODELS: "2"     # LLM + embedding modell egyszerre
       OLLAMA_KEEP_ALIVE: "24h"          # ne unloadolja a modelleket
-    # GPU-gyorsítás (NVIDIA)
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    # GPU-gyorsítás (csak NVIDIA): komment nélkül aktív, CPU-n hagyd kikommentezve.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
     healthcheck:
       test: ["CMD", "ollama", "ls"]
       interval: 30s
@@ -29,9 +34,10 @@ services:
       retries: 5
     networks: [rag-net]
 
-  # Egyszeri modell-letöltés induláskor (idempotens)
+  # Egyszeri modell-letöltés induláskor (idempotens) — csak bundled-ollama profillal
   ollama-init:
     image: ollama/ollama:latest
+    profiles: [bundled-ollama]
     depends_on:
       ollama:
         condition: service_healthy
@@ -82,14 +88,15 @@ services:
     restart: unless-stopped
     environment:
       RAG_INTERNAL_TOKEN: ${RAG_INTERNAL_TOKEN:?RAG_INTERNAL_TOKEN kötelező}
-      OLLAMA_BASE_URL: http://ollama:11434
+      # Bundled ollama profil: http://ollama:11434 | hoszton futó (pl. Windows/AMD): http://host.docker.internal:11434
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
       QDRANT_URL: http://qdrant:6333
       QDRANT_COLLECTION: ${QDRANT_COLLECTION:-enterprise_docs}
       OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-llama3.1:8b-instruct-q5_K_M}
       OLLAMA_EMBED_MODEL: ${OLLAMA_EMBED_MODEL:-bge-m3}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
-      ollama:
-        condition: service_healthy
       qdrant:
         condition: service_healthy
     # Csak localhostra kötve — a Laravel proxyzza, publikusan SOHA nem elérhető.
