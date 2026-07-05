@@ -39,7 +39,7 @@ class TenantUserController extends Controller
             'name'                  => 'required|string|max:255',
             'email'                 => ['required', 'email', 'max:255', Rule::unique(TenantUser::class)],
             'password'              => 'required|string|min:8|confirmed',
-            'role'                  => 'required|in:admin,user,property_manager',
+            'role'                  => 'required|in:admin,user,property_manager,security_lead,area_director',
         ], [
             'email.unique'          => 'Ez az email cím már foglalt ennél a cégnél.',
             'password.min'          => 'A jelszó legalább 8 karakter legyen.',
@@ -65,7 +65,7 @@ class TenantUserController extends Controller
         $request->validate([
             'name'           => 'required|string|max:255',
             'email'          => ['required', 'email', 'max:255', Rule::unique(TenantUser::class)->ignore($user->id)],
-            'role'           => 'required|in:admin,user,property_manager',
+            'role'           => 'required|in:admin,user,property_manager,security_lead,area_director',
             'employed_since' => 'nullable|date',
             'password'       => 'nullable|string|min:8|confirmed',
         ], [
