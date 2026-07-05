@@ -29,12 +29,11 @@ export default function Hero({ videoSrc = '/videos/hero-bg.mp4' }: HeroProps) {
                 </video>
 
                 {/*
-                  Olvashatósági scrim — a videó fölött, a tartalom alatt (z-[5]).
-                  A sötét/szürke szövegek (navbar, hero) mögött világosít, hogy
-                  bármilyen videón olvashatók legyenek; a középső sáv tisztább
-                  marad, hogy a videó-élmény megmaradjon.
+                  Finom sötét vignette a videó fölött (z-[5]) — a fehéres
+                  videó tónusát tompítja, hogy a glass-panelek éle és a
+                  fehér szövegek elváljanak; a videó-élmény megmarad.
                 */}
-                <div className="absolute inset-0 z-[5] pointer-events-none bg-gradient-to-b from-[#f0f0f0]/85 via-[#f0f0f0]/25 via-45% to-[#f0f0f0]/45" />
+                <div className="absolute inset-0 z-[5] pointer-events-none bg-gradient-to-b from-black/25 via-black/5 to-black/15" />
 
                 {/* Tartalom réteg */}
                 <div className="relative z-10 w-full h-full flex flex-col items-center">
@@ -44,27 +43,35 @@ export default function Hero({ videoSrc = '/videos/hero-bg.mp4' }: HeroProps) {
                     <div className="w-full flex flex-col items-center pt-8 px-6 text-center max-w-4xl">
                         <HeroBadge />
 
-                        <motion.h1
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.8, delay: 0.2 }}
-                            className="cortex-legible text-4xl sm:text-5xl md:text-6xl lg:text-[80px] font-normal text-[#5E6470] mb-2 tracking-tight leading-[1.05]"
+                        {/* Sötét brand glass-panel — a fehéres videón is éles kontraszt */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.7, delay: 0.15 }}
+                            className="mt-2 rounded-[1.6rem] md:rounded-[2.2rem] bg-[rgba(24,38,62,0.55)] backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/25 px-6 py-6 md:px-12 md:py-9"
                         >
-                            A jövő itt van.
-                            <br />
-                            Te élsz vele?
-                        </motion.h1>
+                            <motion.h1
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.8, delay: 0.25 }}
+                                className="text-4xl sm:text-5xl md:text-6xl lg:text-[80px] font-normal text-white mb-3 tracking-tight leading-[1.05]"
+                            >
+                                A jövő itt van.
+                                <br />
+                                Te élsz vele?
+                            </motion.h1>
 
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.8, delay: 0.4 }}
-                            className="cortex-legible text-sm sm:text-base md:text-lg text-[#5E6470] opacity-90 leading-relaxed max-w-xl font-normal"
-                        >
-                            Automatizált vállalati rendszerek, golyóálló szoftverek és 24/7
-                            biztonsági felügyelet — a Cortex Opsystems azt a hátteret adja,
-                            amivel a vállalata nyugodtan nőhet.
-                        </motion.p>
+                            <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.8, delay: 0.45 }}
+                                className="text-sm sm:text-base md:text-lg text-white/85 leading-relaxed max-w-xl mx-auto font-normal"
+                            >
+                                Automatizált vállalati rendszerek, golyóálló szoftverek és 24/7
+                                biztonsági felügyelet — a Cortex Opsystems azt a hátteret adja,
+                                amivel a vállalata nyugodtan nőhet.
+                            </motion.p>
+                        </motion.div>
                     </div>
 
                     <BottomLeftCard />

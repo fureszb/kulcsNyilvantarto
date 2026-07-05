@@ -9,8 +9,9 @@ export default function Navbar() {
             {/* Bal oldal: távolságtartó helykitöltő a középre igazított menühöz */}
             <div className="hidden md:block w-[140px]" aria-hidden="true" />
 
-            {/* Középső menü */}
-            <ul className="cortex-legible hidden md:flex items-center gap-8 text-[rgb(45,45,45)] font-normal text-sm">
+            {/* Középső menü — világos glass-sáv, hogy a sötét szöveg elváljon
+                a fehéres videótól */}
+            <ul className="hidden md:flex items-center gap-7 text-[rgb(30,40,55)] font-normal text-sm bg-white/55 backdrop-blur-md rounded-full px-6 py-2.5 border border-white/40 shadow-sm">
                 {MENU_ITEMS.map(item => (
                     <li key={item}>
                         <a
@@ -24,9 +25,9 @@ export default function Navbar() {
                 ))}
             </ul>
 
-            {/* Mobil logó */}
-            <div className="md:hidden">
-                <span className="cortex-legible font-normal tracking-tighter text-xl text-[rgba(30,50,90,0.9)]">CORTEX</span>
+            {/* Mobil logó — glass pill a kontraszthoz */}
+            <div className="md:hidden bg-white/55 backdrop-blur-md rounded-full px-3 py-1 border border-white/40">
+                <span className="font-normal tracking-tighter text-xl text-[rgba(30,50,90,0.95)]">CORTEX</span>
             </div>
 
             {/* Jobb oldali CTA gomb */}
