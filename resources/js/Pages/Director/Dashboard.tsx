@@ -4,6 +4,8 @@ import DirectorLayout from '../../Layouts/DirectorLayout';
 
 declare function route(name: string, params?: unknown): string;
 
+const NOISE_BG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")";
+
 interface LocationStat {
     location_id: number;
     location_name: string;
@@ -163,11 +165,23 @@ export default function DirectorDashboard({ leads, currentPeriod }: Props) {
 
     return (
         <DirectorLayout title="Vezérlőpult">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-slate-900">Vezetők teljesítménye</h1>
-                    <p className="text-sm text-slate-500 mt-1">
-                        {currentPeriod.year}. {currentPeriod.month}. hó · Kattints egy kártyára az irodaházankénti bontáshoz.
-                    </p>
+                {/* Hero */}
+                <div className="-mx-4 sm:-mx-6 lg:-mx-8 relative overflow-hidden rounded-2xl mb-8 shadow-2xl"
+                    style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)' }}>
+                    <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
+                    <div className="relative z-10 px-8 py-8 flex items-center justify-between gap-6">
+                        <div>
+                            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Területi Igazgató Portál</p>
+                            <h1 className="text-3xl font-extrabold text-white tracking-tight" style={{ animation: 'pmHeartbeat 4s ease-in-out infinite' }}>Vezetők teljesítménye</h1>
+                            <p className="text-slate-400 mt-1 text-sm">{currentPeriod.year}. {currentPeriod.month}. hó · {leads.length} vezető · kattints egy kártyára az irodaházankénti bontáshoz</p>
+                        </div>
+                        <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-white/5 border border-white/10 items-center justify-center shrink-0">
+                            <svg className="w-7 h-7 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.038, backgroundImage: NOISE_BG, backgroundSize: '180px 180px', mixBlendMode: 'screen' }}/>
                 </div>
 
                 {leads.length === 0 ? (
