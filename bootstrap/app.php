@@ -54,7 +54,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         // render() korábban fut — TokenMismatchException itt kezelhető megbízhatóan
         $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
-            if (! ($e instanceof \Illuminate\Session\TokenMismatchException)) {
+            // Laravel 11: a CSRF token-mismatch a render hookhoz már HttpException(419)
+            // alakban ér, NEM TokenMismatchException-ként — ezért mindkettőt fel kell
+            // ismerni, különben a gyári "Page Expired" oldal jön a saját helyett.
+            $isPageExpired = $e instanceof \Illuminate\Session\TokenMismatchException
+                || ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface
+                    && $e->getStatusCode() === 419);
+            if (! $isPageExpired) {
                 return null;
             }
             // Login form POST: session lejárt közben → redirect a login oldalra hibaüzenettel
