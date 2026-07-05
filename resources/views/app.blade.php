@@ -72,9 +72,34 @@
         }, wait);
     }
 
+    // Elavult asset-chunk hiba felismerése: új deploy után a memóriában futó
+    // régi kód a régi hash-sel kéri a lazy chunkokat, amit a szerver már nem
+    // talál — HTML 404-et ad JS helyett ('text/html' is not a valid JS MIME).
+    function isStaleChunkError(msg) {
+        return /valid JavaScript MIME type|Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Unable to preload CSS|dynamically imported module/i.test(msg || '');
+    }
+
+    // Egyszeri friss újratöltés: SW-cache ürítése + reload (loop-védelemmel)
+    function reloadFresh() {
+        try {
+            if (sessionStorage.getItem('__staleReload')) return false; // már próbáltuk
+            sessionStorage.setItem('__staleReload', '1');
+        } catch (e) {}
+        if ('caches' in window) {
+            caches.keys()
+                .then(function (keys) { return Promise.all(keys.map(function (k) { return caches.delete(k); })); })
+                .catch(function () {})
+                .then(function () { location.reload(); });
+        } else {
+            location.reload();
+        }
+        return true;
+    }
+
     // Show JS errors visually (helpful for mobile debugging)
     window.__jsErrShown = false;
     function showErr(label, msg) {
+        if (isStaleChunkError(msg) && reloadFresh()) return; // frissítünk, nem hibát mutatunk
         if (window.__jsErrShown) return;
         window.__jsErrShown = true;
         hide();
@@ -84,8 +109,12 @@
         document.body.appendChild(div);
     }
     window.addEventListener('error', function(e) {
-        // Ignore resource-load errors (img, etc.)
-        if (e.target && e.target !== window) return;
+        // Elavult <script>/<link> chunk betöltési hibája (resource load error)
+        if (e.target && e.target !== window) {
+            var src = (e.target.src || e.target.href || '');
+            if (src.indexOf('/build/') !== -1) { reloadFresh(); }
+            return;
+        }
         showErr('JavaScript Error', e.message + '\n@ ' + (e.filename || '?') + ':' + e.lineno);
     }, true);
     window.addEventListener('unhandledrejection', function(e) {
@@ -99,6 +128,9 @@
         var app = document.getElementById('app');
         if (app && app.firstElementChild) {
             observer.disconnect();
+            // Sikeres mount → az assetek jók voltak, a loop-guard nullázható,
+            // hogy egy KÉSŐBBI deploy megint tudjon frissíteni
+            try { sessionStorage.removeItem('__staleReload'); } catch (e) {}
             hide();
         }
     });
