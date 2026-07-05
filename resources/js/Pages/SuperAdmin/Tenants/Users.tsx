@@ -10,7 +10,7 @@ interface Props {
     users: TenantUser[];
 }
 
-type UserRole = 'admin' | 'user' | 'property_manager';
+type UserRole = 'admin' | 'user' | 'property_manager' | 'security_lead' | 'area_director';
 
 interface NewUserFormData {
     name: string;
@@ -85,6 +85,8 @@ export default function TenantUsers({ tenant, users }: Props) {
     const roleLabel = (role: string) => {
         if (role === 'admin') return 'Admin';
         if (role === 'property_manager') return 'Property Manager';
+        if (role === 'security_lead') return 'Biztonsági vezető';
+        if (role === 'area_director') return 'Területi igazgató';
         return 'Felhasználó';
     };
 
@@ -131,6 +133,8 @@ export default function TenantUsers({ tenant, users }: Props) {
                                     <select value={editUser.role} onChange={(e) => setEditUser((s) => s && ({...s, role: e.target.value}))} className={inputClass}>
                                         <option value="user">Felhasználó</option>
                                         <option value="property_manager">Property Manager</option>
+                                        <option value="security_lead">Biztonsági vezető</option>
+                                        <option value="area_director">Területi igazgató</option>
                                         <option value="admin">Admin</option>
                                     </select>
                                 </div>
@@ -216,6 +220,10 @@ export default function TenantUsers({ tenant, users }: Props) {
                                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">Admin</span>
                                                     ) : user.role === 'property_manager' ? (
                                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Property Manager</span>
+                                                    ) : user.role === 'security_lead' ? (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">Biztonsági vezető</span>
+                                                    ) : user.role === 'area_director' ? (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">Területi igazgató</span>
                                                     ) : (
                                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">Felhasználó</span>
                                                     )}
@@ -294,6 +302,8 @@ export default function TenantUsers({ tenant, users }: Props) {
                                     className={`${inputClass} ${errors.role ? 'border-red-400' : ''}`}>
                                     <option value="user">Felhasználó</option>
                                     <option value="property_manager">Property Manager</option>
+                                    <option value="security_lead">Biztonsági vezető</option>
+                                    <option value="area_director">Területi igazgató</option>
                                     <option value="admin">Admin</option>
                                 </select>
                                 {errors.role && <p className="text-red-500 text-xs mt-1">{errors.role as string}</p>}
