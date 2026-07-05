@@ -22,7 +22,7 @@ export default function SuperAdminLayout({ children, title }: Props) {
         <div className="min-h-screen overflow-x-hidden flex flex-col bg-slate-100">
             {title && <title>{title} – KK Nyilvántartó</title>}
 
-            <header className="bg-slate-900 border-b border-white/5 shadow-xl sticky top-0 z-30">
+            <header className="safe-top bg-slate-900 border-b border-white/5 shadow-xl sticky top-0 z-30">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
 
                     {/* Brand */}

@@ -261,6 +261,12 @@ html.no-progress #nprogress { display: none !important; }
     border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
+/* PWA standalone módban (telepítve, kezdőképernyőről indítva) az iOS
+   státusz-sáv / kivágás a page tetejét takarja — a fejléc háttere fusson
+   alá, de a kattintható tartalom csússzon lejjebb. Böngészőben (nincs
+   safe-area) az env() nullára esik, tehát itt nem okoz felesleges rést. */
+.safe-top { padding-top: env(safe-area-inset-top); }
+
 /* ═══════════════════════════════════════════════════════════
    12. AI CHAT — üzenetek, fázisjelző, animációk
 ═══════════════════════════════════════════════════════════ */

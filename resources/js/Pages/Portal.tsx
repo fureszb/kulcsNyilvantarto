@@ -1025,7 +1025,7 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
 
             {/* ─── Sticky nav ─────────────────────────────── */}
             <div
-                className="sticky top-0 z-30 relative transition-all duration-300"
+                className="safe-top sticky top-0 z-30 relative transition-all duration-300"
                 style={scrolled ? {
                     background: 'rgba(15,23,42,0.82)',
                     backdropFilter: 'blur(20px) saturate(1.4)',

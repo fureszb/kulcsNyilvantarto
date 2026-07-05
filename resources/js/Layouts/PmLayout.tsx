@@ -229,7 +229,7 @@ export default function PmLayout({ children, title }: Props) {
 
             {/* Header */}
             <header
-                className="sticky top-0 z-30 transition-all duration-300"
+                className="safe-top sticky top-0 z-30 transition-all duration-300"
                 style={scrolled ? {
                     background: 'rgba(15,23,42,0.82)',
                     backdropFilter: 'blur(20px) saturate(1.4)',

@@ -45,7 +45,7 @@ export default function AdminLayout({ children, title, headerActions }: Props) {
                 )}
 
                 <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 flex flex-col shrink-0 transition-transform duration-200 ease-in-out lg:relative lg:inset-auto lg:z-auto ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-                    <div className="px-5 py-5 border-b border-white/10">
+                    <div className="safe-top px-5 py-5 border-b border-white/10">
                         <Link href={route('home')} className="flex items-center gap-3 group">
                             <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-blue-500 transition-colors shadow-lg">
                                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
@@ -108,7 +108,7 @@ export default function AdminLayout({ children, title, headerActions }: Props) {
                 </aside>
 
                 <div className="flex-1 flex flex-col overflow-auto min-w-0">
-                    <header className="relative bg-slate-900 border-b border-white/10 px-4 sm:px-8 py-0 flex items-center shrink-0 h-14 gap-3">
+                    <header className="safe-top relative bg-slate-900 border-b border-white/10 px-4 sm:px-8 py-0 flex items-center shrink-0 h-14 gap-3">
                         <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
                         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="relative lg:hidden p-1.5 -ml-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
