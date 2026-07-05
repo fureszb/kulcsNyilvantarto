@@ -138,6 +138,7 @@ export interface Exam {
     is_active: boolean;
     pass_score: number;
     steps?: ExamStep[];
+    steps_count?: number;
     user_result?: ExamResult | null;
     max_attempts?: number | null;
     cooldown_minutes?: number;

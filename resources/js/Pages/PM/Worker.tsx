@@ -246,7 +246,7 @@ export default function PmWorker({ user, trainingRows, examRows, stats, recentAc
                     <div className="divide-y divide-slate-100">
                         {recentActivity.map((log) => (
                             <div key={log.id} className="px-6 py-3.5 flex items-center gap-4">
-                                <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor(log.action ?? '')}`} />
+                                <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor(log.event_type ?? '')}`} />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm text-slate-700 truncate">{log.description}</p>
                                 </div>

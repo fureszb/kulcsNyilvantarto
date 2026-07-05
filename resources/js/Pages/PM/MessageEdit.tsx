@@ -10,8 +10,9 @@ interface Props {
 }
 
 interface FormData {
-    body: string;
-    recipient_ids: number[];
+    content: string;
+    user_ids: number[];
+    send_to_all: boolean;
     [key: string]: unknown;
 }
 
@@ -19,15 +20,16 @@ export default function PmMessageEdit({ message, workers }: Props) {
     const existingRecipientIds = (message.recipients ?? []).map((r) => r.user_id);
 
     const { data, setData, put, processing, errors } = useForm<FormData>({
-        body: message.body,
-        recipient_ids: existingRecipientIds,
+        content: message.content,
+        user_ids: existingRecipientIds,
+        send_to_all: message.send_to_all,
     });
 
     function toggleRecipient(id: number) {
-        const ids = data.recipient_ids.includes(id)
-            ? data.recipient_ids.filter((r) => r !== id)
-            : [...data.recipient_ids, id];
-        setData('recipient_ids', ids);
+        const ids = data.user_ids.includes(id)
+            ? data.user_ids.filter((r) => r !== id)
+            : [...data.user_ids, id];
+        setData('user_ids', ids);
     }
 
     function submit(e: React.FormEvent) {
@@ -49,34 +51,48 @@ export default function PmMessageEdit({ message, workers }: Props) {
 
                     <form onSubmit={submit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="body">Üzenet szövege</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="content">Üzenet szövege</label>
                             <textarea
-                                id="body"
-                                value={data.body}
-                                onChange={(e) => setData('body', e.target.value)}
+                                id="content"
+                                value={data.content}
+                                onChange={(e) => setData('content', e.target.value)}
                                 rows={5}
                                 className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
                                 required
                             />
-                            {errors.body && <p className="mt-1 text-xs text-red-600">{errors.body}</p>}
+                            {errors.content && <p className="mt-1 text-xs text-red-600">{errors.content}</p>}
                         </div>
 
                         <div>
-                            <p className="block text-sm font-medium text-slate-700 mb-2">Címzettek</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                                {workers.map((w) => (
-                                    <label key={w.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
-                                        <input
-                                            type="checkbox"
-                                            checked={data.recipient_ids.includes(w.id)}
-                                            onChange={() => toggleRecipient(w.id)}
-                                            className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
-                                        />
-                                        <span className="text-sm font-medium text-slate-700 truncate">{w.name}</span>
-                                    </label>
-                                ))}
-                            </div>
-                            {errors.recipient_ids && <p className="mt-1 text-xs text-red-600">{errors.recipient_ids as string}</p>}
+                            <label className="flex items-center gap-2 mb-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={data.send_to_all}
+                                    onChange={(e) => setData('send_to_all', e.target.checked)}
+                                    className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                />
+                                <span className="text-sm font-medium text-slate-700">Küldés mindenkinek</span>
+                            </label>
+
+                            {!data.send_to_all && (
+                                <>
+                                    <p className="block text-sm font-medium text-slate-700 mb-2">Címzettek</p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                                        {workers.map((w) => (
+                                            <label key={w.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={data.user_ids.includes(w.id)}
+                                                    onChange={() => toggleRecipient(w.id)}
+                                                    className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                                />
+                                                <span className="text-sm font-medium text-slate-700 truncate">{w.name}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                            {errors.user_ids && <p className="mt-1 text-xs text-red-600">{errors.user_ids as string}</p>}
                         </div>
 
                         <div className="pt-2 flex items-center gap-3">

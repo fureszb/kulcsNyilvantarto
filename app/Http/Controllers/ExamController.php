@@ -14,7 +14,7 @@ class ExamController extends Controller
 {
     public function index()
     {
-        $exams = Exam::where('is_active', true)->orderBy('sort_order')->orderBy('id')->get();
+        $exams = Exam::withCount('steps')->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get();
         $user  = Auth::guard('tenant')->user();
 
         $myResults = collect();
