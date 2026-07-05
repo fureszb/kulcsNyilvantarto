@@ -6,7 +6,7 @@
  * WebSocket auth), így az autentikáció nem tud cache miatt elromlani.
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const STATIC_CACHE = `kk-static-${VERSION}`;
 const FONT_CACHE = `kk-fonts-${VERSION}`;
 

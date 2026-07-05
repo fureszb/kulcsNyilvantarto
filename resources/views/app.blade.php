@@ -79,20 +79,36 @@
         return /valid JavaScript MIME type|Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Unable to preload CSS|dynamically imported module/i.test(msg || '');
     }
 
-    // Egyszeri friss újratöltés: SW-cache ürítése + reload (loop-védelemmel)
+    // Egyszeri friss újratöltés: SW-cache + SW-regisztráció törlése, majd
+    // cache-bypass reload (loop-védelemmel). A cache-busting query param a
+    // böngésző HTTP-cache-ét is megkerüli, hogy friss HTML (friss asset-hash)
+    // jöjjön — enélkül a régi dokumentum újra a halott chunkokat kérné.
     function reloadFresh() {
         try {
             if (sessionStorage.getItem('__staleReload')) return false; // már próbáltuk
             sessionStorage.setItem('__staleReload', '1');
         } catch (e) {}
-        if ('caches' in window) {
-            caches.keys()
-                .then(function (keys) { return Promise.all(keys.map(function (k) { return caches.delete(k); })); })
-                .catch(function () {})
-                .then(function () { location.reload(); });
-        } else {
-            location.reload();
+
+        function hardReload() {
+            try {
+                var u = new URL(location.href);
+                u.searchParams.set('_fresh', Date.now().toString());
+                location.replace(u.toString());
+            } catch (e) { location.reload(); }
         }
+
+        var jobs = [];
+        if ('caches' in window) {
+            jobs.push(caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+            }).catch(function () {}));
+        }
+        if (navigator.serviceWorker) {
+            jobs.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(regs.map(function (r) { return r.unregister(); }));
+            }).catch(function () {}));
+        }
+        Promise.all(jobs).catch(function () {}).then(hardReload);
         return true;
     }
 
