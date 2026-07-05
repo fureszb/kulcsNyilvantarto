@@ -14,6 +14,14 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
+// A kliens (app.blade.php) SKIP_WAITING üzenetére azonnal aktiválunk — így egy
+// esetleg 'waiting' állapotban ragadt új SW sem blokkolja a frissítést.
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
+
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) =>

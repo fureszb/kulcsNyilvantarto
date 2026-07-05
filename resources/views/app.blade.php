@@ -112,6 +112,11 @@
         return true;
     }
 
+    // Kiexportáljuk a React runtime (ErrorBoundary) számára, hogy ugyanazt az
+    // EGYETLEN, loop-guardolt friss-újratöltést használja — ne legyen külön logika.
+    window.__reloadFresh = reloadFresh;
+    window.__isStaleChunkError = isStaleChunkError;
+
     // Show JS errors visually (helpful for mobile debugging)
     window.__jsErrShown = false;
     function showErr(label, msg) {
@@ -166,8 +171,31 @@
 
 <script>
 if ('serviceWorker' in navigator) {
+    // Egyszeri reload, ha egy ÚJ Service Worker átveszi az irányítást (deploy).
+    // Csak akkor, ha a lap már kontrollált volt (nem az első SW-telepítéskor),
+    // és csak egyszer — a refreshing flag megakadályozza a végtelen hurkot.
+    var __hadController = !!navigator.serviceWorker.controller;
+    var __swRefreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (!__hadController || __swRefreshing) return;
+        __swRefreshing = true;
+        window.location.reload();
+    });
+
     window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function (e) {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function (reg) {
+            // Ha már van várakozó (waiting) SW, azonnal aktiváljuk (SKIP_WAITING)
+            if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            reg.addEventListener('updatefound', function () {
+                var sw = reg.installing;
+                if (!sw) return;
+                sw.addEventListener('statechange', function () {
+                    if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+                        sw.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                });
+            });
+        }).catch(function (e) {
             console.warn('SW regisztráció sikertelen:', e);
         });
     });

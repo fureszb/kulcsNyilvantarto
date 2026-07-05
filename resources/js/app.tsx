@@ -4,6 +4,20 @@ import '../css/app.css';
 import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import ErrorBoundary from './Components/ErrorBoundary';
+
+// ── localStorage séma-verzió őr ────────────────────────────
+// Ha a kliens-oldali state-séma breaking módon változik, EMELD ezt a számot.
+// Ekkor a régi (esetleg összeomlást okozó) state törlődik. Sima deploy NEM
+// emeli — így a felhasználói beállítások (pl. oktatás-progress) megmaradnak.
+const STORAGE_VERSION = '1';
+try {
+    const stored = localStorage.getItem('__app_storage_version');
+    if (stored !== STORAGE_VERSION) {
+        if (stored !== null) localStorage.clear(); // csak valódi verzióváltásnál
+        localStorage.setItem('__app_storage_version', STORAGE_VERSION);
+    }
+} catch { /* privát mód / letiltott storage — nem kritikus */ }
 
 // ── Page transition overlay ───────────────────────────────
 let ptOverlay: HTMLDivElement | null = null;
@@ -58,7 +72,11 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);
-        root.render(<App {...props} />);
+        root.render(
+            <ErrorBoundary>
+                <App {...props} />
+            </ErrorBoundary>
+        );
     },
     progress: {
         color: '#3b82f6',
