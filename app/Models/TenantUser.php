@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 class TenantUser extends Authenticatable
 {
+    use HasPushSubscriptions, Notifiable;
+
     protected $connection = 'tenant';
     protected $table = 'users';
 

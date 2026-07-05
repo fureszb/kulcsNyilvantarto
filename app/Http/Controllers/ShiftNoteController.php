@@ -61,6 +61,19 @@ class ShiftNoteController extends Controller
         $tenant = app('tenant');
         if ($tenant?->slug) {
             broadcast(new NewShiftNote($tenant->slug, $user->name, $user->id));
+
+            \App\Jobs\SendPushJob::dispatch(
+                tenantSlug: $tenant->slug,
+                userIds: TenantUser::where('is_active', true)
+                    ->where('role', '!=', 'property_manager')
+                    ->where('id', '!=', $user->id)
+                    ->pluck('id')
+                    ->toArray(),
+                title: 'Új váltóüzenet — ' . $user->name,
+                body: $request->content,
+                url: route('notes.index'),
+                tag: 'shift-note',
+            );
         }
 
         $tenantName = $tenant?->name ?? 'KK Nyilvántartó';

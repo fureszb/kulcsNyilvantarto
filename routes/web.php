@@ -144,6 +144,12 @@ Route::prefix('{tenant}')
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         });
 
+        // Web Push feliratkozás — tenant guard-dal (worker, admin és PM egyaránt)
+        Route::post('/push/subscribe',   [\App\Http\Controllers\PushSubscriptionController::class, 'store'])
+            ->middleware('throttle:20,1')->name('push.subscribe');
+        Route::post('/push/unsubscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'destroy'])
+            ->middleware('throttle:20,1')->name('push.unsubscribe');
+
         // WebSocket broadcast auth — tenant guard-dal (worker és PM egyaránt eléri)
         Route::post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
             if (!\Illuminate\Support\Facades\Auth::guard('tenant')->check()) {

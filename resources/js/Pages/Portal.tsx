@@ -10,6 +10,7 @@ import {
     useSortable, rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import PushToggle from '../Components/PushToggle';
 import type { PageProps } from '../types';
 
 // ── SVG noise data URI ────────────────────────────────────
@@ -1070,6 +1071,7 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
 
                         <div className="flex items-center gap-1.5">
                             <LiveClock />
+                            <PushToggle />
                             {user && (
                                 <>
                                     <Link href={route('profile.edit')} className="hidden sm:flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 hover:bg-white/10 transition-colors">

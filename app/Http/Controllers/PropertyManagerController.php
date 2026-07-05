@@ -160,6 +160,15 @@ class PropertyManagerController extends Controller
             recipientIds: $userIds,
         ))->toOthers();
 
+        \App\Jobs\SendPushJob::dispatch(
+            tenantSlug: $slug,
+            userIds: $userIds,
+            title: 'Új PM üzenet — ' . $sender->name,
+            body: $message->content,
+            url: route('messages.index'),
+            tag: 'pm-message-' . $message->id,
+        );
+
         $tenantName = app('tenant')?->name ?? 'KK Nyilvántartó';
         $loginUrl   = route('login');
 
@@ -237,6 +246,15 @@ class PropertyManagerController extends Controller
         } catch (\Throwable $e) {
             Log::error('PM replyToMessage broadcast failed: ' . $e->getMessage());
         }
+
+        \App\Jobs\SendPushJob::dispatch(
+            tenantSlug: $slug,
+            userIds: array_values(array_diff($recipientIds, [$sender->id])),
+            title: 'PM válasz — ' . $sender->name,
+            body: $reply->content,
+            url: route('messages.index'),
+            tag: 'pm-message-' . $message->id,
+        );
 
         return back()->with('success', 'Válasz elküldve.');
     }

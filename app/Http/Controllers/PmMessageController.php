@@ -47,6 +47,17 @@ class PmMessageController extends Controller
             'content'       => $request->content,
         ]);
 
+        if ($message->sent_by_user_id && $message->sent_by_user_id !== $user->id) {
+            \App\Jobs\SendPushJob::dispatch(
+                tenantSlug: app('tenant')->slug,
+                userIds: [$message->sent_by_user_id],
+                title: 'Válasz az üzenetére — ' . $user->name,
+                body: $reply->content,
+                url: route('pm.messages'),
+                tag: 'pm-message-' . $message->id,
+            );
+        }
+
         if ($message->sent_by_user_id) {
             try {
                 broadcast(new NewPmReply(

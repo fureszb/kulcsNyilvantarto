@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
+import PushToggle from '../Components/PushToggle';
 import { getEcho } from '../echo';
 import type { PageProps } from '../types';
 
@@ -150,6 +151,7 @@ export default function AppLayout({ children, title }: Props) {
                         {/* Right side */}
                         <div className="flex items-center gap-1.5">
                             <LiveClock />
+                            <PushToggle />
 
                             {user && !user.is_property_manager && (
                                 <Link
