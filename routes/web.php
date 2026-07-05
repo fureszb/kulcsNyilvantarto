@@ -35,6 +35,9 @@ use Illuminate\Support\Facades\Route;
 // Root → szervezetválasztó landing
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
+// Cortex Opsystems vállalati nyitóoldal (Hero)
+Route::get('/cortex', fn () => \Inertia\Inertia::render('Cortex/Landing'))->name('cortex.landing');
+
 // Storage file streaming with proper byte-range support (required for Safari/iOS video playback).
 // Nginx or Traefik strip Accept-Ranges from responses; serving through BinaryFileResponse
 // adds correct Range/Accept-Ranges headers that WebKit needs.

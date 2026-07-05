@@ -27,7 +27,9 @@
         "@dnd-kit/utilities": "^3.2.2",
         "@inertiajs/react": "^2.0.6",
         "dompurify": "^3.4.11",
+        "lucide-react": "^1.23.0",
         "marked": "^18.0.5",
+        "motion": "^12.42.2",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "ziggy-js": "^2.5.2"
