@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant-user'      => \App\Http\Middleware\TenantUserMiddleware::class,
             'property-manager' => \App\Http\Middleware\PropertyManagerMiddleware::class,
             'area-director'    => \App\Http\Middleware\AreaDirectorMiddleware::class,
+            'security-lead'    => \App\Http\Middleware\EnsureSecurityLead::class,
         ]);
 
         // TenantMiddleware-nek a SubstituteBindings előtt kell futnia,

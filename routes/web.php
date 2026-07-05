@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DirectorController;
+use App\Http\Controllers\SecurityLeadController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\HomeController;
@@ -188,7 +189,17 @@ Route::prefix('{tenant}')
 
         // Területi igazgató portál
         Route::prefix('director')->name('director.')->middleware('area-director')->group(function () {
-            Route::get('/', [DirectorController::class, 'dashboard'])->name('dashboard');
+            Route::get('/',                              [DirectorController::class, 'dashboard'])->name('dashboard');
+            Route::post('/leads/{leadId}/goals',         [DirectorController::class, 'setGoal'])->name('set-goal');
+            Route::get('/monthly-report',                [DirectorController::class, 'monthlyReport'])->name('monthly-report');
+            Route::get('/messages',                      [DirectorController::class, 'messages'])->name('messages');
+            Route::post('/messages/{leadId}',            [DirectorController::class, 'sendMessage'])->name('send-message');
+        });
+
+        // Biztonsági vezető portál (üzenetek + névtelen visszajelzés)
+        Route::prefix('security-lead')->name('security-lead.')->middleware('security-lead')->group(function () {
+            Route::get('/messages',   [SecurityLeadController::class, 'messages'])->name('messages');
+            Route::post('/feedback',  [SecurityLeadController::class, 'submitFeedback'])->name('feedback');
         });
 
         // ── Admin ──────────────────────────────────────────────────────────────

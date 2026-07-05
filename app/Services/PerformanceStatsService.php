@@ -117,6 +117,38 @@ class PerformanceStatsService
         ];
     }
 
+    /**
+     * Az utolsó N hónap statisztikája igazgatónként, vezető-bontással.
+     * Tartalmaz hónap-over-hónap deltákat (delta_score, delta_completion, delta_turnover).
+     */
+    public function monthlyHistory(TenantUser $director, int $months = 6): array
+    {
+        $leads = $director->supervisedLeads()->orderBy('name')->get();
+        $history = [];
+
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $month = Carbon::now()->startOfMonth()->subMonths($i);
+            $history[] = [
+                'year'  => (int) $month->year,
+                'month' => (int) $month->month,
+                'leads' => $leads->map(fn ($lead) => $this->leadStats($lead, $month))->values()->all(),
+            ];
+        }
+
+        for ($i = 1; $i < count($history); $i++) {
+            foreach ($history[$i]['leads'] as $j => &$leadData) {
+                $prev = $history[$i - 1]['leads'][$j] ?? null;
+                if ($prev) {
+                    $leadData['delta_score']      = round($leadData['overall']['score']          - $prev['overall']['score'],          1);
+                    $leadData['delta_completion']  = round($leadData['overall']['completion_pct'] - $prev['overall']['completion_pct'], 1);
+                    $leadData['delta_turnover']    = round($leadData['overall']['turnover_pct']   - $prev['overall']['turnover_pct'],   1);
+                }
+            }
+        }
+
+        return $history;
+    }
+
     /** Az aktív dolgozók átlagos készültsége (0–100). */
     private function completionForWorkers(array $userIds): float
     {
