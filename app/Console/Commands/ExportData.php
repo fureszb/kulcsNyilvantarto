@@ -17,10 +17,13 @@ class ExportData extends Command
             mkdir($exportDir, 0755, true);
         }
 
+        // A valós app config/database.php + TenantMiddleware szerint a fő és
+        // a tenant DB-k is storage_path alatt élnek — database_path(...) egy
+        // másik, soha nem használt, üres/elavult fájlra mutatna.
         $this->info('Exporting main database...');
-        $this->exportSqlite(database_path('database.sqlite'), $exportDir . '/main');
+        $this->exportSqlite(storage_path('database/database.sqlite'), $exportDir . '/main');
 
-        $tenantsDir = database_path('tenants');
+        $tenantsDir = storage_path('database/tenants');
         foreach (glob($tenantsDir . '/*.sqlite') as $file) {
             $slug = basename($file, '.sqlite');
             $this->info("Exporting tenant: {$slug}");

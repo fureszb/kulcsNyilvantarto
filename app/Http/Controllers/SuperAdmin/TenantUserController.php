@@ -15,8 +15,10 @@ class TenantUserController extends Controller
 {
     private function bootTenant(Tenant $tenant): void
     {
-        $dbPath = database_path('tenants/' . $tenant->slug . '.sqlite');
-        config(['database.connections.tenant.database' => $dbPath]);
+        // A tenant konvenció szerinti valódi elérési út (lásd TenantMiddleware,
+        // Tenant::database_path) — NEM database_path('tenants/...'), az egy
+        // másik, a valós app által soha nem olvasott fájlra mutatott.
+        config(['database.connections.tenant.database' => $tenant->database_path]);
         DB::purge('tenant');
     }
 

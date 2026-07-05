@@ -33,10 +33,13 @@ class TenantController extends Controller
         ]);
 
         $slug = $request->slug;
-        $dbPath = database_path('tenants/' . $slug . '.sqlite');
+        // A valós app (TenantMiddleware, Tenant::database_path) ezt az elérési
+        // utat olvassa — database_path('tenants/...') egy másik, soha nem
+        // használt fájlra mutatna, és a tenant élesben elérhetetlen maradna.
+        $dbPath = storage_path('database/tenants/' . $slug . '.sqlite');
 
-        if (!is_dir(database_path('tenants'))) {
-            mkdir(database_path('tenants'), 0755, true);
+        if (!is_dir(storage_path('database/tenants'))) {
+            mkdir(storage_path('database/tenants'), 0755, true);
         }
 
         touch($dbPath);
