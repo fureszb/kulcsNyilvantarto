@@ -340,6 +340,31 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
         });
     }
 
+    // Üzenetenkénti felolvasás: melyik üzenet szól éppen (index), vagy null
+    const [playingIdx, setPlayingIdx] = useState<number | null>(null);
+
+    function stopPlayback() {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+        try { audioSrcRef.current?.stop(); } catch { /* már leállt */ }
+        audioSrcRef.current = null;
+        setPlayingIdx(null);
+    }
+
+    /** Egy adott válasz felolvasása a buborék hangszóró-ikonjáról.
+     *  Kattintás = lejátszás; újrakattintás ugyanazon = leállítás. */
+    async function playMessage(i: number, content: string) {
+        if (playingIdx === i) { stopPlayback(); return; }
+        stopPlayback();
+        ensureAudioUnlocked(); // gomb-gesztusból — mobilon is megszólal
+        setPlayingIdx(i);
+        try {
+            await speak(stripForSpeech(content));
+        } finally {
+            setPlayingIdx(cur => (cur === i ? null : cur));
+        }
+    }
+
     /** Markdown → felolvasható tiszta szöveg */
     function stripForSpeech(md: string): string {
         return md
@@ -950,6 +975,33 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                                                             {src}
                                                         </span>
                                                     ))}
+                                                </div>
+                                            )}
+                                            {/* Válasz felolvasása — jobb alsó sarok */}
+                                            {msg.role === 'assistant' && !isThinking && msg.content && (
+                                                <div className="flex justify-end mt-1.5 -mb-0.5 -mr-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => playMessage(i, msg.content)}
+                                                        disabled={isStreamingThis || voiceStatus !== 'idle'}
+                                                        aria-label={playingIdx === i ? 'Felolvasás leállítása' : 'Válasz felolvasása'}
+                                                        title={playingIdx === i ? 'Felolvasás leállítása' : 'Válasz felolvasása'}
+                                                        className={`flex items-center justify-center w-7 h-7 rounded-lg transition-colors duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                                                            playingIdx === i
+                                                                ? 'bg-blue-100 text-blue-600'
+                                                                : 'text-slate-300 hover:text-blue-600 hover:bg-blue-50'
+                                                        }`}
+                                                    >
+                                                        {playingIdx === i ? (
+                                                            <span className="ai-voice-bars flex items-end gap-[2px] h-3" aria-hidden="true">
+                                                                <span/><span/><span/>
+                                                            </span>
+                                                        ) : (
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072M19.07 4.93a10 10 0 010 14.14M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                                            </svg>
+                                                        )}
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>
