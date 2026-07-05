@@ -10,7 +10,7 @@ export default function Navbar() {
             <div className="hidden md:block w-[140px]" aria-hidden="true" />
 
             {/* Középső menü */}
-            <ul className="hidden md:flex items-center gap-8 text-[rgb(45,45,45)] font-normal text-sm">
+            <ul className="cortex-legible hidden md:flex items-center gap-8 text-[rgb(45,45,45)] font-normal text-sm">
                 {MENU_ITEMS.map(item => (
                     <li key={item}>
                         <a
@@ -26,7 +26,7 @@ export default function Navbar() {
 
             {/* Mobil logó */}
             <div className="md:hidden">
-                <span className="font-normal tracking-tighter text-xl text-[rgba(30,50,90,0.9)]">CORTEX</span>
+                <span className="cortex-legible font-normal tracking-tighter text-xl text-[rgba(30,50,90,0.9)]">CORTEX</span>
             </div>
 
             {/* Jobb oldali CTA gomb */}
