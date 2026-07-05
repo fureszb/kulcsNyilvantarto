@@ -84,7 +84,11 @@ function playNotificationSound() {
 interface NoteToast { author: string; key: number; }
 
 export default function NotesIndex({ notes, user, filterDate }: Props) {
-    const { props: { tenant } } = usePage<PageProps>();
+    // A page-local `user` prop nyers Eloquent-szerializáció — nincs benne
+    // is_admin (nem valódi oszlop). A megbízható forrás a globálisan
+    // megosztott auth.user (HandleInertiaRequests), ott isAdmin()-ből számolva.
+    const { props: { tenant, auth } } = usePage<PageProps>();
+    const isAdmin = auth.user?.is_admin === true;
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editContent, setEditContent] = useState('');
     const [editNoteDate, setEditNoteDate] = useState('');
@@ -197,6 +201,12 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
         });
     }
 
+    function adminDeleteNote(note: ShiftNote) {
+        const authorName = note.user?.name ?? 'ismeretlen felhasználó';
+        if (!confirm(`Biztosan törli ${authorName} váltóüzenetét?\n\n„${note.content}"`)) return;
+        router.delete(route('notes.destroy', note.id));
+    }
+
     return (
         <>
         <AppLayout title="Váltóüzenetek">
@@ -212,7 +222,7 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
                         <div>
                             <p className="text-xs font-bold text-teal-400 uppercase tracking-widest mb-1.5">Privát csatorna · Csak kollégák</p>
                             <h1 className="text-2xl font-extrabold text-white tracking-tight sm:text-3xl">Váltóüzenetek</h1>
-                            {user.is_admin && (
+                            {isAdmin && (
                                 <button
                                     type="button"
                                     onClick={togglePolling}
@@ -374,13 +384,13 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
                                 <div
                                     key={note.id}
                                     style={{ animationDelay: `${i * 45}ms` }}
-                                    className={`group animate-page-enter bg-white border rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
+                                    className={`group relative animate-page-enter bg-white border rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
                                         isOwn ? 'border-teal-200' : 'border-slate-200'
                                     }`}
                                 >
                                     {/* View mode */}
                                     {!isEditing && (
-                                        <div className="px-5 py-4">
+                                        <div className={`px-5 py-4 ${!isOwn && isAdmin ? 'pb-9' : ''}`}>
                                             <div className="flex items-start gap-3">
                                                 <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
                                                     isOwn ? 'bg-teal-600 text-white' : 'bg-slate-100 border border-slate-200 text-slate-600'
@@ -503,40 +513,18 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
                                         </div>
                                     )}
 
-                                    {/* Action bar - admin delete others' notes */}
-                                    {!isOwn && user.is_admin && !isEditing && (
-                                        <div className="px-5 py-2.5 border-t border-slate-100 bg-slate-50/60 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                                            {isDeleting ? (
-                                                <>
-                                                    <span className="text-xs text-slate-500 mr-2">Biztosan törlöd?</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setDeletingId(null)}
-                                                        className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors mr-1"
-                                                    >
-                                                        Nem
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => confirmDelete(note.id)}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-red-600 hover:bg-red-500 transition-colors"
-                                                    >
-                                                        Törlés
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setDeletingId(note.id)}
-                                                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                                                >
-                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                    </svg>
-                                                    Törlés (admin)
-                                                </button>
-                                            )}
-                                        </div>
+                                    {/* Admin-moderáció: kuka ikon a kártya jobb alsó sarkában */}
+                                    {!isOwn && isAdmin && !isEditing && (
+                                        <button
+                                            type="button"
+                                            onClick={() => adminDeleteNote(note)}
+                                            title={`${authorName} váltóüzenetének törlése (admin)`}
+                                            className="absolute bottom-2.5 right-2.5 flex items-center justify-center w-7 h-7 rounded-lg text-slate-300 bg-white/80 hover:text-white hover:bg-rose-600 border border-slate-100 hover:border-rose-600 shadow-sm transition-colors cursor-pointer"
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
                                     )}
                                 </div>
                             );
