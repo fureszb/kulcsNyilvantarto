@@ -56,9 +56,9 @@ export default function Hero({ videoSrc = '/videos/hero-bg.mp4' }: HeroProps) {
                                 transition={{ duration: 0.8, delay: 0.25 }}
                                 className="text-4xl sm:text-5xl md:text-6xl lg:text-[80px] font-normal text-white mb-3 tracking-tight leading-[1.05]"
                             >
-                                A jövő itt van.
+                                Intelligens automatizáció.
                                 <br />
-                                Te élsz vele?
+                                Transzparens védelem.
                             </motion.h1>
 
                             <motion.p
@@ -67,9 +67,10 @@ export default function Hero({ videoSrc = '/videos/hero-bg.mp4' }: HeroProps) {
                                 transition={{ duration: 0.8, delay: 0.45 }}
                                 className="text-sm sm:text-base md:text-lg text-white/85 leading-relaxed max-w-xl mx-auto font-normal"
                             >
-                                Automatizált vállalati rendszerek, golyóálló szoftverek és 24/7
-                                biztonsági felügyelet — a Cortex Opsystems azt a hátteret adja,
-                                amivel a vállalata nyugodtan nőhet.
+                                Autonóm vállalati rendszerek és kiberbiztonsági védvonalak a
+                                legmagasabb szintű rendelkezésre állásra tervezve. A Cortex
+                                Opsystems stabil, skálázható és intelligens digitális
+                                infrastruktúrát biztosít a kritikus üzleti folyamatok mögé.
                             </motion.p>
                         </motion.div>
                     </div>
