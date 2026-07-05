@@ -3,7 +3,7 @@ import AdminLayout from '../../../Layouts/AdminLayout';
 
 declare function route(name: string, params?: unknown): string;
 
-type TenantUserRole = 'admin' | 'user' | 'property_manager';
+type TenantUserRole = 'admin' | 'user' | 'property_manager' | 'security_lead' | 'area_director';
 
 interface TenantUser {
     id: number;
@@ -23,18 +23,16 @@ const ROLE_LABELS: Record<TenantUserRole, string> = {
     admin: 'Admin',
     user: 'Felhasználó',
     property_manager: 'Ingatlankezelő',
-};
-
-const ROLE_CLASSES: Record<TenantUserRole, string> = {
-    admin: 'bg-blue-100 text-blue-700',
-    user: 'bg-slate-100 text-slate-700',
-    property_manager: 'bg-amber-100 text-amber-700',
+    security_lead: 'Biztonsági vezető',
+    area_director: 'Területi igazgató',
 };
 
 const ROLE_BADGE_CLASSES: Record<TenantUserRole, string> = {
     admin: 'bg-blue-50 text-blue-700',
     user: 'bg-slate-100 text-slate-600',
     property_manager: 'bg-amber-50 text-amber-700',
+    security_lead: 'bg-teal-50 text-teal-700',
+    area_director: 'bg-indigo-50 text-indigo-700',
 };
 
 export default function UsersIndex({ users }: Props) {

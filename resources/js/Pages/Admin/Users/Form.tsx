@@ -4,7 +4,7 @@ import AdminLayout from '../../../Layouts/AdminLayout';
 
 declare function route(name: string, params?: unknown): string;
 
-type TenantUserRole = 'admin' | 'user' | 'property_manager';
+type TenantUserRole = 'admin' | 'user' | 'property_manager' | 'security_lead' | 'area_director';
 
 interface TenantUser {
     id: number;
@@ -14,6 +14,7 @@ interface TenantUser {
     is_active: boolean;
     created_at: string;
     employed_since?: string;
+    left_at?: string;
 }
 
 interface ExamItem {
@@ -27,11 +28,17 @@ interface OverrideItem {
     max_attempts: number | null;
 }
 
+interface IdName { id: number; name: string; }
+
 interface Props {
     user?: TenantUser;
     roles: string[];
     exams?: ExamItem[];
     overrides?: OverrideItem[];
+    assignableLocations?: IdName[];
+    assignableLeads?: IdName[];
+    assignedLocationIds?: number[];
+    assignedLeadIds?: number[];
 }
 
 interface FormData {
@@ -41,17 +48,25 @@ interface FormData {
     password: string;
     password_confirmation: string;
     employed_since: string;
+    left_at: string;
     is_active: boolean;
-    [key: string]: unknown;
+    location_ids: number[];
+    lead_ids: number[];
 }
 
-const ROLE_LABELS: Record<string, string> = {
-    admin: 'Admin',
-    user: 'Felhasználó',
-    property_manager: 'Ingatlankezelő',
-};
+const ROLE_OPTIONS: { value: string; label: string }[] = [
+    { value: 'user', label: 'Felhasználó (worker)' },
+    { value: 'property_manager', label: 'Property Manager' },
+    { value: 'security_lead', label: 'Biztonsági vezető' },
+    { value: 'area_director', label: 'Területi igazgató' },
+    { value: 'admin', label: 'Admin' },
+];
 
-export default function UserForm({ user, roles, exams = [], overrides = [] }: Props) {
+export default function UserForm({
+    user, exams = [], overrides = [],
+    assignableLocations = [], assignableLeads = [],
+    assignedLocationIds = [], assignedLeadIds = [],
+}: Props) {
     const isEdit = !!user;
     const [examOverrides, setExamOverrides] = useState<Record<number, string>>(
         () => Object.fromEntries(overrides.map(o => [o.exam_id, o.max_attempts != null ? String(o.max_attempts) : '']))
@@ -86,12 +101,24 @@ export default function UserForm({ user, roles, exams = [], overrides = [] }: Pr
     const { data, setData, post, put, processing, errors } = useForm<FormData>({
         name: user?.name ?? '',
         email: user?.email ?? '',
-        role: user?.role ?? (roles[0] ?? 'user'),
+        role: user?.role ?? 'user',
         password: '',
         password_confirmation: '',
         employed_since: user?.employed_since ?? '',
+        left_at: user?.left_at ?? '',
         is_active: user?.is_active ?? true,
+        location_ids: assignedLocationIds,
+        lead_ids: assignedLeadIds,
     });
+
+    // Role-függő hozzárendelés: worker/vezető → irodaházak, igazgató → vezetők
+    const needsLocations = data.role === 'user' || data.role === 'security_lead';
+    const needsLeads = data.role === 'area_director';
+
+    function toggleId(field: 'location_ids' | 'lead_ids', id: number) {
+        const cur = data[field] as number[];
+        setData(field, cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]);
+    }
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -155,11 +182,61 @@ export default function UserForm({ user, roles, exams = [], overrides = [] }: Pr
                                 onChange={(e) => setData('role', e.target.value)}
                                 className="form-input"
                             >
-                                <option value="user">Felhasználó (worker)</option>
-                                <option value="property_manager">Property Manager</option>
-                                <option value="admin">Admin</option>
+                                {ROLE_OPTIONS.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
                             </select>
+                            {errors.role && <p className="text-red-500 text-xs mt-1">{errors.role}</p>}
                         </div>
+
+                        {/* Role-függő hozzárendelés */}
+                        {needsLocations && (
+                            <div>
+                                <label className="form-label">
+                                    {data.role === 'security_lead' ? 'Kezelt irodaházak' : 'Irodaházak (hol dolgozik)'}
+                                </label>
+                                {assignableLocations.length === 0 ? (
+                                    <p className="text-xs text-slate-400">Még nincs felvéve irodaház.</p>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-52 overflow-y-auto rounded-lg border border-slate-200 p-2">
+                                        {assignableLocations.map(loc => (
+                                            <label key={loc.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-50 cursor-pointer text-sm text-slate-700">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={(data.location_ids as number[]).includes(loc.id)}
+                                                    onChange={() => toggleId('location_ids', loc.id)}
+                                                    className="w-4 h-4 rounded text-blue-600"
+                                                />
+                                                <span className="truncate">{loc.name}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {needsLeads && (
+                            <div>
+                                <label className="form-label">Felügyelt biztonsági vezetők</label>
+                                {assignableLeads.length === 0 ? (
+                                    <p className="text-xs text-slate-400">Még nincs biztonsági vezető. Előbb hozz létre ilyen szerepkörű felhasználót.</p>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-52 overflow-y-auto rounded-lg border border-slate-200 p-2">
+                                        {assignableLeads.map(lead => (
+                                            <label key={lead.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-50 cursor-pointer text-sm text-slate-700">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={(data.lead_ids as number[]).includes(lead.id)}
+                                                    onChange={() => toggleId('lead_ids', lead.id)}
+                                                    className="w-4 h-4 rounded text-blue-600"
+                                                />
+                                                <span className="truncate">{lead.name}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         <div>
                             <label className="form-label" htmlFor="password">
@@ -199,6 +276,18 @@ export default function UserForm({ user, roles, exams = [], overrides = [] }: Pr
                                 className="form-input"
                             />
                             {errors.employed_since && <p className="text-red-500 text-xs mt-1">{errors.employed_since}</p>}
+                        </div>
+
+                        <div>
+                            <label className="form-label" htmlFor="left_at">Kilépés dátuma (fluktuációhoz, ha kilépett)</label>
+                            <input
+                                id="left_at"
+                                type="date"
+                                value={data.left_at}
+                                onChange={(e) => setData('left_at', e.target.value)}
+                                className="form-input"
+                            />
+                            {errors.left_at && <p className="text-red-500 text-xs mt-1">{errors.left_at}</p>}
                         </div>
 
                         <div className="flex items-center gap-2 pt-1">

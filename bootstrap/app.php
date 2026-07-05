@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'super-admin'      => \App\Http\Middleware\SuperAdminMiddleware::class,
             'tenant-user'      => \App\Http\Middleware\TenantUserMiddleware::class,
             'property-manager' => \App\Http\Middleware\PropertyManagerMiddleware::class,
+            'area-director'    => \App\Http\Middleware\AreaDirectorMiddleware::class,
         ]);
 
         // TenantMiddleware-nek a SubstituteBindings előtt kell futnia,

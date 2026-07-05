@@ -7,7 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class TenantUserMiddleware
+/**
+ * A területi igazgató felülete (/director). Az admin is beléphet (felügyeleti
+ * célból), de a sima PM/biztonsági vezető nem.
+ */
+class AreaDirectorMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
@@ -23,18 +27,14 @@ class TenantUserMiddleware
         }
 
         $user = Auth::guard('tenant')->user();
+
         if (!$user->is_active) {
             Auth::guard('tenant')->logout();
-            return redirect()->route('login')->with('error', 'Fiókja inaktív. Vegye fel a kapcsolatot az adminisztrátorral.');
+            return redirect()->route('login')->with('error', 'Fiókja inaktív.');
         }
 
-        // A felügyeleti szerepkörök a saját kezdőfelületükre irányulnak
-        if ($user->isPropertyManager() || $user->isSecurityLead()) {
-            return redirect()->route('pm.dashboard');
-        }
-
-        if ($user->isAreaDirector()) {
-            return redirect()->route('director.dashboard');
+        if (!$user->hasAdminPowers()) {
+            abort(403, 'Nincs jogosultsága ehhez az oldalhoz.');
         }
 
         return $next($request);

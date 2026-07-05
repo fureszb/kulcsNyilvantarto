@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\TrainingStepController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CheckController;
+use App\Http\Controllers\DirectorController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\HomeController;
@@ -183,6 +184,11 @@ Route::prefix('{tenant}')
             Route::get('/messages/{message}/edit',         [PropertyManagerController::class, 'editMessage'])->name('messages.edit');
             Route::put('/messages/{message}',              [PropertyManagerController::class, 'updateMessage'])->name('messages.update');
             Route::delete('/messages/{message}',           [PropertyManagerController::class, 'destroyMessage'])->name('messages.destroy');
+        });
+
+        // Területi igazgató portál
+        Route::prefix('director')->name('director.')->middleware('area-director')->group(function () {
+            Route::get('/', [DirectorController::class, 'dashboard'])->name('dashboard');
         });
 
         // ── Admin ──────────────────────────────────────────────────────────────
