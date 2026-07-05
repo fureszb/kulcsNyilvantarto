@@ -29,50 +29,42 @@ export default function Hero({ videoSrc = '/videos/hero-bg.mp4' }: HeroProps) {
                 </video>
 
                 {/*
-                  Finom sötét vignette a videó fölött (z-[5]) — a fehéres
-                  videó tónusát tompítja, hogy a glass-panelek éle és a
-                  fehér szövegek elváljanak; a videó-élmény megmarad.
+                  Filmes vignette a videó fölött (z-[5]) — lágy szélű sötétítés
+                  a szöveg-zóna mögé, doboz nélkül. A fehér szöveg így a világos
+                  videón is éles, a videó a széleken tiszta marad.
                 */}
-                <div className="absolute inset-0 z-[5] pointer-events-none bg-gradient-to-b from-black/25 via-black/5 to-black/15" />
+                <div className="cortex-scrim absolute inset-0 z-[5] pointer-events-none" />
 
                 {/* Tartalom réteg */}
                 <div className="relative z-10 w-full h-full flex flex-col items-center">
                     <Navbar />
 
-                    {/* Szöveges konténer */}
-                    <div className="w-full flex flex-col items-center pt-8 px-6 text-center max-w-4xl">
+                    {/* Szöveges konténer — doboz nélkül, tiszta tipográfia */}
+                    <div className="w-full flex flex-col items-center pt-10 md:pt-16 px-6 text-center max-w-5xl">
                         <HeroBadge />
 
-                        {/* Sötét brand glass-panel — a fehéres videón is éles kontraszt */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.7, delay: 0.15 }}
-                            className="mt-2 rounded-[1.6rem] md:rounded-[2.2rem] bg-[rgba(24,38,62,0.55)] backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/25 px-6 py-6 md:px-12 md:py-9"
+                        <motion.h1
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                            className="mt-4 font-normal text-white tracking-[-0.02em] leading-[1.06] text-[clamp(2rem,5vw,3.75rem)] [text-shadow:0_2px_30px_rgba(9,16,33,0.55)]"
                         >
-                            <motion.h1
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.8, delay: 0.25 }}
-                                className="text-4xl sm:text-5xl md:text-6xl lg:text-[80px] font-normal text-white mb-3 tracking-tight leading-[1.05]"
-                            >
-                                Intelligens automatizáció.
-                                <br />
-                                Transzparens védelem.
-                            </motion.h1>
+                            Intelligens automatizáció.
+                            <br />
+                            <span className="cortex-accent">Transzparens védelem.</span>
+                        </motion.h1>
 
-                            <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.8, delay: 0.45 }}
-                                className="text-sm sm:text-base md:text-lg text-white/85 leading-relaxed max-w-xl mx-auto font-normal"
-                            >
-                                Autonóm vállalati rendszerek és kiberbiztonsági védvonalak a
-                                legmagasabb szintű rendelkezésre állásra tervezve. A Cortex
-                                Opsystems stabil, skálázható és intelligens digitális
-                                infrastruktúrát biztosít a kritikus üzleti folyamatok mögé.
-                            </motion.p>
-                        </motion.div>
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.8, delay: 0.4 }}
+                            className="mt-5 text-base md:text-lg text-white/80 leading-relaxed max-w-2xl mx-auto font-normal [text-shadow:0_1px_16px_rgba(9,16,33,0.5)]"
+                        >
+                            Autonóm vállalati rendszerek és kiberbiztonsági védvonalak a
+                            legmagasabb szintű rendelkezésre állásra tervezve. A Cortex
+                            Opsystems stabil, skálázható és intelligens digitális
+                            infrastruktúrát biztosít a kritikus üzleti folyamatok mögé.
+                        </motion.p>
                     </div>
 
                     <BottomLeftCard />
