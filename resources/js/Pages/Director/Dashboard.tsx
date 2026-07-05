@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { router, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
+import DirectorLayout from '../../Layouts/DirectorLayout';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -157,65 +158,11 @@ function GoalSection({ lead, currentPeriod }: { lead: Lead; currentPeriod: { yea
     );
 }
 
-export default function DirectorDashboard({ welcomeName, leads, currentPeriod, unreadFeedback }: Props) {
+export default function DirectorDashboard({ leads, currentPeriod }: Props) {
     const [openId, setOpenId] = useState<number | null>(null);
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            <title>Területi igazgató – Vezérlőpult</title>
-
-            <header className="bg-slate-900 text-white">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <p className="text-sm font-bold leading-tight">Területi igazgató</p>
-                            <p className="text-xs text-slate-400">{welcomeName}</p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => router.visit(route('director.monthly-report'))}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition-colors cursor-pointer"
-                        >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                            </svg>
-                            Havi riport
-                        </button>
-                        <button
-                            onClick={() => router.visit(route('director.messages'))}
-                            className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition-colors cursor-pointer"
-                        >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                            </svg>
-                            Üzenetek
-                            {unreadFeedback > 0 && (
-                                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
-                                    {unreadFeedback > 9 ? '9+' : unreadFeedback}
-                                </span>
-                            )}
-                        </button>
-                        <button
-                            onClick={() => router.post(route('logout'))}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-slate-300 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10 transition-all cursor-pointer"
-                        >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                            </svg>
-                            Kilépés
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <DirectorLayout title="Vezérlőpult">
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-slate-900">Vezetők teljesítménye</h1>
                     <p className="text-sm text-slate-500 mt-1">
@@ -320,7 +267,6 @@ export default function DirectorDashboard({ welcomeName, leads, currentPeriod, u
                         })}
                     </div>
                 )}
-            </main>
-        </div>
+        </DirectorLayout>
     );
 }

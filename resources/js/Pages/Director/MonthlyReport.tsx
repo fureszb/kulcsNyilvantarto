@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import DirectorLayout from '../../Layouts/DirectorLayout';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -49,35 +49,17 @@ function Delta({ val, invert = false }: { val?: number; invert?: boolean }) {
     return <span className={`text-xs font-semibold ${color}`}>{sign}{val}</span>;
 }
 
-export default function MonthlyReport({ welcomeName, history }: Props) {
+export default function MonthlyReport({ history }: Props) {
     const leads = history[history.length - 1]?.leads ?? [];
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            <title>Havi riport – Területi igazgató</title>
-
-            <header className="bg-slate-900 text-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
-                    <button
-                        onClick={() => router.visit(route('director.dashboard'))}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition-colors cursor-pointer"
-                    >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/>
-                        </svg>
-                        Vezérlőpult
-                    </button>
-                    <div>
-                        <p className="text-sm font-bold">Havi riport</p>
-                        <p className="text-xs text-slate-400">{welcomeName}</p>
-                    </div>
+        <DirectorLayout title="Havi riport">
+                <div className="mb-6">
+                    <h1 className="text-2xl font-bold text-slate-900">Havi riport</h1>
+                    <p className="text-sm text-slate-500 mt-1">
+                        Pont = Készültség% − Fluktuáció%. A delta az előző hónaphoz képest.
+                    </p>
                 </div>
-            </header>
-
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <p className="text-sm text-slate-500 mb-6">
-                    Pont = Készültség% − Fluktuáció%. A delta az előző hónaphoz képest.
-                </p>
 
                 {leads.length === 0 ? (
                     <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-500">
@@ -143,7 +125,6 @@ export default function MonthlyReport({ welcomeName, history }: Props) {
                         ))}
                     </div>
                 )}
-            </main>
-        </div>
+        </DirectorLayout>
     );
 }

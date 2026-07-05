@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { router, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
+import DirectorLayout from '../../Layouts/DirectorLayout';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -29,7 +30,7 @@ interface Props {
     unreadCount: number;
 }
 
-export default function DirectorMessages({ welcomeName, threads, feedback, unreadCount }: Props) {
+export default function DirectorMessages({ threads, feedback, unreadCount }: Props) {
     const [activeLead, setActiveLead] = useState<number | null>(threads[0]?.lead_id ?? null);
     const [tab, setTab] = useState<'messages' | 'feedback'>('messages');
     const { data, setData, post, processing, reset, errors } = useForm({ content: '' });
@@ -50,28 +51,11 @@ export default function DirectorMessages({ welcomeName, threads, feedback, unrea
     }
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            <title>Üzenetek – Területi igazgató</title>
-
-            <header className="bg-slate-900 text-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
-                    <button
-                        onClick={() => router.visit(route('director.dashboard'))}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition-colors cursor-pointer"
-                    >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/>
-                        </svg>
-                        Vezérlőpult
-                    </button>
-                    <div>
-                        <p className="text-sm font-bold">Üzenetek</p>
-                        <p className="text-xs text-slate-400">{welcomeName}</p>
-                    </div>
+        <DirectorLayout title="Üzenetek">
+                <div className="mb-5">
+                    <h1 className="text-2xl font-bold text-slate-900">Üzenetek</h1>
+                    <p className="text-sm text-slate-500 mt-1">Közvetlen üzenetek a vezetőknek, és a névtelen dolgozói visszajelzések.</p>
                 </div>
-            </header>
-
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 {/* Tab sor */}
                 <div className="flex gap-2 mb-5">
                     <button
@@ -190,7 +174,6 @@ export default function DirectorMessages({ welcomeName, threads, feedback, unrea
                         ))}
                     </div>
                 )}
-            </main>
-        </div>
+        </DirectorLayout>
     );
 }
