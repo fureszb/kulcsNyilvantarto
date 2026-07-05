@@ -9,14 +9,14 @@ RUN npm run build
 # Stage 2: PHP application
 FROM php:8.3-fpm-alpine
 
-RUN apk add --no-cache nginx sqlite-dev libzip-dev oniguruma-dev supervisor git \
+RUN apk add --no-cache nginx sqlite-dev libzip-dev oniguruma-dev supervisor \
     && docker-php-ext-install pdo pdo_sqlite mbstring bcmath zip pcntl \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 WORKDIR /app
 
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --prefer-source
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 COPY . .
 COPY --from=frontend-builder /app/public/build ./public/build
