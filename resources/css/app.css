@@ -493,17 +493,6 @@ html.no-progress #nprogress { display: none !important; }
     background-color: #f0f0f0;
 }
 
-/* Filmes vignette a szöveg-zóna mögé — lágy szélű sötétítés doboz nélkül,
-   hogy a fehér szöveg a világos videón is olvasható legyen. */
-.cortex-scrim {
-    background: radial-gradient(
-        ellipse 72% 58% at 50% 38%,
-        rgba(9, 16, 33, 0.74) 0%,
-        rgba(9, 16, 33, 0.34) 46%,
-        rgba(9, 16, 33, 0) 74%
-    );
-}
-
 /* A főcím második sorának hűvös "cyber-pajzs" gradiens accentje. */
 .cortex-accent {
     background: linear-gradient(100deg, #7dd3fc 0%, #38bdf8 42%, #818cf8 100%);
