@@ -204,8 +204,10 @@ Route::prefix('{tenant}')
 
         // ── Admin ──────────────────────────────────────────────────────────────
         Route::prefix('admin')->name('admin.')->group(function () {
-            Route::get('/login',  [AdminAuthController::class, 'showLogin'])->name('login');
-            Route::post('/login', [AdminAuthController::class, 'login'])->name('authenticate')->middleware('throttle:login');
+            // Egységes belépés: a régi /admin/login a közös /login-ra terel
+            // (a szerepkör-alapú átirányítás onnan viszi az admint a dashboardra).
+            // A route nevét megtartjuk, hogy a régi könyvjelzők ne 404-eljenek.
+            Route::get('/login', fn () => redirect()->route('login'))->name('login');
             Route::post('/logout',[AdminAuthController::class, 'logout'])->name('logout');
 
             Route::middleware('admin')->group(function () {

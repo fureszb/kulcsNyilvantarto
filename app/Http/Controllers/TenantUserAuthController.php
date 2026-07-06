@@ -3,20 +3,43 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\TenantUser;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class TenantUserAuthController extends Controller
 {
+    /**
+     * Egységes belépés utáni átirányítás szerepkör szerint. Minden tenant-user
+     * (admin, területi igazgató, biztonsági vezető, PM, dolgozó) a közös
+     * /login oldalon lép be, és innen jut a saját kezdőoldalára.
+     */
+    private function redirectForRole(TenantUser $user): RedirectResponse
+    {
+        if ($user->isAdmin()) {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+        if ($user->isAreaDirector()) {
+            return redirect()->intended(route('director.dashboard'));
+        }
+        if ($user->isSecurityLead()) {
+            return redirect()->intended(route('security-lead.messages'));
+        }
+        if ($user->isPropertyManager()) {
+            session(['pm_welcome' => $user->name]);
+            return redirect()->route('pm.dashboard');
+        }
+        session(['user_welcome' => $user->name]);
+        return redirect()->intended(route('home'));
+    }
+
     public function showLogin()
     {
         $tenant = app()->bound('tenant') ? app('tenant') : null;
         if (Auth::guard('tenant')->check() && session('auth_tenant') === optional($tenant)->slug) {
-            $user = Auth::guard('tenant')->user();
-            return $user->isPropertyManager()
-                ? redirect()->route('pm.dashboard')
-                : redirect()->route('home');
+            return $this->redirectForRole(Auth::guard('tenant')->user());
         }
         return Inertia::render('Auth/Login');
     }
@@ -43,13 +66,7 @@ class TenantUserAuthController extends Controller
 
             ActivityLog::record('user.login', $user, "{$user->name} bejelentkezett");
 
-            if ($user->isPropertyManager()) {
-                session(['pm_welcome' => $user->name]);
-                return redirect()->route('pm.dashboard');
-            }
-
-            session(['user_welcome' => $user->name]);
-            return redirect()->intended(route('home'));
+            return $this->redirectForRole($user);
         }
 
         return back()->withErrors(['email' => 'Hibás email cím vagy jelszó.'])->onlyInput('email');
