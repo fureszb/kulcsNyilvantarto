@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
+import FeedbackWidget from '../Components/FeedbackWidget';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -12,6 +13,7 @@ export default function SecurityLeadLayout({ children, title }: Props) {
     const page = usePage<PageProps>();
     const { auth, tenant } = page.props;
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [profileMenuOpen, setProfileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [loaded, setLoaded] = useState(false);
     const [loaderFading, setLoaderFading] = useState(false);
@@ -211,11 +213,44 @@ export default function SecurityLeadLayout({ children, title }: Props) {
 
                             {/* Right side */}
                             <div className="flex items-center gap-2">
-                                <div className="hidden sm:flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
-                                    <div className="w-6 h-6 rounded-lg bg-cyan-500/30 border border-cyan-500/40 flex items-center justify-center shrink-0">
-                                        <span className="text-xs font-bold text-cyan-300 leading-none">{userInitial}</span>
-                                    </div>
-                                    <span className="text-xs font-medium text-slate-300">{userName}</span>
+                                <FeedbackWidget />
+
+                                <div className="relative hidden sm:block">
+                                    <button
+                                        type="button"
+                                        onClick={() => setProfileMenuOpen(v => !v)}
+                                        className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 hover:bg-white/10 transition-colors cursor-pointer"
+                                    >
+                                        <div className="w-6 h-6 rounded-lg bg-cyan-500/30 border border-cyan-500/40 flex items-center justify-center shrink-0">
+                                            <span className="text-xs font-bold text-cyan-300 leading-none">{userInitial}</span>
+                                        </div>
+                                        <span className="text-xs font-medium text-slate-300">{userName}</span>
+                                        <svg className={`w-3 h-3 text-slate-500 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
+                                    </button>
+
+                                    {profileMenuOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)} />
+                                            <div className="absolute right-0 top-11 z-50 w-52 py-1.5 rounded-xl bg-slate-800 border border-white/10 shadow-xl overflow-hidden">
+                                                <Link
+                                                    href={route('profile.edit')}
+                                                    onClick={() => setProfileMenuOpen(false)}
+                                                    className="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                                                >
+                                                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                                    Profil szerkesztése
+                                                </Link>
+                                                <Link
+                                                    href={route('security-lead.team')}
+                                                    onClick={() => setProfileMenuOpen(false)}
+                                                    className="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                                                >
+                                                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                                    Csapat
+                                                </Link>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                                 <form onSubmit={logout} className="hidden sm:block">
                                     <button type="submit" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-medium text-slate-400 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10 transition-all cursor-pointer">
@@ -263,6 +298,14 @@ export default function SecurityLeadLayout({ children, title }: Props) {
                                     );
                                 })}
                                 <div className="pt-2 border-t border-white/5 mt-2">
+                                    <Link href={route('profile.edit')} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                        Profil szerkesztése
+                                    </Link>
+                                    <Link href={route('security-lead.team')} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Csapat
+                                    </Link>
                                     <Link href={route('home')} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                                         Kezdőlap (dolgozói nézet)

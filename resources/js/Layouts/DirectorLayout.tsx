@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import FeedbackWidget from '../Components/FeedbackWidget';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -251,6 +252,7 @@ export default function DirectorLayout({ children, title }: Props) {
 
                             {/* Right side */}
                             <div className="flex items-center gap-2">
+                                <div className="hidden sm:block"><FeedbackWidget /></div>
                                 <div className="hidden sm:flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
                                     <div className="w-6 h-6 rounded-lg bg-indigo-500/30 border border-indigo-500/40 flex items-center justify-center shrink-0">
                                         <span className="text-xs font-bold text-indigo-300 leading-none">{userInitial}</span>
@@ -308,6 +310,10 @@ export default function DirectorLayout({ children, title }: Props) {
                                     );
                                 })}
                                 <div className="pt-2 border-t border-white/5 mt-2">
+                                    <div className="flex items-center gap-3 px-3 py-2.5">
+                                        <FeedbackWidget />
+                                        <span className="text-sm font-medium text-slate-400">Névtelen visszajelzés</span>
+                                    </div>
                                     <form onSubmit={logout}>
                                         <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>

@@ -16,7 +16,6 @@ use App\Services\PerformanceStatsService;
 use App\Services\WorkerCompletionStatsService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -165,10 +164,17 @@ class SecurityLeadController extends Controller
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
-        $directors = $user->directors()->orderBy('name')->get(['users.id', 'users.name'])
-            ->map(fn ($d) => ['id' => $d->id, 'name' => $d->name]);
+        return Inertia::render('SecurityLead/Messages', [
+            'welcomeName' => $user->name,
+            'messages'    => $inbox,
+        ]);
+    }
 
+    public function team(): Response
+    {
+        $user = Auth::guard('tenant')->user();
         $managedLocationIds = $user->managedLocations()->pluck('locations.id');
+
         $teamUsers = TenantUser::where('is_active', true)
             ->where('id', '!=', $user->id)
             ->where(function ($q) use ($managedLocationIds) {
@@ -177,36 +183,6 @@ class SecurityLeadController extends Controller
             })
             ->orderBy('name')->get(['id', 'name', 'role']);
 
-        return Inertia::render('SecurityLead/Messages', [
-            'welcomeName' => $user->name,
-            'messages'    => $inbox,
-            'directors'   => $directors,
-            'teamUsers'   => $teamUsers,
-        ]);
-    }
-
-    public function submitFeedback(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'director_id' => 'required|integer',
-            'content'     => 'required|string|max:2000',
-        ]);
-
-        $user = Auth::guard('tenant')->user();
-
-        // Ellenőrzés: csak a saját igazgatójának küldhet
-        $isAssigned = $user->directors()->where('users.id', $request->director_id)->exists();
-        if (!$isAssigned && $user->role !== 'admin') {
-            abort(403);
-        }
-
-        DirectorMessage::create([
-            'from_user_id' => $user->id, // DB-ben tároljuk, de soha nem exponáljuk
-            'to_user_id'   => $request->director_id,
-            'content'      => $request->content,
-            'is_anonymous' => true,
-        ]);
-
-        return back()->with('success', 'Visszajelzés névtelenül elküldve.');
+        return Inertia::render('SecurityLead/Team', ['teamUsers' => $teamUsers]);
     }
 }

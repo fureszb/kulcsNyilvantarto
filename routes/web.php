@@ -22,6 +22,7 @@ use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DirectorController;
 use App\Http\Controllers\SecurityLeadController;
 use App\Http\Controllers\ExamController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LandingController;
@@ -148,6 +149,10 @@ Route::prefix('{tenant}')
             // Profil
             Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+            // Névtelen visszajelzés az igazgatónak — bármely szerepkör elérheti
+            Route::post('/feedback',      [FeedbackController::class, 'store'])->name('feedback.store');
+            Route::get('/feedback/mine',  [FeedbackController::class, 'index'])->name('feedback.index');
         });
 
         // Web Push feliratkozás — tenant guard-dal (worker, admin és PM egyaránt)
@@ -214,7 +219,7 @@ Route::prefix('{tenant}')
             Route::put('/inventory/{location}/groups/{group}',        [ItemGroupController::class, 'update'])->name('inventory.groups.update');
             Route::delete('/inventory/{location}/groups/{group}',     [ItemGroupController::class, 'destroy'])->name('inventory.groups.destroy');
             Route::get('/messages',   [SecurityLeadController::class, 'messages'])->name('messages');
-            Route::post('/feedback',  [SecurityLeadController::class, 'submitFeedback'])->name('feedback');
+            Route::get('/team',       [SecurityLeadController::class, 'team'])->name('team');
         });
 
         // Vezénylés / beosztás — olvasás mindenkinek (PM kivételével, a controller tiltja),

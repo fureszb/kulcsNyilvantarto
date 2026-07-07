@@ -3,11 +3,14 @@
 @tailwind utilities;
 
 /* Nagy képernyőn a vízszintes konténer-padding kivétele, hogy a fejléc-menük
-   (pl. 6 menüpont) ne legyenek zsúfoltak. Egységesen minden lg:px-8 konténerre.
-   Duplázott osztály (magasabb specificitás), hogy a Vite media-query-csoportosítás
-   utáni sorrendtől függetlenül felülírja a Tailwind lg:px-8 (2rem) szabályát. */
+   (pl. 6 menüpont) ne legyenek zsúfoltak. KIZÁRÓLAG a <header>-en belüli
+   lg:px-8 konténerre — NEM a <main> tartalom-konténerére, mert arra a hero
+   bannerek negatív margója (-mx-8) épít; ha ez is nullázódna, a hero
+   bannerek túllógnának a konténeren és levágódnának a szélükön.
+   A `header` elem-szelektoros scope (0,1,1) specificitása magasabb, mint a
+   sima Tailwind `.lg\:px-8` (0,1,0), ezért sorrendtől függetlenül felülírja. */
 @media (min-width: 1024px) {
-    .lg\:px-8.lg\:px-8 {
+    header .lg\:px-8 {
         padding-left: 0rem;
         padding-right: 0rem;
     }
