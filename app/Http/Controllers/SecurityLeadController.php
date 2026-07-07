@@ -15,6 +15,7 @@ use App\Services\PerformanceStatsService;
 use App\Services\WorkerCompletionStatsService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -141,14 +142,90 @@ class SecurityLeadController extends Controller
         $user = Auth::guard('tenant')->user();
         $managedLocationIds = $user->managedLocations()->pluck('locations.id');
 
-        $teamUsers = TenantUser::where('is_active', true)
-            ->where('id', '!=', $user->id)
-            ->where(function ($q) use ($managedLocationIds) {
-                $q->where('role', 'property_manager')
-                  ->orWhereHas('workLocations', fn ($w) => $w->whereIn('locations.id', $managedLocationIds));
-            })
+        $workerUsers = TenantUser::where('role', 'user')->where('is_active', true)
+            ->whereHas('workLocations', fn ($w) => $w->whereIn('locations.id', $managedLocationIds))
             ->orderBy('name')->get(['id', 'name', 'role']);
 
-        return Inertia::render('SecurityLead/Team', ['teamUsers' => $teamUsers]);
+        // A PM-eket is irodaházhoz kötjük (ugyanaz a location_manager pivot, mint a
+        // biztonsági vezetőknél) — egy irodaháznak egyszerre lehet security_lead ÉS
+        // property_manager "menedzsere" is, mert a pivot kulcsa (location_id, manager_id).
+        $pmUsers = TenantUser::where('role', 'property_manager')->where('is_active', true)
+            ->whereHas('managedLocations', fn ($w) => $w->whereIn('locations.id', $managedLocationIds))
+            ->orderBy('name')->get(['id', 'name', 'role']);
+
+        $leadLocations = $user->managedLocations()->orderBy('name')->get(['locations.id', 'locations.name']);
+
+        $availableWorkers = TenantUser::where('role', 'user')->where('is_active', true)
+            ->orderBy('name')->get(['id', 'name']);
+        $availablePms = TenantUser::where('role', 'property_manager')->where('is_active', true)
+            ->orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('SecurityLead/Team', [
+            'workerUsers'      => $workerUsers,
+            'pmUsers'          => $pmUsers,
+            'leadLocations'    => $leadLocations,
+            'availableWorkers' => $availableWorkers,
+            'availablePms'     => $availablePms,
+        ]);
+    }
+
+    /** A megadott irodaház(ak)at kizárólag a hívó biztonsági vezető saját
+     *  irodaházaira szűkítjük — máséhoz nem nyúlhat. */
+    private function ownLocationIds(TenantUser $lead, array $requestedIds): array
+    {
+        $ownIds = $lead->managedLocations()->pluck('locations.id')->all();
+        return array_values(array_intersect($requestedIds, $ownIds));
+    }
+
+    public function addTeamWorker(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'user_id'     => 'required|integer',
+            'location_id' => 'required|integer',
+        ]);
+
+        $lead = Auth::guard('tenant')->user();
+        $locationIds = $this->ownLocationIds($lead, [(int) $request->location_id]);
+        abort_if(empty($locationIds), 403);
+
+        $worker = TenantUser::where('role', 'user')->where('is_active', true)->findOrFail($request->user_id);
+        $worker->workLocations()->syncWithoutDetaching($locationIds);
+
+        return back()->with('success', 'Dolgozó hozzáadva a csapathoz.');
+    }
+
+    public function removeTeamWorker(TenantUser $user): RedirectResponse
+    {
+        $lead = Auth::guard('tenant')->user();
+        $ownLocationIds = $lead->managedLocations()->pluck('locations.id')->all();
+        $user->workLocations()->detach($ownLocationIds);
+
+        return back()->with('success', 'Dolgozó eltávolítva a csapatból.');
+    }
+
+    public function setTeamPm(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'user_id'     => 'required|integer',
+            'location_id' => 'required|integer',
+        ]);
+
+        $lead = Auth::guard('tenant')->user();
+        $locationIds = $this->ownLocationIds($lead, [(int) $request->location_id]);
+        abort_if(empty($locationIds), 403);
+
+        $pm = TenantUser::where('role', 'property_manager')->where('is_active', true)->findOrFail($request->user_id);
+        $pm->managedLocations()->syncWithoutDetaching($locationIds);
+
+        return back()->with('success', 'Property Manager hozzárendelve.');
+    }
+
+    public function removeTeamPm(TenantUser $user): RedirectResponse
+    {
+        $lead = Auth::guard('tenant')->user();
+        $ownLocationIds = $lead->managedLocations()->pluck('locations.id')->all();
+        $user->managedLocations()->detach($ownLocationIds);
+
+        return back()->with('success', 'Property Manager eltávolítva.');
     }
 }

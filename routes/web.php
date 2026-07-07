@@ -218,6 +218,10 @@ Route::prefix('{tenant}')
             Route::put('/inventory/{location}/groups/{group}',        [ItemGroupController::class, 'update'])->name('inventory.groups.update');
             Route::delete('/inventory/{location}/groups/{group}',     [ItemGroupController::class, 'destroy'])->name('inventory.groups.destroy');
             Route::get('/team',       [SecurityLeadController::class, 'team'])->name('team');
+            Route::post('/team/workers',            [SecurityLeadController::class, 'addTeamWorker'])->name('team.workers.store');
+            Route::delete('/team/workers/{user}',   [SecurityLeadController::class, 'removeTeamWorker'])->name('team.workers.destroy');
+            Route::post('/team/pm',                 [SecurityLeadController::class, 'setTeamPm'])->name('team.pm.store');
+            Route::delete('/team/pm/{user}',         [SecurityLeadController::class, 'removeTeamPm'])->name('team.pm.destroy');
         });
 
         // Vezénylés / beosztás — olvasás mindenkinek (PM kivételével, a controller tiltja),
