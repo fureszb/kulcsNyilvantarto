@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\NewShiftNote;
 use App\Mail\NewShiftNoteMail;
 use App\Models\ActivityLog;
+use App\Models\Location;
 use App\Models\ShiftNote;
 use App\Models\TenantUser;
 use Illuminate\Http\Request;
@@ -15,25 +16,56 @@ use Inertia\Inertia;
 
 class ShiftNoteController extends Controller
 {
+    /** Azok az irodaházak, amelyeknek a váltó-chatjét a user elérheti. Admin/igazgató
+     *  mindet, biztonsági vezető a sajátjait, dolgozó/PM csak a saját (egy) irodaházát. */
+    private function viewableLocations(TenantUser $user)
+    {
+        if ($user->hasAdminPowers()) {
+            return Location::orderBy('name')->get(['id', 'name']);
+        }
+        if ($user->isSecurityLead()) {
+            return $user->managedLocations()->orderBy('name')->get(['id', 'name']);
+        }
+        return $user->workLocations()->orderBy('name')->get(['id', 'name']);
+    }
+
     public function index(Request $request)
     {
         $user = Auth::guard('tenant')->user();
         abort_if($user->isPropertyManager(), 403);
 
+        $viewableLocations = $this->viewableLocations($user);
+        $viewableIds = $viewableLocations->pluck('id')->all();
+
+        $requestedLocationId = $request->filled('location_id') ? (int) $request->input('location_id') : null;
+        $locationId = in_array($requestedLocationId, $viewableIds, true) ? $requestedLocationId : ($viewableIds[0] ?? null);
+
         $filterDate = $request->input('date', today()->toDateString());
 
-        $notes = ShiftNote::with('user')
+        $notesQuery = ShiftNote::with('user')
             ->whereDate('note_date', $filterDate)
             ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->paginate(40);
+            ->orderByDesc('id');
 
-        $notes->appends(['date' => $filterDate]);
+        if ($locationId) {
+            $notesQuery->where('location_id', $locationId);
+        } else {
+            $notesQuery->whereRaw('0 = 1'); // nincs elérhető irodaház → üres lista
+        }
+
+        $notes = $notesQuery->paginate(40);
+        $notes->appends(['date' => $filterDate, 'location_id' => $locationId]);
 
         $user->notes_read_at = now();
         $user->saveQuietly();
 
-        return Inertia::render('Notes/Index', ['notes' => $notes, 'user' => $user, 'filterDate' => $filterDate]);
+        return Inertia::render('Notes/Index', [
+            'notes'             => $notes,
+            'user'              => $user,
+            'filterDate'        => $filterDate,
+            'viewableLocations' => $viewableLocations,
+            'selectedLocationId' => $locationId,
+        ]);
     }
 
     public function store(Request $request)
@@ -42,21 +74,40 @@ class ShiftNoteController extends Controller
         abort_if($user->isPropertyManager(), 403);
 
         $request->validate([
-            'content' => 'required|string|max:1000',
+            'content'     => 'required|string|max:1000',
+            'location_id' => 'required|integer',
         ]);
+
+        $viewableIds = $this->viewableLocations($user)->pluck('id')->all();
+        abort_unless(in_array((int) $request->location_id, $viewableIds, true), 403);
 
         $today = today()->toDateString();
 
         ShiftNote::create([
-            'user_id'   => $user->id,
-            'content'   => $request->content,
-            'note_date' => $today,
+            'user_id'     => $user->id,
+            'location_id' => $request->location_id,
+            'content'     => $request->content,
+            'note_date'   => $today,
         ]);
 
+        $location = Location::find($request->location_id);
+
         ActivityLog::record('shift_note.created', $user, "Váltóüzenet rögzítve ({$today})", [
-            'note_date' => $today,
-            'content'   => mb_substr($request->content, 0, 500),
+            'note_date'   => $today,
+            'location_id' => $request->location_id,
+            'content'     => mb_substr($request->content, 0, 500),
         ]);
+
+        // Az üzenet csak az érintett irodaházban dolgozóknak / az irodaházért felelős
+        // biztonsági vezetőnek szól — nem az egész tenantnak.
+        $recipientIds = TenantUser::where('is_active', true)
+            ->where('role', '!=', 'property_manager')
+            ->where('id', '!=', $user->id)
+            ->where(function ($q) use ($request) {
+                $q->where('location_id', $request->location_id)
+                  ->orWhereHas('managedLocations', fn ($w) => $w->where('id', $request->location_id));
+            })
+            ->get(['id', 'name', 'email']);
 
         $tenant = app('tenant');
         if ($tenant?->slug) {
@@ -64,12 +115,8 @@ class ShiftNoteController extends Controller
 
             \App\Jobs\SendPushJob::dispatch(
                 tenantSlug: $tenant->slug,
-                userIds: TenantUser::where('is_active', true)
-                    ->where('role', '!=', 'property_manager')
-                    ->where('id', '!=', $user->id)
-                    ->pluck('id')
-                    ->toArray(),
-                title: 'Új váltóüzenet — ' . $user->name,
+                userIds: $recipientIds->pluck('id')->toArray(),
+                title: 'Új váltóüzenet — ' . $user->name . ($location ? " ({$location->name})" : ''),
                 body: $request->content,
                 url: route('notes.index'),
                 tag: 'shift-note',
@@ -79,23 +126,18 @@ class ShiftNoteController extends Controller
         $tenantName = $tenant?->name ?? 'KK Nyilvántartó';
         $loginUrl   = route('login');
 
-        TenantUser::where('is_active', true)
-            ->where('role', '!=', 'property_manager')
-            ->where('id', '!=', $user->id)
-            ->whereNotNull('email')
-            ->get()
-            ->each(function (TenantUser $recipient) use ($user, $request, $tenantName, $loginUrl) {
-                try {
-                    Mail::to($recipient->email)->send(new NewShiftNoteMail(
-                        authorName:   $user->name,
-                        noteContent:  $request->content,
-                        tenantName:   $tenantName,
-                        loginUrl:     $loginUrl,
-                    ));
-                } catch (\Throwable $e) {
-                    Log::error('NewShiftNoteMail failed: ' . $e->getMessage());
-                }
-            });
+        $recipientIds->whereNotNull('email')->each(function (TenantUser $recipient) use ($user, $request, $tenantName, $loginUrl) {
+            try {
+                Mail::to($recipient->email)->send(new NewShiftNoteMail(
+                    authorName:   $user->name,
+                    noteContent:  $request->content,
+                    tenantName:   $tenantName,
+                    loginUrl:     $loginUrl,
+                ));
+            } catch (\Throwable $e) {
+                Log::error('NewShiftNoteMail failed: ' . $e->getMessage());
+            }
+        });
 
         return back()->with('success', 'Üzenet rögzítve.');
     }

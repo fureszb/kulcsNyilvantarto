@@ -7,14 +7,19 @@ import type { ShiftNote, AuthUser, PaginatedData, PageProps } from '../../types'
 
 declare function route(name: string, params?: unknown): string;
 
+interface LocationOption { id: number; name: string; }
+
 interface Props {
     notes: PaginatedData<ShiftNote>;
     user: AuthUser;
     filterDate: string;
+    viewableLocations: LocationOption[];
+    selectedLocationId: number | null;
 }
 
 interface NewNoteFormData {
     content: string;
+    location_id: number | '';
     [key: string]: unknown;
 }
 
@@ -83,7 +88,7 @@ function playNotificationSound() {
 
 interface NoteToast { author: string; key: number; }
 
-export default function NotesIndex({ notes, user, filterDate }: Props) {
+export default function NotesIndex({ notes, user, filterDate, viewableLocations, selectedLocationId }: Props) {
     const Layout = useOwnLayout();
     // A page-local `user` prop nyers Eloquent-szerializáció — nincs benne
     // is_admin (nem valódi oszlop). A megbízható forrás a globálisan
@@ -165,17 +170,25 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
         return () => clearInterval(id);
     }, [pollingEnabled]);
 
-    const { data, setData, post, processing, reset, errors } = useForm<NewNoteFormData>({ content: '' });
+    const { data, setData, post, processing, reset, errors } = useForm<NewNoteFormData>({
+        content: '',
+        location_id: selectedLocationId ?? '',
+    });
 
     const today = getTodayString();
     const yesterday = getYesterdayString();
     const filterLabel = getFilterLabel(filterDate);
     const isFilterToday = filterDate === today;
     const isFilterYesterday = filterDate === yesterday;
+    const selectedLocationName = viewableLocations.find(l => l.id === selectedLocationId)?.name;
+
+    function goTo(params: Record<string, string | number>) {
+        router.get(route('notes.index'), { date: filterDate, location_id: selectedLocationId, ...params }, { preserveState: false });
+    }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(route('notes.store'), { onSuccess: () => reset() });
+        post(route('notes.store'), { onSuccess: () => reset('content') });
     }
 
     function startEdit(note: ShiftNote) {
@@ -221,7 +234,9 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
                          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
                     <div className="relative px-4 py-6 sm:px-8 sm:py-8 flex items-start justify-between gap-6 flex-wrap">
                         <div>
-                            <p className="text-xs font-bold text-teal-400 uppercase tracking-widest mb-1.5">Privát csatorna · Csak kollégák</p>
+                            <p className="text-xs font-bold text-teal-400 uppercase tracking-widest mb-1.5">
+                                Privát csatorna · Csak kollégák{selectedLocationName ? ` · ${selectedLocationName}` : ''}
+                            </p>
                             <h1 className="text-2xl font-extrabold text-white tracking-tight sm:text-3xl">Váltóüzenetek</h1>
                             {isAdmin && (
                                 <button
@@ -259,6 +274,12 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
                         </Link>
                     </div>
                 </div>
+
+                {viewableLocations.length === 0 && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
+                        Jelenleg nincs irodaházhoz rendelve, ezért nem éri el egyik váltó-csatornát sem — kérje meg az adminisztrátort, hogy rendelje hozzá egy irodaházhoz.
+                    </div>
+                )}
 
                 {/* New note form */}
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
@@ -300,7 +321,7 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
                             </div>
                             <button
                                 type="submit"
-                                disabled={processing || !data.content.trim()}
+                                disabled={processing || !data.content.trim() || !data.location_id}
                                 className="inline-flex items-center gap-2 px-5 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-300 text-white text-sm font-bold rounded-xl transition-colors shadow-sm cursor-pointer"
                             >
                                 {processing ? (
@@ -319,6 +340,32 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
                     </form>
                 </div>
 
+                {/* Irodaház-váltó */}
+                {viewableLocations.length > 1 && (
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm px-5 py-3.5 flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0 mr-1">
+                            <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m4-4h.01M11 17h.01"/>
+                            </svg>
+                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Irodaház</span>
+                        </div>
+                        {viewableLocations.map(loc => (
+                            <button
+                                key={loc.id}
+                                type="button"
+                                onClick={() => goTo({ location_id: loc.id })}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                                    selectedLocationId === loc.id
+                                        ? 'bg-teal-600 text-white'
+                                        : 'bg-slate-100 text-slate-500 hover:bg-teal-50 hover:text-teal-700'
+                                }`}
+                            >
+                                {loc.name}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 {/* Date filter */}
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm px-5 py-3.5 flex flex-wrap items-center gap-3">
                     <div className="flex items-center gap-2 shrink-0">
@@ -331,30 +378,32 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
                         type="date"
                         id="date-filter"
                         defaultValue={filterDate}
-                        onChange={e => router.get(route('notes.index'), { date: e.target.value }, { preserveState: false })}
+                        onChange={e => goTo({ date: e.target.value })}
                         className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700 focus:border-teal-400 focus:bg-white focus:outline-none transition cursor-pointer"
                     />
                     <div className="flex items-center gap-2">
-                        <Link
-                            href={route('notes.index')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        <button
+                            type="button"
+                            onClick={() => goTo({ date: today })}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                                 isFilterToday
                                     ? 'bg-teal-600 text-white'
                                     : 'bg-slate-100 text-slate-500 hover:bg-teal-50 hover:text-teal-700'
                             }`}
                         >
                             Ma
-                        </Link>
-                        <Link
-                            href={route('notes.index', { date: yesterday })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => goTo({ date: yesterday })}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                                 isFilterYesterday
                                     ? 'bg-teal-600 text-white'
                                     : 'bg-slate-100 text-slate-500 hover:bg-teal-50 hover:text-teal-700'
                             }`}
                         >
                             Tegnap
-                        </Link>
+                        </button>
                     </div>
                     <span className="ml-auto text-xs text-slate-400">
                         <span className="font-semibold text-slate-600">{notes.total}</span> bejegyzés · {filterLabel}
