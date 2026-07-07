@@ -217,19 +217,14 @@ export default function DirectorLayout({ children, title }: Props) {
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-14">
                             {/* Brand */}
-                            <div className="flex items-center gap-3">
+                            <Link href={route('director.dashboard')} className="flex items-center gap-3 group shrink-0">
                                 <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
                                     <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1"/>
                                     </svg>
                                 </div>
-                                <div className="leading-tight">
-                                    <Link href={route('director.dashboard')} className="text-sm font-bold text-white block hover:text-indigo-400 transition-colors">
-                                        {tenantName}
-                                    </Link>
-                                    <span className="text-xs text-indigo-400 font-semibold uppercase tracking-wider">Területi Igazgató</span>
-                                </div>
-                            </div>
+                                <span className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors">Területi Igazgató</span>
+                            </Link>
 
                             {/* Desktop nav */}
                             <nav className="hidden sm:flex items-center gap-1">
