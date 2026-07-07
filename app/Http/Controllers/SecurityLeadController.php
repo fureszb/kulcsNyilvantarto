@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Jobs\SendPushJob;
 use App\Models\ActivityLog;
 use App\Models\DirectorLeadGoal;
-use App\Models\DirectorMessage;
 use App\Models\Exam;
 use App\Models\ExamResult;
 use App\Models\SecurityDailyReport;
@@ -135,39 +134,6 @@ class SecurityLeadController extends Controller
         });
 
         return Inertia::render('SecurityLead/Inventory', ['locations' => $locations]);
-    }
-
-    public function messages(): Response
-    {
-        $user = Auth::guard('tenant')->user();
-
-        $inbox = DirectorMessage::where('to_user_id', $user->id)
-            ->where('is_anonymous', false)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($m) {
-                $sender = $m->from_user_id
-                    ? TenantUser::find($m->from_user_id)
-                    : null;
-                return [
-                    'id'         => $m->id,
-                    'content'    => $m->content,
-                    'from_name'  => $sender?->name ?? 'Igazgató',
-                    'created_at' => $m->created_at->format('Y.m.d H:i'),
-                    'is_new'     => is_null($m->read_at),
-                ];
-            });
-
-        // Olvasottnak jelöljük
-        DirectorMessage::where('to_user_id', $user->id)
-            ->where('is_anonymous', false)
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
-
-        return Inertia::render('SecurityLead/Messages', [
-            'welcomeName' => $user->name,
-            'messages'    => $inbox,
-        ]);
     }
 
     public function team(): Response

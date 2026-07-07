@@ -198,8 +198,7 @@ Route::prefix('{tenant}')
             Route::get('/',                              [DirectorController::class, 'dashboard'])->name('dashboard');
             Route::post('/leads/{leadId}/goals',         [DirectorController::class, 'setGoal'])->name('set-goal');
             Route::get('/monthly-report',                [DirectorController::class, 'monthlyReport'])->name('monthly-report');
-            Route::get('/messages',                      [DirectorController::class, 'messages'])->name('messages');
-            Route::post('/messages/{leadId}',            [DirectorController::class, 'sendMessage'])->name('send-message');
+            Route::get('/feedback',                      [DirectorController::class, 'feedback'])->name('feedback');
         });
 
         // Biztonsági vezető portál
@@ -218,7 +217,6 @@ Route::prefix('{tenant}')
             Route::post('/inventory/{location}/groups',               [ItemGroupController::class, 'store'])->name('inventory.groups.store');
             Route::put('/inventory/{location}/groups/{group}',        [ItemGroupController::class, 'update'])->name('inventory.groups.update');
             Route::delete('/inventory/{location}/groups/{group}',     [ItemGroupController::class, 'destroy'])->name('inventory.groups.destroy');
-            Route::get('/messages',   [SecurityLeadController::class, 'messages'])->name('messages');
             Route::get('/team',       [SecurityLeadController::class, 'team'])->name('team');
         });
 

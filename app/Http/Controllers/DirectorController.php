@@ -112,30 +112,10 @@ class DirectorController extends Controller
         ]);
     }
 
-    public function messages(): Response
+    /** Az igazgatóhoz beérkezett névtelen dolgozói visszajelzések listája. */
+    public function feedback(): Response
     {
-        $user  = Auth::guard('tenant')->user();
-        $leads = $user->supervisedLeads()->orderBy('name')->get();
-
-        $allSent = DirectorMessage::where('from_user_id', $user->id)
-            ->where('is_anonymous', false)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $threads = $leads->map(function ($lead) use ($allSent) {
-            return [
-                'lead_id'   => $lead->id,
-                'lead_name' => $lead->name,
-                'messages'  => $allSent
-                    ->where('to_user_id', $lead->id)
-                    ->values()
-                    ->map(fn ($m) => [
-                        'id'         => $m->id,
-                        'content'    => $m->content,
-                        'created_at' => $m->created_at->format('Y.m.d H:i'),
-                    ]),
-            ];
-        });
+        $user = Auth::guard('tenant')->user();
 
         $unreadCount = DirectorMessage::where('to_user_id', $user->id)
             ->where('is_anonymous', true)
@@ -159,33 +139,10 @@ class DirectorController extends Controller
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
-        return Inertia::render('Director/Messages', [
+        return Inertia::render('Director/Feedback', [
             'welcomeName' => $user->name,
-            'threads'     => $threads->values(),
             'feedback'    => $feedback,
             'unreadCount' => $unreadCount,
         ]);
-    }
-
-    public function sendMessage(Request $request, int $leadId): RedirectResponse
-    {
-        $request->validate([
-            'content' => 'required|string|max:2000',
-        ]);
-
-        $director = Auth::guard('tenant')->user();
-
-        if (!$director->supervisedLeads()->where('users.id', $leadId)->exists()) {
-            abort(403);
-        }
-
-        DirectorMessage::create([
-            'from_user_id' => $director->id,
-            'to_user_id'   => $leadId,
-            'content'      => $request->content,
-            'is_anonymous' => false,
-        ]);
-
-        return back()->with('success', 'Üzenet elküldve.');
     }
 }
