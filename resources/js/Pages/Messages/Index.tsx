@@ -77,9 +77,28 @@ function silentReload() {
     router.reload({ only: ['messages'], preserveScroll: true });
 }
 
+const HERO_TEXT: Record<string, { eyebrow: string; title: string; subtitle: string }> = {
+    security_lead: {
+        eyebrow: 'Igazgatói üzenetek',
+        title: 'Üzenetek',
+        subtitle: 'Az igazgatódtól és a csapattól kapott üzenetek',
+    },
+    area_director: {
+        eyebrow: 'Csapat üzenetek',
+        title: 'Üzenetek',
+        subtitle: 'A biztonsági vezetőktől és a csapattól kapott üzenetek',
+    },
+};
+const DEFAULT_HERO_TEXT = {
+    eyebrow: 'Property Manager üzenetek',
+    title: 'PM értesítések',
+    subtitle: 'Kérések és üzenetek a Property Managertől',
+};
+
 export default function MessagesIndex({ messages }: Props) {
     const Layout = useOwnLayout();
     const { props: { auth, tenant } } = usePage<PageProps>();
+    const heroText = HERO_TEXT[auth.user?.role ?? ''] ?? DEFAULT_HERO_TEXT;
     const [openReplyId, setOpenReplyId] = useState<number | null>(null);
     const [pollingEnabled, setPollingEnabled] = useState<boolean>(() => {
         try { return localStorage.getItem('worker_polling_enabled') !== 'false'; } catch { return true; }
@@ -111,7 +130,7 @@ export default function MessagesIndex({ messages }: Props) {
     }, [pollingEnabled]);
 
     return (
-        <Layout title="PM üzenetek">
+        <Layout title={heroText.title}>
             <div className="max-w-7xl mx-auto space-y-5">
 
                 {/* Hero */}
@@ -128,9 +147,9 @@ export default function MessagesIndex({ messages }: Props) {
                     />
                     <div className="relative px-8 py-7 flex items-start justify-between gap-4 flex-wrap">
                         <div>
-                            <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-1">Property Manager üzenetek</p>
-                            <h1 className="text-2xl font-extrabold text-white tracking-tight">PM értesítések</h1>
-                            <p className="text-slate-400 text-sm mt-1">Kérések és üzenetek a Property Managertől</p>
+                            <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-1">{heroText.eyebrow}</p>
+                            <h1 className="text-2xl font-extrabold text-white tracking-tight">{heroText.title}</h1>
+                            <p className="text-slate-400 text-sm mt-1">{heroText.subtitle}</p>
                             <button
                                 type="button"
                                 onClick={togglePolling}
@@ -169,7 +188,7 @@ export default function MessagesIndex({ messages }: Props) {
                             <svg className="w-10 h-10 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
-                            <p className="text-sm font-medium">Nincs PM üzeneted</p>
+                            <p className="text-sm font-medium">Még nem érkezett üzeneted</p>
                         </div>
                     ) : (
                         <>
@@ -184,7 +203,7 @@ export default function MessagesIndex({ messages }: Props) {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 flex-wrap mb-2">
-                                                    <span className="text-sm font-semibold text-slate-800">{message.sent_by_name ?? 'Property Manager'}</span>
+                                                    <span className="text-sm font-semibold text-slate-800">{message.sent_by_name ?? 'Ismeretlen küldő'}</span>
                                                     {message.send_to_all ? (
                                                         <span className="text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">Mindenki</span>
                                                     ) : (
