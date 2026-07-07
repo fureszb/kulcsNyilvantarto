@@ -6,9 +6,15 @@ import type { TenantUser } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
 
+interface LocationOption {
+    id: number;
+    name: string;
+}
+
 interface Props {
     sortedUsers: TenantUser[];
     preparedBy: string;
+    locations: LocationOption[];
 }
 
 type ShiftRow    = { 'beosztás': string; nev: string; 'idő_tól': string; 'idő_ig': string };
@@ -247,13 +253,14 @@ const lSm  = 'block text-xs font-semibold text-slate-500 uppercase tracking-wide
 const thC  = 'text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider';
 const tdC  = 'px-4 py-2.5';
 
-export default function SecurityCreate({ sortedUsers, preparedBy }: Props) {
+export default function SecurityCreate({ sortedUsers, preparedBy, locations }: Props) {
     const [reportDate,    setReportDate]    = useState(todayString());
     const [preparedByVal, setPreparedByVal] = useState(preparedBy);
     const [takenOverFrom, setTakenOverFrom] = useState('');
     const [handoverTime,  setHandoverTime]  = useState('');
     const [ccRecipients,  setCcRecipients]  = useState('');
     const [shareUserIds,  setShareUserIds]  = useState<number[]>([]);
+    const [locationIds,   setLocationIds]   = useState<number[]>([]);
     const [processing,    setProcessing]    = useState(false);
     const [errors,        setErrors]        = useState<Record<string, string>>({});
     const [valErrors,     setValErrors]     = useState<string[]>([]);
@@ -288,6 +295,7 @@ export default function SecurityCreate({ sortedUsers, preparedBy }: Props) {
         e.preventDefault();
         const ve: string[] = [];
         if (!takenOverFrom.trim()) ve.push('Az „Átadás-átvétel → Kitől veszi át a szolgálatot" mező kitöltése kötelező.');
+        if (locationIds.length === 0) ve.push('Legalább egy irodaházat ki kell választani, amelyre a jelentés vonatkozik.');
         if (serviceMembers.some(r => !r.nev.trim())) ve.push('A „Napi Szolgálat tagjai → Név" mező kitöltése kötelező minden sornál.');
         if (inspectors.some(r => !r.neve.trim())) ve.push('Az „Ellenőrzést végző személyek → Neve" mező kitöltése kötelező minden sornál.');
         if (patrols.some(r => !r['vagyonőr'].trim())) ve.push('A „Járőrözés → Vagyonőr" mező kitöltése kötelező minden sornál.');
@@ -301,6 +309,7 @@ export default function SecurityCreate({ sortedUsers, preparedBy }: Props) {
             handover_time:           handoverTime,
             cc_recipients:           ccRecipients,
             share_user_ids:          shareUserIds,
+            location_ids:            locationIds,
             service_members:         JSON.stringify(serviceMembers),
             previous_shift_members:  JSON.stringify(previousShiftMembers),
             equipment:               JSON.stringify(equipment),
@@ -366,6 +375,25 @@ export default function SecurityCreate({ sortedUsers, preparedBy }: Props) {
                             <label className={lSm}>Jelentést készítette</label>
                             <input type="text" value={preparedByVal} readOnly className="w-full rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-500 cursor-not-allowed"/>
                             {errors.prepared_by && <p className="mt-1 text-xs text-red-500">{errors.prepared_by}</p>}
+                        </div>
+                        <div className="sm:col-span-2">
+                            <label className={lSm}>Érintett irodaházak <span className="text-rose-500">*</span></label>
+                            <div className="flex flex-wrap gap-2">
+                                {locations.map(loc => {
+                                    const checked = locationIds.includes(loc.id);
+                                    return (
+                                        <button
+                                            key={loc.id}
+                                            type="button"
+                                            onClick={() => setLocationIds(ids => checked ? ids.filter(id => id !== loc.id) : [...ids, loc.id])}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${checked ? 'bg-rose-600 border-rose-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                                        >
+                                            {loc.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {errors.location_ids && <p className="mt-1 text-xs text-red-500">{errors.location_ids}</p>}
                         </div>
                     </div>
                 </div>

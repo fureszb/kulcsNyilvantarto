@@ -26,15 +26,28 @@ class DirectorController extends Controller
             ->where('period_type', 'monthly')
             ->where('year', $now->year)
             ->where('period', $now->month)
-            ->get()
-            ->keyBy('lead_id');
+            ->get();
 
-        $leads = array_map(function ($lead) use ($goals) {
-            $goal = $goals->get($lead['lead_id']);
+        $overallGoals  = $goals->whereNull('location_id')->keyBy('lead_id');
+        $locationGoals = $goals->whereNotNull('location_id')->groupBy('lead_id');
+
+        $leads = array_map(function ($lead) use ($overallGoals, $locationGoals) {
+            $goal = $overallGoals->get($lead['lead_id']);
             $lead['goal'] = $goal ? [
                 'target_completion_pct' => $goal->target_completion_pct,
                 'target_turnover_pct'   => $goal->target_turnover_pct,
             ] : null;
+
+            $leadLocGoals = $locationGoals->get($lead['lead_id'])?->keyBy('location_id');
+            $lead['locations'] = array_map(function ($loc) use ($leadLocGoals) {
+                $locGoal = $leadLocGoals?->get($loc['location_id']);
+                $loc['goal'] = $locGoal ? [
+                    'target_completion_pct' => $locGoal->target_completion_pct,
+                    'target_turnover_pct'   => $locGoal->target_turnover_pct,
+                ] : null;
+                return $loc;
+            }, $lead['locations']);
+
             return $lead;
         }, $leadsData);
 
@@ -58,18 +71,24 @@ class DirectorController extends Controller
             'target_turnover_pct'   => 'required|numeric|min:0|max:100',
             'year'                  => 'required|integer|min:2020|max:2100',
             'month'                 => 'required|integer|min:1|max:12',
+            'location_id'           => 'nullable|integer',
         ]);
 
         $director = Auth::guard('tenant')->user();
 
-        if (!$director->supervisedLeads()->where('users.id', $leadId)->exists()) {
-            abort(403);
+        $lead = $director->supervisedLeads()->where('users.id', $leadId)->first();
+        abort_unless($lead, 403);
+
+        $locationId = $request->input('location_id');
+        if ($locationId !== null) {
+            abort_unless($lead->managedLocations()->where('locations.id', $locationId)->exists(), 403);
         }
 
         DirectorLeadGoal::updateOrCreate(
             [
                 'director_id' => $director->id,
                 'lead_id'     => $leadId,
+                'location_id' => $locationId,
                 'period_type' => 'monthly',
                 'year'        => $request->year,
                 'period'      => $request->month,

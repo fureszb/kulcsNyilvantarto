@@ -1,4 +1,5 @@
-import { Link } from '@inertiajs/react';
+import { useState } from 'react';
+import { Link, router } from '@inertiajs/react';
 import PmLayout from '../../Layouts/PmLayout';
 import type { TenantUser, Training, Exam, ActivityLog } from '../../types';
 
@@ -69,6 +70,16 @@ export default function PmWorker({ user, trainingRows, examRows, stats, recentAc
     const trainingTheme = pctTheme(stats.training_pct, 80, 50);
     const locationTheme = pctTheme(stats.location_pct, 80, 50);
     const profTheme = stats.prof_pct !== null ? pctTheme(stats.prof_pct, 70, 50) : null;
+    const isSecurityLead = route().current('security-lead.*');
+    const backRoute = isSecurityLead ? 'security-lead.workers' : 'pm.dashboard';
+    const [nudged, setNudged] = useState<Record<number, boolean>>({});
+
+    function nudgeExam(examId: number) {
+        router.post(route('security-lead.workers.nudge-exam', [user.id, examId]), {}, {
+            preserveScroll: true,
+            onSuccess: () => setNudged(n => ({ ...n, [examId]: true })),
+        });
+    }
 
     return (
         <PmLayout title={`${user.name} – részletek`}>
@@ -97,7 +108,7 @@ export default function PmWorker({ user, trainingRows, examRows, stats, recentAc
                         </div>
                     </div>
                     <Link
-                        href={route('pm.dashboard')}
+                        href={route(backRoute)}
                         className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 hover:text-white text-sm font-medium transition-colors shrink-0"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/></svg>
@@ -204,11 +215,12 @@ export default function PmWorker({ user, trainingRows, examRows, stats, recentAc
                                 <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Vizsga neve</th>
                                 <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Legjobb eredmény</th>
                                 <th className="text-right px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Alkalmak</th>
+                                {isSecurityLead && <th className="text-right px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider"></th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {examRows.length === 0 ? (
-                                <tr><td colSpan={3} className="px-6 py-6 text-center text-slate-400 text-sm">Nincs aktív vizsga.</td></tr>
+                                <tr><td colSpan={isSecurityLead ? 4 : 3} className="px-6 py-6 text-center text-slate-400 text-sm">Nincs aktív vizsga.</td></tr>
                             ) : examRows.map(({ exam, exam_done, last_exam, exam_count }) => {
                                 const pct = last_exam?.score_percent ?? (last_exam && last_exam.max_score > 0 ? Math.round(last_exam.score / last_exam.max_score * 100) : null);
                                 return (
@@ -226,6 +238,27 @@ export default function PmWorker({ user, trainingRows, examRows, stats, recentAc
                                         <td className="px-6 py-3.5 text-right text-slate-500">
                                             {exam_count > 0 ? `${exam_count} alkalom` : '–'}
                                         </td>
+                                        {isSecurityLead && (
+                                            <td className="px-6 py-3.5 text-right">
+                                                <button
+                                                    onClick={() => nudgeExam(exam.id)}
+                                                    disabled={!!nudged[exam.id]}
+                                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:cursor-default ${nudged[exam.id] ? 'text-green-600' : 'text-blue-600 hover:bg-blue-50'}`}
+                                                >
+                                                    {nudged[exam.id] ? (
+                                                        <>
+                                                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                                                            Elküldve
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                                            Emlékeztető
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </td>
+                                        )}
                                     </tr>
                                 );
                             })}

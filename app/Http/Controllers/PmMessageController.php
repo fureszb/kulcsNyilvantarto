@@ -15,7 +15,6 @@ class PmMessageController extends Controller
     public function index()
     {
         $user = Auth::guard('tenant')->user();
-        abort_if($user->isPropertyManager(), 403);
 
         $messages = PmMessage::visibleTo($user->id)
             ->with(['replies'])

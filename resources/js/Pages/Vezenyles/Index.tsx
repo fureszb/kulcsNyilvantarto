@@ -7,12 +7,13 @@ declare function route(name: string, params?: unknown): string;
 
 const HU_MONTHS = ['Január', 'Február', 'Március', 'Április', 'Május', 'Június', 'Július', 'Augusztus', 'Szeptember', 'Október', 'November', 'December'];
 
-interface Area { id: number; name: string; }
+interface Area { id: number; name: string; location_id: number | null; }
 interface Employee { id: number; area_id: number; name: string; user_id: number | null; }
 interface ScheduleRow { employee_id: number; day: number; value: string | null; }
 interface OverrideRow { area_id: number; employee_id: number; day: number; slot: 'night' | 'day'; cover_employee_id: number; cover_area_id: number; }
 interface ChangelogRow { id: number; year: number; month: number; day: number; absent_employee: string | null; absent_area: string | null; cover_employee: string | null; cover_area: string | null; slot: string | null; action: string | null; }
 interface UserRow { id: number; name: string; }
+interface LocationOption { id: number; name: string; }
 
 interface Props {
     year: number;
@@ -23,6 +24,9 @@ interface Props {
     overrides: OverrideRow[];
     changelog: ChangelogRow[];
     users: UserRow[];
+    canEdit: boolean;
+    canImport: boolean;
+    assignableLocations: LocationOption[] | null;
 }
 
 interface Candidate { empId: number; name: string; areaId: number; area: string; source: 'natural' | 'free'; flag: 'plus' | 'uncertain' | null; }
@@ -49,7 +53,7 @@ function cellKind(val: string | null | undefined) {
     return 'num';
 }
 
-export default function VezenylesIndex({ year, month, areas, employees, schedule, overrides, changelog, users }: Props) {
+export default function VezenylesIndex({ year, month, areas, employees, schedule, overrides, changelog, users, canEdit, canImport, assignableLocations }: Props) {
     usePage<PageProps>();
 
     const [currentView, setCurrentView] = useState<'felvitel' | 'potlas'>('felvitel');
@@ -58,6 +62,8 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
     const [selection, setSelection] = useState<{ areaId: number; employeeId: number; day: number } | null>(null);
     const [newEmpName, setNewEmpName] = useState('');
     const [newEmpUserId, setNewEmpUserId] = useState('');
+    const [newAreaName, setNewAreaName] = useState('');
+    const [newAreaLocationId, setNewAreaLocationId] = useState('');
     const [importing, setImporting] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
 
@@ -126,14 +132,26 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
         router.post(route('vezenyles.schedule.upsert'), { year, month, employee_id: empId, day, value: raw }, visitOpts);
     }
     function addArea() {
-        const name = window.prompt('Új terület neve:');
-        if (!name || !name.trim()) return;
-        router.post(route('vezenyles.areas.store'), { year, month, name: name.trim() }, visitOpts);
+        const name = newAreaName.trim();
+        if (!name) return;
+        if ((assignableLocations?.length ?? 0) > 0 && !newAreaLocationId) {
+            window.alert('Válassz irodaházat az új területhez.');
+            return;
+        }
+        router.post(route('vezenyles.areas.store'), {
+            year, month, name,
+            location_id: newAreaLocationId ? Number(newAreaLocationId) : null,
+        }, { ...visitOpts, onSuccess: () => { setNewAreaName(''); setNewAreaLocationId(''); } });
     }
     function delArea() {
         if (!effectiveAreaId) return;
         if (!window.confirm('Biztosan törlöd ezt a területet, a dolgozóival és beosztásukkal együtt?')) return;
         router.delete(route('vezenyles.areas.destroy', effectiveAreaId), { data: { year, month }, ...visitOpts });
+    }
+    function setAreaLocation(areaId: number, locationId: string) {
+        router.put(route('vezenyles.areas.update', areaId), {
+            year, month, location_id: locationId ? Number(locationId) : null,
+        }, visitOpts);
     }
     function addEmployee() {
         const name = newEmpName.trim();
@@ -298,21 +316,25 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                             {HU_MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
                         </select>
                         <input type="number" style={{ width: 84 }} value={year} onChange={e => goto(parseInt(e.target.value, 10) || year, month)} />
-                        <label className={`btn ${importing ? 'disabled' : ''}`}>
-                            {importing ? 'Import…' : 'Excel import'}
-                            <input ref={fileRef} type="file" accept=".xlsx" multiple disabled={importing} onChange={handleImportFile} />
-                        </label>
+                        {canImport && (
+                            <label className={`btn ${importing ? 'disabled' : ''}`}>
+                                {importing ? 'Import…' : 'Excel import'}
+                                <input ref={fileRef} type="file" accept=".xlsx" multiple disabled={importing} onChange={handleImportFile} />
+                            </label>
+                        )}
                     </div>
                 </div>
 
                 {/* Nézetváltó */}
-                <div className="vez-viewtabs">
-                    <button className={currentView === 'felvitel' ? 'active' : ''} onClick={() => setCurrentView('felvitel')}>Felvitel</button>
-                    <button className={currentView === 'potlas' ? 'active' : ''} onClick={() => setCurrentView('potlas')}>Pótlás tervezés</button>
-                </div>
+                {canEdit && (
+                    <div className="vez-viewtabs">
+                        <button className={currentView === 'felvitel' ? 'active' : ''} onClick={() => setCurrentView('felvitel')}>Felvitel</button>
+                        <button className={currentView === 'potlas' ? 'active' : ''} onClick={() => setCurrentView('potlas')}>Pótlás tervezés</button>
+                    </div>
+                )}
 
                 {/* ── FELVITEL ── */}
-                {currentView === 'felvitel' && (
+                {(currentView === 'felvitel' || !canEdit) && (
                     <div className="layout">
                         <div className="col-main">
                             <div className="card">
@@ -351,7 +373,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                                                                 else if (kind === 'num') cls = 'cell-num';
                                                                 else if (kind !== 'empty') cls = 'cell-sym ' + kind;
                                                                 if (isWeekend(year, month, d)) cls += ' weekend-col';
-                                                                return <td key={d} className={cls} onClick={() => editCell(emp.id, d)}>{val ?? ''}</td>;
+                                                                return <td key={d} className={cls} onClick={canEdit ? () => editCell(emp.id, d) : undefined}>{val ?? ''}</td>;
                                                             })}
                                                             <td className="cell-total">{total}</td>
                                                         </tr>
@@ -371,29 +393,62 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                                     <select style={{ flex: 1 }} value={effectiveAreaId ?? ''} onChange={e => setSelectedAreaId(parseInt(e.target.value, 10))}>
                                         {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                     </select>
-                                    <button className="btn small" onClick={addArea}>+ Új</button>
-                                    <button className="btn small danger" onClick={delArea}>Törlés</button>
+                                    {canEdit && <button className="btn small danger" onClick={delArea}>Törlés</button>}
                                 </div>
+
+                                {canEdit && assignableLocations && effectiveAreaId && (
+                                    <div className="row" style={{ marginTop: 8 }}>
+                                        <span style={{ fontSize: 11.5, color: 'var(--ink-dim)' }}>Irodaház:</span>
+                                        <select
+                                            style={{ flex: 1 }}
+                                            value={areaById.get(effectiveAreaId)?.location_id ?? ''}
+                                            onChange={e => setAreaLocation(effectiveAreaId, e.target.value)}
+                                        >
+                                            <option value="">— nincs hozzárendelve —</option>
+                                            {assignableLocations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+
+                                {canEdit && assignableLocations && (
+                                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
+                                        <div className="row">
+                                            <input type="text" placeholder="Új terület neve" style={{ flex: 1 }} value={newAreaName}
+                                                onChange={e => setNewAreaName(e.target.value)} />
+                                        </div>
+                                        <div className="row" style={{ marginTop: 6 }}>
+                                            <select style={{ flex: 1 }} value={newAreaLocationId} onChange={e => setNewAreaLocationId(e.target.value)}>
+                                                <option value="">— irodaház —</option>
+                                                {assignableLocations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                                            </select>
+                                            <button className="btn small primary" onClick={addArea}>+ Új terület</button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="card">
                                 <h2>Dolgozók <span className="n">({felvitelEmps.length})</span></h2>
-                                <div className="row">
-                                    <input type="text" placeholder="Új dolgozó neve" style={{ flex: 1 }} value={newEmpName}
-                                        onChange={e => setNewEmpName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addEmployee(); }} />
-                                </div>
-                                <div className="row" style={{ marginTop: 8 }}>
-                                    <select style={{ flex: 1 }} value={newEmpUserId} onChange={e => setNewEmpUserId(e.target.value)}>
-                                        <option value="">— nincs fiók-kötés —</option>
-                                        {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                                    </select>
-                                    <button className="btn small primary" onClick={addEmployee}>Hozzáad</button>
-                                </div>
+                                {canEdit && (
+                                    <>
+                                        <div className="row">
+                                            <input type="text" placeholder="Új dolgozó neve" style={{ flex: 1 }} value={newEmpName}
+                                                onChange={e => setNewEmpName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addEmployee(); }} />
+                                        </div>
+                                        <div className="row" style={{ marginTop: 8 }}>
+                                            <select style={{ flex: 1 }} value={newEmpUserId} onChange={e => setNewEmpUserId(e.target.value)}>
+                                                <option value="">— nincs fiók-kötés —</option>
+                                                {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                                            </select>
+                                            <button className="btn small primary" onClick={addEmployee}>Hozzáad</button>
+                                        </div>
+                                    </>
+                                )}
                                 <div className="emplist">
                                     {felvitelEmps.length === 0 && <div className="none">Még nincs dolgozó ezen a területen.</div>}
                                     {felvitelEmps.map(emp => (
                                         <div key={emp.id} className="emprow">
                                             <span>{emp.name}{emp.user_id ? <span className="tag">fiók</span> : null}</span>
-                                            <button title="Törlés" onClick={() => delEmployee(emp)}>✕</button>
+                                            {canEdit && <button title="Törlés" onClick={() => delEmployee(emp)}>✕</button>}
                                         </div>
                                     ))}
                                 </div>
@@ -403,7 +458,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                 )}
 
                 {/* ── PÓTLÁS ── */}
-                {currentView === 'potlas' && (
+                {canEdit && currentView === 'potlas' && (
                     <div className="layout">
                         <div className="col-main">
                             <div className="card">

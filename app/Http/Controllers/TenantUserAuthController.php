@@ -25,7 +25,7 @@ class TenantUserAuthController extends Controller
             return redirect()->intended(route('director.dashboard'));
         }
         if ($user->isSecurityLead()) {
-            return redirect()->intended(route('security-lead.messages'));
+            return redirect()->intended(route('security-lead.dashboard'));
         }
         if ($user->isPropertyManager()) {
             session(['pm_welcome' => $user->name]);

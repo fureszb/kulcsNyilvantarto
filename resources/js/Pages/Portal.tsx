@@ -947,7 +947,7 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
         return () => { clearTimeout(t0); clearTimeout(t1); clearTimeout(t2); };
     }, [welcomeName]);
 
-    const canVezenyles = !!user && (user.role === 'admin' || user.role === 'area_director');
+    const canVezenyles = !!user && user.role !== 'property_manager';
     const visibleModules = ALL_MODULES.filter(m => {
         if (m.onlyNonPm && !isNotPm) return false;
         if (m.adminOnly && !canVezenyles) return false;

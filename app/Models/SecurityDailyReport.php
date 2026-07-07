@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SecurityDailyReport extends Model
@@ -35,5 +36,10 @@ class SecurityDailyReport extends Model
     public function shares(): HasMany
     {
         return $this->hasMany(SecurityReportShare::class, 'report_id');
+    }
+
+    public function locations(): BelongsToMany
+    {
+        return $this->belongsToMany(Location::class, 'security_daily_report_location', 'report_id', 'location_id');
     }
 }

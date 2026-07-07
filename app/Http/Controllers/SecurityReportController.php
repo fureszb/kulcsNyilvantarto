@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\SecurityReportMail;
 use App\Models\ActivityLog;
+use App\Models\Location;
 use App\Models\SecurityDailyReport;
 use App\Models\SecurityReportShare;
 use App\Models\Setting;
@@ -51,7 +52,8 @@ class SecurityReportController extends Controller
         $this->authorizeForUsers();
         $sortedUsers  = $this->usersSortedByFrequency();
         $preparedBy   = Auth::guard('tenant')->user()->name;
-        return Inertia::render('Security/Create', ['sortedUsers' => $sortedUsers, 'preparedBy' => $preparedBy]);
+        $locations    = Location::orderBy('name')->get(['id', 'name']);
+        return Inertia::render('Security/Create', ['sortedUsers' => $sortedUsers, 'preparedBy' => $preparedBy, 'locations' => $locations]);
     }
 
     public function store(Request $request)
@@ -61,6 +63,8 @@ class SecurityReportController extends Controller
             'report_date'     => 'required|date',
             'prepared_by'     => 'required|string|max:255',
             'taken_over_from' => 'required|string|max:255',
+            'location_ids'    => 'required|array|min:1',
+            'location_ids.*'  => 'integer|exists:tenant.locations,id',
         ]);
 
         $decode = fn($field) => json_decode($request->input($field, '[]'), true) ?: [];
@@ -97,6 +101,8 @@ class SecurityReportController extends Controller
             'prepared_by'            => $request->prepared_by,
             'created_by_user_id'     => Auth::guard('tenant')->id(),
         ]);
+
+        $report->locations()->sync($request->input('location_ids', []));
 
         // Megosztás – kiválasztott user-ek
         $shareIds = array_filter(array_map('intval', $request->input('share_user_ids', [])));
@@ -149,7 +155,15 @@ class SecurityReportController extends Controller
 
         $sortedUsers = $this->usersSortedByFrequency();
         $sharedIds   = $security->shares()->pluck('user_id')->toArray();
-        return Inertia::render('Security/Edit', ['security' => $security, 'sortedUsers' => $sortedUsers, 'sharedIds' => $sharedIds]);
+        $locations   = Location::orderBy('name')->get(['id', 'name']);
+        $locationIds = $security->locations()->pluck('locations.id')->toArray();
+        return Inertia::render('Security/Edit', [
+            'security'    => $security,
+            'sortedUsers' => $sortedUsers,
+            'sharedIds'   => $sharedIds,
+            'locations'   => $locations,
+            'locationIds' => $locationIds,
+        ]);
     }
 
     public function update(Request $request, SecurityDailyReport $security)
@@ -162,6 +176,8 @@ class SecurityReportController extends Controller
             'report_date'     => 'required|date',
             'prepared_by'     => 'required|string|max:255',
             'taken_over_from' => 'required|string|max:255',
+            'location_ids'    => 'required|array|min:1',
+            'location_ids.*'  => 'integer|exists:tenant.locations,id',
         ]);
 
         $decode = fn($field) => json_decode($request->input($field, '[]'), true) ?: [];
@@ -197,6 +213,8 @@ class SecurityReportController extends Controller
             'maintenance'            => $decode('maintenance'),
             'prepared_by'            => $request->prepared_by,
         ]);
+
+        $security->locations()->sync($request->input('location_ids', []));
 
         // Megosztás frissítése
         $shareIds = array_filter(array_map('intval', $request->input('share_user_ids', [])));

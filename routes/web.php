@@ -197,16 +197,32 @@ Route::prefix('{tenant}')
             Route::post('/messages/{leadId}',            [DirectorController::class, 'sendMessage'])->name('send-message');
         });
 
-        // Biztonsági vezető portál (üzenetek + névtelen visszajelzés)
+        // Biztonsági vezető portál
         Route::prefix('security-lead')->name('security-lead.')->middleware('security-lead')->group(function () {
+            Route::get('/',           [SecurityLeadController::class, 'dashboard'])->name('dashboard');
+            Route::get('/workers',    [SecurityLeadController::class, 'workers'])->name('workers');
+            // Dolgozó-részletező: ugyanaz a controller-metódus, mint a PM portálon (location-guard a metóduson belül)
+            Route::get('/workers/{user}', [PropertyManagerController::class, 'worker'])->name('worker');
+            Route::post('/workers/{user}/exams/{exam}/nudge', [SecurityLeadController::class, 'nudgeExam'])->name('workers.nudge-exam');
+            Route::get('/reports',    [SecurityLeadController::class, 'dailyReports'])->name('reports');
+            Route::get('/inventory',  [SecurityLeadController::class, 'inventory'])->name('inventory');
+            // Leltár mutációk: ugyanaz az Admin\ItemController/ItemGroupController, location-guarddal
+            Route::post('/inventory/{location}/items',          [ItemController::class, 'store'])->name('inventory.items.store');
+            Route::put('/inventory/{location}/items/{item}',    [ItemController::class, 'update'])->name('inventory.items.update');
+            Route::delete('/inventory/{location}/items/{item}', [ItemController::class, 'destroy'])->name('inventory.items.destroy');
+            Route::post('/inventory/{location}/groups',               [ItemGroupController::class, 'store'])->name('inventory.groups.store');
+            Route::put('/inventory/{location}/groups/{group}',        [ItemGroupController::class, 'update'])->name('inventory.groups.update');
+            Route::delete('/inventory/{location}/groups/{group}',     [ItemGroupController::class, 'destroy'])->name('inventory.groups.destroy');
             Route::get('/messages',   [SecurityLeadController::class, 'messages'])->name('messages');
             Route::post('/feedback',  [SecurityLeadController::class, 'submitFeedback'])->name('feedback');
         });
 
-        // Vezénylés / beosztás — admin + területi igazgató (area-director = hasAdminPowers)
-        Route::prefix('vezenyles')->name('vezenyles.')->middleware('area-director')->group(function () {
+        // Vezénylés / beosztás — olvasás mindenkinek (PM kivételével, a controller tiltja),
+        // szerkesztés admin/igazgató/biztonsági vezető (a controller ellenőrzi irodaházankénnt)
+        Route::prefix('vezenyles')->name('vezenyles.')->middleware('tenant-user')->group(function () {
             Route::get('/',                       [VezenylesController::class, 'index'])->name('index');
             Route::post('/areas',                 [VezenylesController::class, 'storeArea'])->name('areas.store');
+            Route::put('/areas/{area}',           [VezenylesController::class, 'updateArea'])->name('areas.update');
             Route::delete('/areas/{area}',        [VezenylesController::class, 'destroyArea'])->name('areas.destroy');
             Route::post('/employees',             [VezenylesController::class, 'storeEmployee'])->name('employees.store');
             Route::delete('/employees/{employee}',[VezenylesController::class, 'destroyEmployee'])->name('employees.destroy');

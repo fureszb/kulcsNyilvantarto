@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Location;
 use App\Models\TenantUser;
 use App\Models\VezenylesArea;
 use App\Models\VezenylesChangelog;
@@ -9,6 +10,7 @@ use App\Models\VezenylesEmployee;
 use App\Models\VezenylesOverride;
 use App\Models\VezenylesSchedule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -32,25 +34,70 @@ class VezenylesController extends Controller
         return redirect()->route('vezenyles.index', ['year' => $year, 'month' => $month]);
     }
 
+    /** Admin/területi igazgató mindent lát/szerkeszthet; biztonsági vezető csak a
+     *  managedLocations-jaihoz kötött területeket szerkesztheti, mást nem lát/érinthet. */
+    private function authorizeAreaAccess(int $areaId): void
+    {
+        $user = Auth::guard('tenant')->user();
+        if ($user->hasAdminPowers()) {
+            return;
+        }
+        if ($user->isSecurityLead()) {
+            $area = VezenylesArea::find($areaId);
+            $ok = $area && $area->location_id
+                && $user->managedLocations()->where('locations.id', $area->location_id)->exists();
+            abort_unless($ok, 403);
+            return;
+        }
+        abort(403);
+    }
+
     public function index(Request $request)
     {
         [$year, $month] = $this->currentYm($request);
+        $user = Auth::guard('tenant')->user();
+        abort_if($user->isPropertyManager(), 403);
 
-        $areas = VezenylesArea::orderBy('name')->get(['id', 'name']);
+        $canEdit = $user->hasAdminPowers() || $user->isSecurityLead();
 
-        $employees = VezenylesEmployee::orderBy('name')
+        $areasQuery = VezenylesArea::orderBy('name');
+        $assignableLocations = null;
+
+        if (!$user->hasAdminPowers()) {
+            if ($user->isSecurityLead()) {
+                $locationIds = $user->managedLocations()->pluck('locations.id');
+                $assignableLocations = $user->managedLocations()->orderBy('name')->get(['locations.id', 'locations.name']);
+            } else {
+                $locationIds = $user->workLocations()->pluck('locations.id');
+            }
+            $areasQuery->whereIn('location_id', $locationIds);
+        } else {
+            $assignableLocations = Location::orderBy('name')->get(['id', 'name']);
+        }
+
+        $areas = $areasQuery->get(['id', 'name', 'location_id']);
+        $areaIds = $areas->pluck('id');
+        $areaNames = $areas->pluck('name');
+
+        $employees = VezenylesEmployee::whereIn('area_id', $areaIds)->orderBy('name')
             ->get(['id', 'area_id', 'name', 'user_id']);
+        $employeeIds = $employees->pluck('id');
 
-        $schedule = VezenylesSchedule::where('year', $year)
+        $schedule = VezenylesSchedule::whereIn('employee_id', $employeeIds)
+            ->where('year', $year)
             ->where('month', $month)
             ->get(['employee_id', 'day', 'value']);
 
-        $overrides = VezenylesOverride::where('year', $year)
+        $overrides = VezenylesOverride::whereIn('area_id', $areaIds)
+            ->where('year', $year)
             ->where('month', $month)
             ->get(['area_id', 'employee_id', 'day', 'slot', 'cover_employee_id', 'cover_area_id']);
 
-        $changelog = VezenylesChangelog::orderByDesc('id')
-            ->limit(200)
+        $changelogQuery = VezenylesChangelog::orderByDesc('id')->limit(200);
+        if (!$user->hasAdminPowers()) {
+            $changelogQuery->whereIn('absent_area', $areaNames);
+        }
+        $changelog = $changelogQuery
             ->get(['id', 'year', 'month', 'day', 'absent_employee', 'absent_area', 'cover_employee', 'cover_area', 'slot', 'action']);
 
         $users = TenantUser::where('is_active', true)
@@ -58,14 +105,17 @@ class VezenylesController extends Controller
             ->get(['id', 'name']);
 
         return Inertia::render('Vezenyles/Index', [
-            'year'      => $year,
-            'month'     => $month,
-            'areas'     => $areas,
-            'employees' => $employees,
-            'schedule'  => $schedule,
-            'overrides' => $overrides,
-            'changelog' => $changelog,
-            'users'     => $users,
+            'year'                 => $year,
+            'month'                => $month,
+            'areas'                => $areas,
+            'employees'            => $employees,
+            'schedule'             => $schedule,
+            'overrides'            => $overrides,
+            'changelog'            => $changelog,
+            'users'                => $users,
+            'canEdit'              => $canEdit,
+            'canImport'            => $user->hasAdminPowers(),
+            'assignableLocations'  => $assignableLocations,
         ]);
     }
 
@@ -73,21 +123,52 @@ class VezenylesController extends Controller
     public function storeArea(Request $request)
     {
         [$year, $month] = $this->currentYm($request);
+        $user = Auth::guard('tenant')->user();
+        abort_unless($user->hasAdminPowers() || $user->isSecurityLead(), 403);
+
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'name'        => 'required|string|max:255',
+            'location_id' => 'nullable|integer|exists:tenant.locations,id',
         ]);
+
+        if ($user->isSecurityLead()) {
+            abort_unless($data['location_id'] ?? null, 422, 'A terület létrehozásához irodaházat kell választani.');
+            abort_unless($user->managedLocations()->where('locations.id', $data['location_id'])->exists(), 403);
+        }
 
         if (VezenylesArea::where('name', $data['name'])->exists()) {
             return $this->redirectBack($year, $month)->with('error', 'Ez a terület már létezik.');
         }
 
-        VezenylesArea::create(['name' => trim($data['name'])]);
+        VezenylesArea::create(['name' => trim($data['name']), 'location_id' => $data['location_id'] ?? null]);
         return $this->redirectBack($year, $month)->with('success', 'Terület létrehozva.');
+    }
+
+    public function updateArea(Request $request, int $area)
+    {
+        [$year, $month] = $this->currentYm($request);
+        $this->authorizeAreaAccess($area);
+        $areaModel = VezenylesArea::findOrFail($area);
+        $user = Auth::guard('tenant')->user();
+
+        $data = $request->validate([
+            'location_id' => 'nullable|integer|exists:tenant.locations,id',
+        ]);
+
+        if ($user->isSecurityLead()) {
+            abort_unless($data['location_id'] ?? null, 422, 'A területhez irodaházat kell választani.');
+            abort_unless($user->managedLocations()->where('locations.id', $data['location_id'])->exists(), 403);
+        }
+
+        $areaModel->update(['location_id' => $data['location_id'] ?? null]);
+
+        return $this->redirectBack($year, $month)->with('success', 'Terület frissítve.');
     }
 
     public function destroyArea(Request $request, int $area)
     {
         [$year, $month] = $this->currentYm($request);
+        $this->authorizeAreaAccess($area);
         $areaModel = VezenylesArea::findOrFail($area);
 
         DB::connection('tenant')->transaction(function () use ($areaModel) {
@@ -112,6 +193,8 @@ class VezenylesController extends Controller
             'user_id' => 'nullable|integer|exists:tenant.users,id',
         ]);
 
+        $this->authorizeAreaAccess($data['area_id']);
+
         $exists = VezenylesEmployee::where('area_id', $data['area_id'])
             ->where('name', trim($data['name']))
             ->exists();
@@ -132,6 +215,7 @@ class VezenylesController extends Controller
     {
         [$year, $month] = $this->currentYm($request);
         $emp = VezenylesEmployee::findOrFail($employee);
+        $this->authorizeAreaAccess($emp->area_id);
 
         DB::connection('tenant')->transaction(function () use ($emp) {
             VezenylesOverride::where('employee_id', $emp->id)
@@ -152,6 +236,9 @@ class VezenylesController extends Controller
             'day'         => 'required|integer|min:1|max:31',
             'value'       => 'nullable|string|max:10',
         ]);
+
+        $emp = VezenylesEmployee::findOrFail($data['employee_id']);
+        $this->authorizeAreaAccess($emp->area_id);
 
         $value = $this->normalizeValue($data['value'] ?? null);
         if ($value === false) {
@@ -215,6 +302,8 @@ class VezenylesController extends Controller
             'cover_area_id'     => 'required|integer|exists:tenant.vezenyles_areas,id',
         ]);
 
+        $this->authorizeAreaAccess($data['area_id']);
+
         VezenylesOverride::updateOrCreate(
             [
                 'area_id'     => $data['area_id'],
@@ -261,6 +350,8 @@ class VezenylesController extends Controller
             'slot'        => 'required|in:night,day',
         ]);
 
+        $this->authorizeAreaAccess($data['area_id']);
+
         $existing = VezenylesOverride::where('area_id', $data['area_id'])
             ->where('employee_id', $data['employee_id'])
             ->where('year', $year)->where('month', $month)
@@ -297,6 +388,8 @@ class VezenylesController extends Controller
     public function import(Request $request)
     {
         [$year, $month] = $this->currentYm($request);
+        abort_unless(Auth::guard('tenant')->user()->hasAdminPowers(), 403);
+
         $data = $request->validate([
             'import_year'                     => 'required|integer|min:2000|max:2100',
             'sheets'                          => 'required|array|min:1',

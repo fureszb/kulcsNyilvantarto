@@ -16,6 +16,7 @@ use App\Models\SecurityDailyReport;
 use App\Models\TenantUser;
 use App\Models\Training;
 use App\Models\TrainingResult;
+use App\Services\WorkerCompletionStatsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -24,6 +25,10 @@ use Inertia\Inertia;
 
 class PropertyManagerController extends Controller
 {
+    public function __construct(private WorkerCompletionStatsService $statsService)
+    {
+    }
+
     public function dashboard()
     {
         $welcomeName = session()->pull('pm_welcome');
@@ -35,7 +40,7 @@ class PropertyManagerController extends Controller
         $allTrainResults = TrainingResult::whereIn('user_id', $workerIds)->get()->groupBy('user_id');
         $allExamResults  = ExamResult::whereIn('user_id', $workerIds)->get()->groupBy('user_id');
 
-        $workerStats = $workers->map(fn($w) => $this->buildStats($w, $trainings, $allTrainResults, $allExamResults));
+        $workerStats = $workers->map(fn($w) => $this->statsService->buildStats($w, $trainings, $allTrainResults, $allExamResults));
 
         return Inertia::render('PM/Dashboard', ['workerStats' => $workerStats, 'welcomeName' => $welcomeName]);
     }
@@ -43,6 +48,13 @@ class PropertyManagerController extends Controller
     public function worker(TenantUser $user)
     {
         abort_if($user->role !== 'user', 404);
+
+        $authUser = Auth::guard('tenant')->user();
+        if ($authUser->isSecurityLead()) {
+            $managedLocationIds = $authUser->managedLocations()->pluck('locations.id');
+            $worksHere = $user->workLocations()->whereIn('locations.id', $managedLocationIds)->exists();
+            abort_unless($worksHere, 403);
+        }
 
         $trainings      = Training::where('is_active', true)->withCount('steps')->orderBy('sort_order')->get();
         $trainingResults = TrainingResult::where('user_id', $user->id)->get();
@@ -70,7 +82,7 @@ class PropertyManagerController extends Controller
             ];
         });
 
-        $stats = $this->buildStats($user, $trainings);
+        $stats = $this->statsService->buildStats($user, $trainings);
 
         $recentActivity = ActivityLog::where('user_id', $user->id)
             ->orderByDesc('occurred_at')
@@ -100,15 +112,35 @@ class PropertyManagerController extends Controller
 
         $messages = $query->paginate(20)->withQueryString();
 
-        $workers = TenantUser::where('is_active', true)
-            ->where('id', '!=', Auth::guard('tenant')->id())
-            ->orderBy('name')->get();
+        $authUser = Auth::guard('tenant')->user();
+        $workers  = $this->messageableUsersFor($authUser);
 
         return Inertia::render('PM/Messages', [
             'messages' => $messages,
             'workers'  => $workers,
             'filters'  => $request->only(['date_from', 'date_to', 'user_id']),
         ]);
+    }
+
+    /** A biztonsági vezető csak a saját irodaházainak dolgozóit + a PM-eket érheti el a
+     *  broadcast-eszközben; admin/PM/igazgató nézete változatlan (mindenki, önmaga nélkül). */
+    private function messageableUsersFor(TenantUser $authUser)
+    {
+        if (!$authUser->isSecurityLead()) {
+            return TenantUser::where('is_active', true)
+                ->where('id', '!=', $authUser->id)
+                ->orderBy('name')->get();
+        }
+
+        $managedLocationIds = $authUser->managedLocations()->pluck('locations.id');
+
+        return TenantUser::where('is_active', true)
+            ->where('id', '!=', $authUser->id)
+            ->where(function ($q) use ($managedLocationIds) {
+                $q->where('role', 'property_manager')
+                  ->orWhereHas('workLocations', fn ($w) => $w->whereIn('locations.id', $managedLocationIds));
+            })
+            ->orderBy('name')->get();
     }
 
     public function storeMessage(Request $request)
@@ -121,12 +153,20 @@ class PropertyManagerController extends Controller
         ]);
 
         $sendToAll = $request->boolean('send_to_all');
+        $sender    = Auth::guard('tenant')->user();
+
+        if ($sender->isSecurityLead()) {
+            $sendToAll = false; // biztonsági vezető sosem küldhet mindenkinek, csak a sajátjainak
+            $allowedIds = $this->messageableUsersFor($sender)->pluck('id')->all();
+            $requestedIds = array_map('intval', $request->input('user_ids', []));
+            if (array_diff($requestedIds, $allowedIds)) {
+                abort(403, 'Csak a saját dolgozóinak vagy a PM-nek küldhet üzenetet.');
+            }
+        }
 
         if (!$sendToAll && empty($request->input('user_ids'))) {
             return back()->withErrors(['user_ids' => 'Válasszon legalább egy dolgozót, vagy küldje mindenkinek.'])->withInput();
         }
-
-        $sender = Auth::guard('tenant')->user();
         $message = PmMessage::create([
             'content'          => $request->content,
             'send_to_all'      => $sendToAll,
@@ -367,35 +407,5 @@ class PropertyManagerController extends Controller
             'users'     => $users,
             'filters'   => $request->only(['location_id', 'user_id', 'date_from', 'date_to']),
         ]);
-    }
-
-    private function buildStats(TenantUser $worker, $trainings, $allTrainResults = null, $allExamResults = null): array
-    {
-        $total         = $trainings->count();
-        $locationTotal = $trainings->where('is_location_knowledge', true)->count();
-
-        $trainingResults = $allTrainResults
-            ? ($allTrainResults->get($worker->id) ?? collect())
-            : TrainingResult::where('user_id', $worker->id)->get();
-
-        $doneIds     = $trainingResults->pluck('training_id')->unique();
-        $trainingPct = $total > 0 ? (int) round($doneIds->count() / $total * 100) : 0;
-
-        $locKnownIds  = $trainings->where('is_location_knowledge', true)->pluck('id');
-        $locDoneCount = $doneIds->intersect($locKnownIds)->count();
-        $locationPct  = $locationTotal > 0 ? (int) round($locDoneCount / $locationTotal * 100) : 0;
-
-        $examResults = $allExamResults
-            ? ($allExamResults->get($worker->id) ?? collect())
-            : ExamResult::where('user_id', $worker->id)->get();
-        $profPct = $examResults->isEmpty() ? null
-            : (int) round($examResults->avg(fn($r) => $r->total_steps > 0 ? $r->first_try_count / $r->total_steps * 100 : 0));
-
-        return [
-            'worker'       => $worker,
-            'training_pct' => $trainingPct,
-            'location_pct' => $locationPct,
-            'prof_pct'     => $profPct,
-        ];
     }
 }

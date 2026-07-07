@@ -13,6 +13,7 @@ class DirectorLeadGoal extends Model
     protected $fillable = [
         'director_id',
         'lead_id',
+        'location_id',
         'period_type',
         'year',
         'period',
@@ -33,5 +34,10 @@ class DirectorLeadGoal extends Model
     public function lead(): BelongsTo
     {
         return $this->belongsTo(TenantUser::class, 'lead_id');
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
     }
 }

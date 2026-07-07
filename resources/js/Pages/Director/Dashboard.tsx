@@ -6,6 +6,11 @@ declare function route(name: string, params?: unknown): string;
 
 const NOISE_BG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")";
 
+interface Goal {
+    target_completion_pct: number;
+    target_turnover_pct: number;
+}
+
 interface LocationStat {
     location_id: number;
     location_name: string;
@@ -15,6 +20,7 @@ interface LocationStat {
     active_workers: number;
     left_this_month: number;
     expected_per_worker: number;
+    goal: Goal | null;
 }
 
 interface Overall {
@@ -24,11 +30,6 @@ interface Overall {
     active_workers: number;
     left_this_month: number;
     location_count: number;
-}
-
-interface Goal {
-    target_completion_pct: number;
-    target_turnover_pct: number;
 }
 
 interface Lead {
@@ -160,6 +161,69 @@ function GoalSection({ lead, currentPeriod }: { lead: Lead; currentPeriod: { yea
     );
 }
 
+function LocationGoalSection({ leadId, loc, currentPeriod }: { leadId: number; loc: LocationStat; currentPeriod: { year: number; month: number } }) {
+    const [editing, setEditing] = useState(false);
+    const { data, setData, post, processing, reset } = useForm({
+        target_completion_pct: loc.goal?.target_completion_pct ?? 80,
+        target_turnover_pct:   loc.goal?.target_turnover_pct ?? 5,
+        year:  currentPeriod.year,
+        month: currentPeriod.month,
+        location_id: loc.location_id,
+    });
+
+    function handleSave(e: React.FormEvent) {
+        e.preventDefault();
+        post(route('director.set-goal', leadId), {
+            onSuccess: () => setEditing(false),
+        });
+    }
+
+    if (!editing) {
+        return (
+            <div className="flex items-center justify-between gap-2 mt-1.5">
+                {loc.goal ? (
+                    <p className="text-[10px] text-slate-400">
+                        Irodaházi cél: <span className="font-semibold text-slate-600">{loc.goal.target_completion_pct}%</span>
+                    </p>
+                ) : (
+                    <p className="text-[10px] text-slate-300 italic">Nincs irodaházi célkitűzés</p>
+                )}
+                <button
+                    onClick={() => setEditing(true)}
+                    className="shrink-0 text-[10px] font-medium text-indigo-600 hover:text-indigo-700 cursor-pointer"
+                >
+                    {loc.goal ? 'Módosít' : 'Cél beállítása'}
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <form onSubmit={handleSave} className="mt-1.5 space-y-1.5" onClick={e => e.stopPropagation()}>
+            <div className="flex gap-2">
+                <input
+                    type="number" min="0" max="100" step="0.5"
+                    value={data.target_completion_pct}
+                    onChange={e => setData('target_completion_pct', parseFloat(e.target.value))}
+                    placeholder="Kész %"
+                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-[11px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <input
+                    type="number" min="0" max="100" step="0.5"
+                    value={data.target_turnover_pct}
+                    onChange={e => setData('target_turnover_pct', parseFloat(e.target.value))}
+                    placeholder="Fluktuáció %"
+                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-[11px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+            </div>
+            <div className="flex gap-2">
+                <button type="submit" disabled={processing} className="flex-1 py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors cursor-pointer">Mentés</button>
+                <button type="button" onClick={() => { reset(); setEditing(false); }} className="flex-1 py-1 rounded-lg border border-slate-200 text-[11px] font-medium text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">Mégse</button>
+            </div>
+        </form>
+    );
+}
+
 export default function DirectorDashboard({ leads, currentPeriod }: Props) {
     const [openId, setOpenId] = useState<number | null>(null);
 
@@ -265,13 +329,14 @@ export default function DirectorDashboard({ leads, currentPeriod }: Props) {
                                                         </span>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-3">
-                                                        <Bar label="Készültség" value={loc.completion_pct} tone="bg-emerald-400" />
-                                                        <Bar label="Fluktuáció" value={loc.turnover_pct} tone="bg-rose-400" />
+                                                        <Bar label="Készültség" value={loc.completion_pct} tone="bg-emerald-400" target={loc.goal?.target_completion_pct} />
+                                                        <Bar label="Fluktuáció" value={loc.turnover_pct} tone="bg-rose-400" target={loc.goal?.target_turnover_pct} />
                                                     </div>
                                                     <p className="text-[10px] text-slate-400 mt-1.5">
                                                         {loc.active_workers} aktív dolgozó
                                                         {loc.left_this_month > 0 && ` · ${loc.left_this_month} kilépő ebben a hónapban`}
                                                     </p>
+                                                    <LocationGoalSection leadId={lead.lead_id} loc={loc} currentPeriod={currentPeriod} />
                                                 </div>
                                             ))}
                                         </div>

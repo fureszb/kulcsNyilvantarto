@@ -6,10 +6,17 @@ import type { SecurityDailyReport, TenantUser } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
 
+interface LocationOption {
+    id: number;
+    name: string;
+}
+
 interface Props {
     security: SecurityDailyReport;
     sortedUsers: TenantUser[];
     sharedIds: number[];
+    locations: LocationOption[];
+    locationIds: number[];
 }
 
 type ShiftRow    = { 'beosztás': string; nev: string; 'idő_tól': string; 'idő_ig': string };
@@ -249,13 +256,14 @@ function asArr<T>(v: unknown): T[] {
     return [];
 }
 
-export default function SecurityEdit({ security, sortedUsers, sharedIds }: Props) {
+export default function SecurityEdit({ security, sortedUsers, sharedIds, locations, locationIds: initialLocationIds }: Props) {
     const [reportDate,    setReportDate]    = useState(security.report_date ?? '');
     const [preparedByVal, setPreparedByVal] = useState(security.prepared_by ?? '');
     const [takenOverFrom, setTakenOverFrom] = useState(security.taken_over_from ?? '');
     const [handoverTime,  setHandoverTime]  = useState(security.handover_time ?? '');
     const [ccRecipients,  setCcRecipients]  = useState(((security.cc_recipients ?? []) as string[]).join(', '));
     const [shareUserIds,  setShareUserIds]  = useState<number[]>(sharedIds);
+    const [locationIds,   setLocationIds]   = useState<number[]>(initialLocationIds);
     const [processing,    setProcessing]    = useState(false);
     const [errors,        setErrors]        = useState<Record<string, string>>({});
     const [valErrors,     setValErrors]     = useState<string[]>([]);
@@ -279,6 +287,7 @@ export default function SecurityEdit({ security, sortedUsers, sharedIds }: Props
         e.preventDefault();
         const ve: string[] = [];
         if (!takenOverFrom.trim()) ve.push('Az „Átadás-átvétel → Kitől veszi át a szolgálatot" mező kitöltése kötelező.');
+        if (locationIds.length === 0) ve.push('Legalább egy irodaházat ki kell választani, amelyre a jelentés vonatkozik.');
         if (serviceMembers.some(r => !r.nev.trim())) ve.push('A „Napi Szolgálat tagjai → Név" mező kitöltése kötelező minden sornál.');
         if (inspectors.some(r => !r.neve.trim())) ve.push('Az „Ellenőrzést végző személyek → Neve" mező kitöltése kötelező minden sornál.');
         if (patrols.some(r => !r['vagyonőr'].trim())) ve.push('A „Járőrözés → Vagyonőr" mező kitöltése kötelező minden sornál.');
@@ -292,6 +301,7 @@ export default function SecurityEdit({ security, sortedUsers, sharedIds }: Props
             handover_time:          handoverTime,
             cc_recipients:          ccRecipients,
             share_user_ids:         shareUserIds,
+            location_ids:           locationIds,
             service_members:        JSON.stringify(serviceMembers),
             previous_shift_members: JSON.stringify(previousShiftMembers),
             equipment:              JSON.stringify(equipment),
@@ -367,6 +377,25 @@ export default function SecurityEdit({ security, sortedUsers, sharedIds }: Props
                             <label className={lSm}>Jelentést készítette</label>
                             <input type="text" value={preparedByVal} onChange={e => setPreparedByVal(e.target.value)} placeholder="Teljes név" required className={iLg}/>
                             {errors.prepared_by && <p className="mt-1 text-xs text-red-500">{errors.prepared_by}</p>}
+                        </div>
+                        <div className="sm:col-span-2">
+                            <label className={lSm}>Érintett irodaházak <span className="text-rose-500">*</span></label>
+                            <div className="flex flex-wrap gap-2">
+                                {locations.map(loc => {
+                                    const checked = locationIds.includes(loc.id);
+                                    return (
+                                        <button
+                                            key={loc.id}
+                                            type="button"
+                                            onClick={() => setLocationIds(ids => checked ? ids.filter(id => id !== loc.id) : [...ids, loc.id])}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${checked ? 'bg-rose-600 border-rose-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                                        >
+                                            {loc.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {errors.location_ids && <p className="mt-1 text-xs text-red-500">{errors.location_ids}</p>}
                         </div>
                     </div>
                 </div>

@@ -1,170 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import PmLayout from '../../Layouts/PmLayout';
-import type { TenantUser, PageProps } from '../../types';
+import { WorkerCard, type WorkerStat } from '../../Components/WorkerStatCard';
 
 const NOISE_BG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")";
-
-interface WorkerStat {
-    worker: TenantUser;
-    training_pct: number;
-    location_pct: number;
-    prof_pct: number | null;
-}
 
 interface Props {
     workerStats: WorkerStat[];
     welcomeName?: string | null;
 }
 
-function pctColor(pct: number, threshHigh = 80, threshMid = 50) {
-    if (pct >= threshHigh) return { text: 'text-green-600', gradient: 'linear-gradient(90deg,#16a34a,#22c55e,#4ade80)', pulse: false };
-    if (pct >= threshMid)  return { text: 'text-amber-600', gradient: 'linear-gradient(90deg,#d97706,#f59e0b,#fcd34d)', pulse: false };
-    return                        { text: 'text-red-500',   gradient: 'linear-gradient(90deg,#dc2626,#ef4444,#f87171)', pulse: true  };
-}
-
-function StatBar({ label, pct, threshHigh, threshMid, delayMs }: {
-    label: string; pct: number | null; threshHigh?: number; threshMid?: number; delayMs?: number;
-}) {
-    const barRef = useRef<HTMLDivElement>(null);
-    const colors = pct !== null ? pctColor(pct, threshHigh, threshMid) : null;
-
-    useEffect(() => {
-        if (barRef.current && pct !== null) {
-            const el = barRef.current;
-            el.style.width = '0%';
-            const timer = setTimeout(() => {
-                el.style.transition = 'width 1.1s cubic-bezier(.16,1,.3,1)';
-                el.style.width = `${pct}%`;
-            }, delayMs ?? 0);
-            return () => clearTimeout(timer);
-        }
-    }, [pct, delayMs]);
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold text-slate-500">{label}</span>
-                {pct !== null && colors ? (
-                    <span className={`text-xs font-bold ${colors.text}`}>{pct}%</span>
-                ) : (
-                    <span className="text-xs text-slate-300">Nincs vizsga</span>
-                )}
-            </div>
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                {pct !== null && colors && (
-                    <div
-                        ref={barRef}
-                        className={`h-full rounded-full${colors.pulse ? ' progress-pulse' : ''}`}
-                        style={{ width: '0%', background: colors.gradient }}
-                    />
-                )}
-            </div>
-        </div>
-    );
-}
-
-function WorkerCard({ stat, index }: { stat: WorkerStat; index: number }) {
-    const { worker, training_pct, location_pct, prof_pct } = stat;
-    const baseDelay = 100 + index * 130;
-    const initial = worker.name ? worker.name.charAt(0) : '?';
-    const employedSince = worker.employed_since ? new Date(worker.employed_since) : null;
-    const daysWorking = employedSince
-        ? Math.floor((Date.now() - employedSince.getTime()) / 86400000)
-        : null;
-
-    const wrapRef = useRef<HTMLDivElement>(null);
-    const [tilt,  setTilt]  = useState({ rx: 0, ry: 0 });
-    const [shine, setShine] = useState({ x: 50, y: 50 });
-    const [hot,   setHot]   = useState(false);
-
-    function onMove(e: React.MouseEvent) {
-        if (!wrapRef.current) return;
-        const r = wrapRef.current.getBoundingClientRect();
-        const dx = (e.clientX - r.left - r.width  / 2) / (r.width  / 2);
-        const dy = (e.clientY - r.top  - r.height / 2) / (r.height / 2);
-        setTilt({ rx: -dy * 7, ry: dx * 7 });
-        setShine({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
-    }
-
-    return (
-        <div className="pm-card-enter" style={{ animationDelay: `${baseDelay}ms` }}>
-        <div
-            ref={wrapRef}
-            onMouseMove={onMove}
-            onMouseEnter={() => setHot(true)}
-            onMouseLeave={() => { setHot(false); setTilt({ rx: 0, ry: 0 }); }}
-            className="rounded-2xl"
-            style={{
-                transform: `perspective(700px) rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg) scale(${hot ? 1.03 : 1})`,
-                transition: hot ? 'transform 0.08s ease-out' : 'transform 0.5s cubic-bezier(.16,1,.3,1)',
-                willChange: 'transform',
-            }}
-        >
-            <Link
-                href={route('pm.worker', worker.id)}
-                className="group relative bg-white border rounded-2xl shadow-sm p-6 flex flex-col gap-4 cursor-pointer overflow-hidden"
-                style={{
-                    borderColor: hot ? '#fde68a' : '#e2e8f0',
-                    boxShadow: hot
-                        ? '0 20px 40px -12px rgba(0,0,0,0.14), 0 8px 20px -8px rgba(0,0,0,0.08)'
-                        : '0 1px 3px 0 rgba(0,0,0,0.08)',
-                    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
-                }}
-            >
-                {/* Shine highlight */}
-                <div
-                    className="absolute inset-0 pointer-events-none rounded-2xl"
-                    style={{
-                        background: hot
-                            ? `radial-gradient(circle at ${shine.x}% ${shine.y}%, rgba(255,255,255,0.22) 0%, transparent 58%)`
-                            : 'none',
-                    }}
-                />
-
-                {/* Worker header */}
-                <div className="flex items-start gap-3">
-                    <div className="w-11 h-11 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0 text-lg font-bold text-amber-600">
-                        {initial}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-800 group-hover:text-amber-700 transition-colors truncate">{worker.name}</p>
-                        <p className="text-xs text-slate-400 mt-0.5 truncate">{worker.email}</p>
-                        {employedSince && (
-                            <>
-                                <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    {employedSince.toISOString().slice(0, 10).replace(/-/g, '.')} óta
-                                </p>
-                                {daysWorking !== null && (
-                                    <p className="text-xs text-amber-500 mt-0.5 flex items-center gap-1 font-medium">
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        {daysWorking} napja dolgozik
-                                    </p>
-                                )}
-                            </>
-                        )}
-                    </div>
-                    <svg className="w-4 h-4 text-slate-300 group-hover:text-amber-500 transition-colors shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </div>
-
-                {/* Stats */}
-                <div className="space-y-3 border-t border-slate-100 pt-4">
-                    <StatBar label="Oktatási anyagok" pct={training_pct} threshHigh={80} threshMid={50} delayMs={baseDelay + 350} />
-                    <StatBar label="Helyismeret" pct={location_pct} threshHigh={80} threshMid={50} delayMs={baseDelay + 480} />
-                    <StatBar label="Szakmai tudás (vizsga)" pct={prof_pct} threshHigh={70} threshMid={50} delayMs={baseDelay + 610} />
-                </div>
-            </Link>
-        </div>
-        </div>
-    );
-}
-
 export default function PmDashboard({ workerStats, welcomeName }: Props) {
-    const { tenant } = usePage<PageProps>().props;
-    const tenantName = tenant?.name ?? 'KK Nyilvántartó';
     const [showWelcome, setShowWelcome] = useState(!!welcomeName);
     const [welcomeVisible, setWelcomeVisible] = useState(false);
     const [welcomeFading, setWelcomeFading] = useState(false);
@@ -238,7 +83,9 @@ export default function PmDashboard({ workerStats, welcomeName }: Props) {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                     {workerStats.map((stat, index) => (
-                        <WorkerCard key={stat.worker.id} stat={stat} index={index} />
+                        <div key={stat.worker.id} className="pm-card-enter" style={{ animationDelay: `${100 + index * 130}ms` }}>
+                            <WorkerCard stat={stat} workerRouteName="pm.worker" delayMs={100 + index * 130} accent="amber" />
+                        </div>
                     ))}
                 </div>
             )}
