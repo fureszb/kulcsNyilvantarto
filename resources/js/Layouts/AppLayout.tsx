@@ -37,11 +37,8 @@ export default function AppLayout({ children, title }: Props) {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [extraMessages, setExtraMessages] = useState(0);
-    const [extraNotes, setExtraNotes] = useState(0);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const channelRef = useRef<any>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notesChannelRef = useRef<any>(null);
     const user = auth.user;
 
     useEffect(() => {
@@ -74,22 +71,6 @@ export default function AppLayout({ children, title }: Props) {
     }, [tenant?.slug, user?.id]);
 
     useEffect(() => { setExtraMessages(0); }, [nav?.newMessages]);
-
-    // Notes bell: subscribe to tenant channel for new shift notes (non-PM only)
-    useEffect(() => {
-        if (!tenant?.slug || !user?.id || user.is_property_manager) return;
-        const echo = getEcho(tenant.slug);
-        const ch = echo.private(`tenant.${tenant.slug}`);
-        notesChannelRef.current = ch;
-        ch.listen('.new-shift-note', (evt: { senderUserId?: number }) => {
-            if (evt.senderUserId === user.id) return;
-            if (route().current('notes.*')) return; // notes page handles it
-            setExtraNotes(n => n + 1);
-        });
-        return () => { ch.stopListening('.new-shift-note'); };
-    }, [tenant?.slug, user?.id]);
-
-    useEffect(() => { if ((nav?.newNotes ?? 0) === 0) setExtraNotes(0); }, [nav?.newNotes]);
 
     const currentYear = new Date().getFullYear();
     const tenantName = tenant?.name ?? 'KK Nyilvántartó';
@@ -157,29 +138,6 @@ export default function AppLayout({ children, title }: Props) {
                         <div className="flex items-center gap-1.5">
                             <LiveClock />
                             <PushToggle />
-
-                            {user && !user.is_property_manager && (
-                                <Link
-                                    href={route('notes.index')}
-                                    onClick={() => setExtraNotes(0)}
-                                    className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all ${
-                                        route().current('notes.*')
-                                            ? 'bg-teal-500/15 border-teal-500/30 text-teal-400'
-                                            : 'bg-white/5 border-white/10 text-slate-400 hover:text-teal-400 hover:bg-teal-500/10 hover:border-teal-500/20'
-                                    }`}
-                                    title="Váltóüzenetek"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                                    </svg>
-                                    {((nav?.newNotes ?? 0) + extraNotes > 0) && (
-                                        <span className="absolute -top-0.5 -right-0.5 flex">
-                                            <span className="absolute -inset-0.5 rounded-full bg-rose-500 animate-ping opacity-50"/>
-                                            <span className="relative w-2.5 h-2.5 rounded-full bg-rose-500 border border-slate-900"/>
-                                        </span>
-                                    )}
-                                </Link>
-                            )}
 
                             {user && (
                                 <>
