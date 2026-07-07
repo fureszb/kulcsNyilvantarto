@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef } from 'react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useOwnLayout } from '../../hooks/useOwnLayout';
+import type { PageProps } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -56,6 +57,11 @@ function cellKind(val: string | null | undefined) {
 
 export default function VezenylesIndex({ year, month, areas, employees, schedule, overrides, changelog, users, canEdit, canImport, assignableLocations }: Props) {
     const Layout = useOwnLayout();
+    const { props: { auth } } = usePage<PageProps>();
+    const myUserId = auth.user?.id ?? null;
+    function canEditCell(emp: Employee) {
+        return canEdit || (myUserId !== null && emp.user_id === myUserId);
+    }
 
     const [currentView, setCurrentView] = useState<'felvitel' | 'potlas'>('felvitel');
     const [selectedAreaId, setSelectedAreaId] = useState<number | null>(areas[0]?.id ?? null);
@@ -375,7 +381,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                                                                 else if (kind === 'num') cls = 'cell-num';
                                                                 else if (kind !== 'empty') cls = 'cell-sym ' + kind;
                                                                 if (isWeekend(year, month, d)) cls += ' weekend-col';
-                                                                return <td key={d} className={cls} onClick={canEdit ? () => editCell(emp.id, d) : undefined}>{val ?? ''}</td>;
+                                                                return <td key={d} className={cls} onClick={canEditCell(emp) ? () => editCell(emp.id, d) : undefined}>{val ?? ''}</td>;
                                                             })}
                                                             <td className="cell-total">{total}</td>
                                                         </tr>

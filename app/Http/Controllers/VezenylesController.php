@@ -238,7 +238,13 @@ class VezenylesController extends Controller
         ]);
 
         $emp = VezenylesEmployee::findOrFail($data['employee_id']);
-        $this->authorizeAreaAccess($emp->area_id);
+        $currentUser = Auth::guard('tenant')->user();
+        // A saját sorát (tervezés — mikor tud jönni) bárki szerkesztheti, akire rá
+        // van kötve az employee-sor; más soraihoz csak admin/igazgató/biztonsági
+        // vezető nyúlhat (authorizeAreaAccess).
+        if (!($emp->user_id && $emp->user_id === $currentUser->id)) {
+            $this->authorizeAreaAccess($emp->area_id);
+        }
 
         $value = $this->normalizeValue($data['value'] ?? null);
         if ($value === false) {
