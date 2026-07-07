@@ -31,6 +31,7 @@ use App\Http\Controllers\SecurityReportController;
 use App\Http\Controllers\TenantUserAuthController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\SuperAdmin;
+use App\Http\Controllers\VezenylesController;
 use App\Http\Controllers\SuperAdmin\TenantUserController as SuperAdminUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -200,6 +201,19 @@ Route::prefix('{tenant}')
         Route::prefix('security-lead')->name('security-lead.')->middleware('security-lead')->group(function () {
             Route::get('/messages',   [SecurityLeadController::class, 'messages'])->name('messages');
             Route::post('/feedback',  [SecurityLeadController::class, 'submitFeedback'])->name('feedback');
+        });
+
+        // Vezénylés / beosztás — admin + területi igazgató (area-director = hasAdminPowers)
+        Route::prefix('vezenyles')->name('vezenyles.')->middleware('area-director')->group(function () {
+            Route::get('/',                       [VezenylesController::class, 'index'])->name('index');
+            Route::post('/areas',                 [VezenylesController::class, 'storeArea'])->name('areas.store');
+            Route::delete('/areas/{area}',        [VezenylesController::class, 'destroyArea'])->name('areas.destroy');
+            Route::post('/employees',             [VezenylesController::class, 'storeEmployee'])->name('employees.store');
+            Route::delete('/employees/{employee}',[VezenylesController::class, 'destroyEmployee'])->name('employees.destroy');
+            Route::post('/schedule',              [VezenylesController::class, 'upsertSchedule'])->name('schedule.upsert');
+            Route::post('/overrides',             [VezenylesController::class, 'assignCover'])->name('overrides.store');
+            Route::delete('/overrides',           [VezenylesController::class, 'removeCover'])->name('overrides.destroy');
+            Route::post('/import',                [VezenylesController::class, 'import'])->name('import');
         });
 
         // ── Admin ──────────────────────────────────────────────────────────────
