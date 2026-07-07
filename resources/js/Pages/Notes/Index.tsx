@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { router, useForm, Link, usePage } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { useOwnLayout } from '../../hooks/useOwnLayout';
 import { getEcho } from '../../echo';
 import type { ShiftNote, AuthUser, PaginatedData, PageProps } from '../../types';
 
@@ -84,6 +84,7 @@ function playNotificationSound() {
 interface NoteToast { author: string; key: number; }
 
 export default function NotesIndex({ notes, user, filterDate }: Props) {
+    const Layout = useOwnLayout();
     // A page-local `user` prop nyers Eloquent-szerializáció — nincs benne
     // is_admin (nem valódi oszlop). A megbízható forrás a globálisan
     // megosztott auth.user (HandleInertiaRequests), ott isAdmin()-ből számolva.
@@ -209,7 +210,7 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
 
     return (
         <>
-        <AppLayout title="Váltóüzenetek">
+        <Layout title="Váltóüzenetek">
             <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* Hero */}
@@ -564,7 +565,7 @@ export default function NotesIndex({ notes, user, filterDate }: Props) {
                 )}
 
             </div>
-        </AppLayout>
+        </Layout>
         {toast && createPortal(
             <div
                 className="fixed top-4 right-4 z-[9999] w-80 rounded-2xl overflow-hidden shadow-2xl"

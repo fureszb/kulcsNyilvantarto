@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm, router, Link } from '@inertiajs/react';
 import { getEcho } from '../../echo';
-import PmLayout from '../../Layouts/PmLayout';
+import { useOwnLayout } from '../../hooks/useOwnLayout';
 import type { PmMessage, PmMessageReply, TenantUser, PaginatedData, PageProps } from '../../types';
 import { usePage } from '@inertiajs/react';
 
@@ -219,6 +219,7 @@ function silentReload() {
 }
 
 export default function PmMessages({ messages, workers, filters }: Props) {
+    const Layout = useOwnLayout();
     const { props: { auth, tenant } } = usePage<PageProps>();
     const [sendToAll, setSendToAll] = useState(true);
     const [search, setSearch]       = useState('');
@@ -308,7 +309,7 @@ export default function PmMessages({ messages, workers, filters }: Props) {
     }
 
     return (
-        <PmLayout title="Üzenetek">
+        <Layout title="Üzenetek">
             <div className="max-w-6xl mx-auto space-y-6">
 
                 {/* Hero */}
@@ -635,6 +636,6 @@ export default function PmMessages({ messages, workers, filters }: Props) {
             {deleteTargetId !== null && (
                 <DeleteModal onConfirm={confirmDelete} onCancel={() => setDeleteTargetId(null)} />
             )}
-        </PmLayout>
+        </Layout>
     );
 }

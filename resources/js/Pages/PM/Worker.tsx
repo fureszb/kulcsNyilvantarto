@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
-import PmLayout from '../../Layouts/PmLayout';
+import { useOwnLayout } from '../../hooks/useOwnLayout';
 import type { TenantUser, Training, Exam, ActivityLog } from '../../types';
 
 interface TrainingRow {
@@ -65,6 +65,7 @@ function dotColor(eventType: string) {
 }
 
 export default function PmWorker({ user, trainingRows, examRows, stats, recentActivity }: Props) {
+    const Layout = useOwnLayout();
     const employedSince = user.employed_since ? new Date(user.employed_since) : null;
     const initial = user.name ? user.name.charAt(0) : '?';
     const trainingTheme = pctTheme(stats.training_pct, 80, 50);
@@ -82,7 +83,7 @@ export default function PmWorker({ user, trainingRows, examRows, stats, recentAc
     }
 
     return (
-        <PmLayout title={`${user.name} – részletek`}>
+        <Layout title={`${user.name} – részletek`}>
 
             {/* Hero */}
             <div className="-mx-4 sm:-mx-6 lg:-mx-8 relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
@@ -291,6 +292,6 @@ export default function PmWorker({ user, trainingRows, examRows, stats, recentAc
                     </div>
                 </div>
             )}
-        </PmLayout>
+        </Layout>
     );
 }

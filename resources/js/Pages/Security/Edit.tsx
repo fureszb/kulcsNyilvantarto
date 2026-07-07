@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { router } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { useOwnLayout } from '../../hooks/useOwnLayout';
 import type { SecurityDailyReport, TenantUser } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
@@ -257,6 +257,7 @@ function asArr<T>(v: unknown): T[] {
 }
 
 export default function SecurityEdit({ security, sortedUsers, sharedIds, locations, locationIds: initialLocationIds }: Props) {
+    const Layout = useOwnLayout();
     const [reportDate,    setReportDate]    = useState(security.report_date ?? '');
     const [preparedByVal, setPreparedByVal] = useState(security.prepared_by ?? '');
     const [takenOverFrom, setTakenOverFrom] = useState(security.taken_over_from ?? '');
@@ -319,7 +320,7 @@ export default function SecurityEdit({ security, sortedUsers, sharedIds, locatio
     }
 
     return (
-        <AppLayout title="Napi Jelentés szerkesztése">
+        <Layout title="Napi Jelentés szerkesztése">
             {/* Hero */}
             <div className="relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
                 <div className="absolute -top-16 -right-16 w-56 h-56 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"/>
@@ -831,6 +832,6 @@ export default function SecurityEdit({ security, sortedUsers, sharedIds, locatio
                 </div>
 
             </form>
-        </AppLayout>
+        </Layout>
     );
 }

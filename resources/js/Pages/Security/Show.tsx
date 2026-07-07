@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
-import PmLayout from '../../Layouts/PmLayout';
+import { useOwnLayout } from '../../hooks/useOwnLayout';
 import type { SecurityDailyReport, TenantUser, PageProps } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
@@ -34,9 +33,9 @@ function SectionCard({ title, icon, count, countSuffix = 'db', border = 'border-
 }
 
 export default function SecurityShow({ report, sharedUsers, allUsers, isCreator }: Props) {
+    const Layout = useOwnLayout();
     const { auth } = usePage<PageProps>().props;
     const isPm = auth.user?.is_property_manager ?? false;
-    const Layout = isPm ? PmLayout : AppLayout;
 
     const [shareOpen, setShareOpen] = useState(false);
     const [selectedIds, setSelectedIds] = useState<number[]>(sharedUsers.map(u => u.id));

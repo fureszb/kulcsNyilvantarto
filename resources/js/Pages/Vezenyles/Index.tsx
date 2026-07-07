@@ -1,7 +1,6 @@
 import { useMemo, useState, useRef } from 'react';
-import { router, usePage } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
-import type { PageProps } from '../../types';
+import { router } from '@inertiajs/react';
+import { useOwnLayout } from '../../hooks/useOwnLayout';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -54,7 +53,7 @@ function cellKind(val: string | null | undefined) {
 }
 
 export default function VezenylesIndex({ year, month, areas, employees, schedule, overrides, changelog, users, canEdit, canImport, assignableLocations }: Props) {
-    usePage<PageProps>();
+    const Layout = useOwnLayout();
 
     const [currentView, setCurrentView] = useState<'felvitel' | 'potlas'>('felvitel');
     const [selectedAreaId, setSelectedAreaId] = useState<number | null>(areas[0]?.id ?? null);
@@ -296,7 +295,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
     const days = Array.from({ length: nd }, (_, i) => i + 1);
 
     return (
-        <AppLayout title="Vezénylés">
+        <Layout title="Vezénylés">
             <div className="vez-app">
                 <style>{CSS}</style>
 
@@ -603,7 +602,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                     </div>
                 )}
             </div>
-        </AppLayout>
+        </Layout>
     );
 }
 

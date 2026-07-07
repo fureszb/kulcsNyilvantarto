@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useForm, router, usePage } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { useOwnLayout } from '../../hooks/useOwnLayout';
 import { getEcho } from '../../echo';
 import type { PmMessage, PmMessageReply, PaginatedData, PageProps } from '../../types';
 
@@ -78,6 +78,7 @@ function silentReload() {
 }
 
 export default function MessagesIndex({ messages }: Props) {
+    const Layout = useOwnLayout();
     const { props: { auth, tenant } } = usePage<PageProps>();
     const [openReplyId, setOpenReplyId] = useState<number | null>(null);
     const [pollingEnabled, setPollingEnabled] = useState<boolean>(() => {
@@ -110,7 +111,7 @@ export default function MessagesIndex({ messages }: Props) {
     }, [pollingEnabled]);
 
     return (
-        <AppLayout title="PM üzenetek">
+        <Layout title="PM üzenetek">
             <div className="max-w-7xl mx-auto space-y-5">
 
                 {/* Hero */}
@@ -248,6 +249,6 @@ export default function MessagesIndex({ messages }: Props) {
                 </div>
 
             </div>
-        </AppLayout>
+        </Layout>
     );
 }

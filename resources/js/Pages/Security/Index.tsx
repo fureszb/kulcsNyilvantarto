@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { useOwnLayout } from '../../hooks/useOwnLayout';
 import type { PaginatedData, SecurityDailyReport } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
@@ -11,8 +11,9 @@ interface Props {
 }
 
 export default function SecurityIndex({ reports, canCreate, isAdmin }: Props) {
+    const Layout = useOwnLayout();
     return (
-        <AppLayout title="Napi Jelentések">
+        <Layout title="Napi Jelentések">
             <div className="max-w-7xl mx-auto">
                 {/* Hero */}
                 <div className="relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
@@ -159,6 +160,6 @@ export default function SecurityIndex({ reports, canCreate, isAdmin }: Props) {
                     )}
                 </div>
             </div>
-        </AppLayout>
+        </Layout>
     );
 }

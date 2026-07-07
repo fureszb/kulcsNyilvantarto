@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import AppLayout from '../../Layouts/AppLayout';
+import { useOwnLayout } from '../../hooks/useOwnLayout';
 
 marked.setOptions({ breaks: true, gfm: true });
 
@@ -110,6 +110,7 @@ function getXsrfToken(): string {
 }
 
 export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props) {
+    const Layout = useOwnLayout();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [question, setQuestion] = useState('');
     const [streaming, setStreaming] = useState(false);
@@ -752,7 +753,7 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
     }
 
     return (
-        <AppLayout title="AI Asszisztens">
+        <Layout title="AI Asszisztens">
             {/* Toast: felolvasás be/kikapcsolva (~3 mp) */}
             {ttsToast && (
                 <div
@@ -1111,6 +1112,6 @@ export default function AiChat({ documents, sessions, isAdmin, kbReady }: Props)
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </Layout>
     );
 }

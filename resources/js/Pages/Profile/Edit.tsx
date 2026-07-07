@@ -1,5 +1,5 @@
 import { useForm, Link } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { useOwnLayout } from '../../hooks/useOwnLayout';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -41,6 +41,7 @@ function InputField({ label, id, type = 'text', value, onChange, error, required
 }
 
 export default function ProfileEdit({ user }: Props) {
+    const Layout = useOwnLayout();
     const { data, setData, put, processing, errors, reset, recentlySuccessful } = useForm({
         name: user.name,
         email: user.email,
@@ -57,7 +58,7 @@ export default function ProfileEdit({ user }: Props) {
     }
 
     return (
-        <AppLayout title="Profilom">
+        <Layout title="Profilom">
 
             {/* Hero */}
             <div className="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl">
@@ -160,6 +161,6 @@ export default function ProfileEdit({ user }: Props) {
                 </div>
             </form>
 
-        </AppLayout>
+        </Layout>
     );
 }

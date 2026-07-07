@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { router } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { useOwnLayout } from '../../hooks/useOwnLayout';
 import type { TenantUser } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
@@ -254,6 +254,7 @@ const thC  = 'text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase
 const tdC  = 'px-4 py-2.5';
 
 export default function SecurityCreate({ sortedUsers, preparedBy, locations }: Props) {
+    const Layout = useOwnLayout();
     const [reportDate,    setReportDate]    = useState(todayString());
     const [preparedByVal, setPreparedByVal] = useState(preparedBy);
     const [takenOverFrom, setTakenOverFrom] = useState('');
@@ -327,7 +328,7 @@ export default function SecurityCreate({ sortedUsers, preparedBy, locations }: P
     }
 
     return (
-        <AppLayout title="Új napi jelentés">
+        <Layout title="Új napi jelentés">
             {/* Hero */}
             <div className="relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-br from-rose-950 via-slate-900 to-slate-900 shadow-2xl">
                 <div className="absolute -top-24 -right-24 w-72 h-72 bg-rose-600/20 rounded-full blur-3xl pointer-events-none"/>
@@ -825,6 +826,6 @@ export default function SecurityCreate({ sortedUsers, preparedBy, locations }: P
                 </div>
 
             </form>
-        </AppLayout>
+        </Layout>
     );
 }
