@@ -50,8 +50,14 @@ export default function SecurityLeadLayout({ children, title }: Props) {
             matchRoute: 'security-lead.dashboard',
         },
         {
-            route: 'security-lead.messages',
+            route: 'notes.index',
             label: 'Váltóüzenetek',
+            icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z',
+            matchRoute: 'notes.*',
+        },
+        {
+            route: 'security-lead.messages',
+            label: 'Igazgatói üzenetek',
             icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
             matchRoute: 'security-lead.messages',
         },

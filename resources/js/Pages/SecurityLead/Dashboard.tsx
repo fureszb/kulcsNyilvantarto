@@ -85,13 +85,11 @@ export default function SecurityLeadDashboard({ lead, currentPeriod }: Props) {
                 <div className="relative z-10 px-8 py-8 flex items-center justify-between gap-6">
                     <div>
                         <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Biztonsági Vezető Portál</p>
-                        <h1 className="text-3xl font-extrabold text-white tracking-tight">Saját teljesítmény</h1>
+                        <h1 className="text-3xl font-extrabold text-white tracking-tight">Teljesítmények</h1>
                         <p className="text-slate-400 mt-1 text-sm">{currentPeriod.year}. {currentPeriod.month}. hó · {o.location_count} irodaház · {o.active_workers} aktív dolgozó</p>
                     </div>
                     <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-white/5 border border-white/10 items-center justify-center shrink-0">
-                        <span className={`inline-flex items-center justify-center min-w-[3rem] px-3 py-2 rounded-xl text-xl font-bold tabular-nums ${scoreClasses(o.score)}`}>
-                            {o.score}
-                        </span>
+                        <span className="text-3xl leading-none" aria-hidden="true">📈</span>
                     </div>
                 </div>
                 <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.038, backgroundImage: NOISE_BG, backgroundSize: '180px 180px', mixBlendMode: 'screen' }}/>

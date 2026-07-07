@@ -50,7 +50,7 @@ export default function SecurityLeadMessages({ messages, directors, teamUsers }:
     const workerUsers = teamUsers.filter(u => u.role !== 'property_manager');
 
     return (
-        <SecurityLeadLayout title="Váltóüzenetek">
+        <SecurityLeadLayout title="Igazgatói üzenetek">
             {/* Hero */}
             <div className="-mx-4 sm:-mx-6 lg:-mx-8 relative overflow-hidden rounded-2xl mb-8 shadow-2xl"
                 style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)' }}>
@@ -58,7 +58,7 @@ export default function SecurityLeadMessages({ messages, directors, teamUsers }:
                 <div className="relative z-10 px-8 py-8 flex items-center justify-between gap-6">
                     <div>
                         <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Biztonsági Vezető Portál</p>
-                        <h1 className="text-3xl font-extrabold text-white tracking-tight">Váltóüzenetek</h1>
+                        <h1 className="text-3xl font-extrabold text-white tracking-tight">Igazgatói üzenetek</h1>
                         <p className="text-slate-400 mt-1 text-sm">Igazgatói üzenetek, névtelen visszajelzés, és kapcsolattartás a csapatoddal</p>
                     </div>
                     <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-white/5 border border-white/10 items-center justify-center shrink-0">
