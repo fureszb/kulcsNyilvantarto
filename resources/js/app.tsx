@@ -5,6 +5,7 @@ import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import ErrorBoundary from './Components/ErrorBoundary';
+import PWAInstallGuard from './Components/PWAInstallGuard';
 
 // ── localStorage séma-verzió őr ────────────────────────────
 // Ha a kliens-oldali state-séma breaking módon változik, EMELD ezt a számot.
@@ -75,6 +76,7 @@ createInertiaApp({
         root.render(
             <ErrorBoundary>
                 <App {...props} />
+                <PWAInstallGuard />
             </ErrorBoundary>
         );
     },

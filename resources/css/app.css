@@ -33,6 +33,8 @@
 @keyframes slideInRight { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:none; } }
 @keyframes slideOutRight{ from { opacity:1; transform:none; } to { opacity:0; transform:translateX(24px); } }
 @keyframes toastProgress{ from { width:100%; } to { width:0%; } }
+@keyframes pwaSheetIn   { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:none; } }
+@keyframes pwaSheetOut  { from { opacity:1; transform:none; } to { opacity:0; transform:translateY(100%); } }
 
 @layer utilities {
     .animate-page-enter  { animation: pageEnter     0.22s ease-out                       both; }
@@ -40,6 +42,8 @@
     .animate-slide-in-r  { animation: slideInRight  0.28s cubic-bezier(0.16,1,0.3,1)    both; }
     .animate-slide-out-r { animation: slideOutRight 0.22s ease-in                        both; }
     .animate-toast-bar   { animation: toastProgress 5s linear                            forwards; }
+    .animate-pwa-sheet-in  { animation: pwaSheetIn  0.38s cubic-bezier(0.16,1,0.3,1)     both; }
+    .animate-pwa-sheet-out { animation: pwaSheetOut 0.22s ease-in                         both; }
 }
 
 @layer base {
