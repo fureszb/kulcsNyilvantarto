@@ -51,8 +51,9 @@ class DirectorController extends Controller
             return $lead;
         }, $leadsData);
 
-        $unreadMessages = DirectorMessage::where('to_user_id', $user->id)
-            ->where('is_anonymous', true)
+        // A névtelen visszajelzés a tenant összes igazgatójának szól, nem csak
+        // annak, akit a küldéskor rögzítettünk a to_user_id-ba (lásd feedback()).
+        $unreadMessages = DirectorMessage::where('is_anonymous', true)
             ->whereNull('read_at')
             ->count();
 
@@ -112,18 +113,19 @@ class DirectorController extends Controller
         ]);
     }
 
-    /** Az igazgatóhoz beérkezett névtelen dolgozói visszajelzések listája. */
+    /** A tenant összes igazgatója látja az összes névtelen dolgozói visszajelzést —
+     *  a to_user_id a küldéskor csak egy (tetszőleges) aktív igazgatóra mutat a
+     *  kötelező oszlop miatt, de itt szándékosan nem szűrünk rá, mert több igazgató
+     *  esetén mindegyiküknek látnia kell mindent. */
     public function feedback(): Response
     {
         $user = Auth::guard('tenant')->user();
 
-        $unreadCount = DirectorMessage::where('to_user_id', $user->id)
-            ->where('is_anonymous', true)
+        $unreadCount = DirectorMessage::where('is_anonymous', true)
             ->whereNull('read_at')
             ->count();
 
-        $feedback = DirectorMessage::where('to_user_id', $user->id)
-            ->where('is_anonymous', true)
+        $feedback = DirectorMessage::where('is_anonymous', true)
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn ($m) => [
@@ -133,9 +135,8 @@ class DirectorController extends Controller
                 'is_new'     => is_null($m->read_at),
             ]);
 
-        // Olvasottnak jelöljük
-        DirectorMessage::where('to_user_id', $user->id)
-            ->where('is_anonymous', true)
+        // Olvasottnak jelöljük (bármelyik igazgató megnyitja, mindenkinél olvasottá válik)
+        DirectorMessage::where('is_anonymous', true)
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 

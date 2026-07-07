@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Auth;
 /** Névtelen visszajelzés — minden bejelentkezett tenant-user elérheti (nem
  *  csak a biztonsági vezető). A küldő a rendszerben tárolva van, de a
  *  fogadó (igazgató) sosem látja — csak a tartalmat. Ha a tenantban több
- *  igazgató van, csak az elsőt (aktív) kapja meg a visszajelzés. */
+ *  igazgató van, a to_user_id csak a kötelező oszlop miatt mutat egyikükre —
+ *  a DirectorController::feedback() nem szűr rá, minden igazgató mindent lát. */
 class FeedbackController extends Controller
 {
     public function store(Request $request): RedirectResponse
