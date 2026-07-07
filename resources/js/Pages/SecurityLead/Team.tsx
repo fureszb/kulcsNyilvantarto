@@ -1,7 +1,4 @@
-import { Link } from '@inertiajs/react';
 import SecurityLeadLayout from '../../Layouts/SecurityLeadLayout';
-
-declare function route(name: string, params?: unknown): string;
 
 const NOISE_BG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")";
 
@@ -41,23 +38,6 @@ export default function SecurityLeadTeam({ teamUsers }: Props) {
             </div>
 
             <div className="max-w-2xl space-y-4">
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                    <div className="flex items-center justify-between mb-3">
-                        <div>
-                            <h2 className="text-sm font-semibold text-slate-800">Üzenet küldése a csapatnak</h2>
-                            <p className="text-xs text-slate-500 mt-0.5">Válaszd ki a dolgozókat vagy a PM-et, és küldj nekik üzenetet.</p>
-                        </div>
-                        <Link href={route('pm.messages')} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
-                            Új üzenet
-                        </Link>
-                    </div>
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                        <p className="text-xs text-slate-500">Beérkezett üzeneteid (tőled és a csapattól)</p>
-                        <Link href={route('messages.index')} className="text-xs font-semibold text-blue-600 hover:text-blue-700">Megnyitás →</Link>
-                    </div>
-                </div>
-
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                     <h2 className="text-sm font-semibold text-slate-800 mb-3">Elérhető kapcsolatok</h2>
                     {pmUsers.length > 0 && (
