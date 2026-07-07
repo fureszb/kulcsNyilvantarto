@@ -94,7 +94,15 @@ class PropertyManagerController extends Controller
 
     public function messages(Request $request)
     {
+        $authUser = Auth::guard('tenant')->user();
+
+        // Ezen a felületen mindenki csak a SAJÁT elküldött üzeneteit látja — a PM, a
+        // biztonsági vezető és az igazgató üzenetei nem keverednek egymással. Az admin
+        // lát mindent, mert az ő feladata a teljes rálátás.
         $query = PmMessage::with('recipients.user', 'replies')->orderByDesc('created_at');
+        if (!$authUser->isAdmin()) {
+            $query->where('sent_by_user_id', $authUser->id);
+        }
 
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
@@ -112,8 +120,7 @@ class PropertyManagerController extends Controller
 
         $messages = $query->paginate(20)->withQueryString();
 
-        $authUser = Auth::guard('tenant')->user();
-        $workers  = $this->messageableUsersFor($authUser);
+        $workers = $this->messageableUsersFor($authUser);
 
         return Inertia::render('PM/Messages', [
             'messages' => $messages,
@@ -245,7 +252,10 @@ class PropertyManagerController extends Controller
 
     public function destroyMessage(PmMessage $message)
     {
-        ActivityLog::record('pm_message.deleted', Auth::guard('tenant')->user(), "PM üzenet törölve", [
+        $authUser = Auth::guard('tenant')->user();
+        abort_unless($authUser->isAdmin() || $message->sent_by_user_id === $authUser->id, 403);
+
+        ActivityLog::record('pm_message.deleted', $authUser, "PM üzenet törölve", [
             'content' => mb_substr($message->content, 0, 500),
         ]);
         $message->delete();
@@ -257,6 +267,7 @@ class PropertyManagerController extends Controller
         $request->validate(['content' => 'required|string|max:2000']);
 
         $sender = Auth::guard('tenant')->user();
+        abort_unless($sender->isAdmin() || $message->sent_by_user_id === $sender->id, 403);
 
         $reply = PmMessageReply::create([
             'pm_message_id' => $message->id,
@@ -301,8 +312,11 @@ class PropertyManagerController extends Controller
 
     public function editMessage(PmMessage $message)
     {
+        $authUser = Auth::guard('tenant')->user();
+        abort_unless($authUser->isAdmin() || $message->sent_by_user_id === $authUser->id, 403);
+
         $workers   = TenantUser::where('is_active', true)
-            ->where('id', '!=', Auth::guard('tenant')->id())
+            ->where('id', '!=', $authUser->id)
             ->orderBy('name')->get();
         $sharedIds = $message->recipients()->pluck('user_id')->toArray();
         return Inertia::render('PM/MessageEdit', ['message' => $message, 'workers' => $workers, 'sharedIds' => $sharedIds]);
@@ -310,6 +324,9 @@ class PropertyManagerController extends Controller
 
     public function updateMessage(Request $request, PmMessage $message)
     {
+        $authUser = Auth::guard('tenant')->user();
+        abort_unless($authUser->isAdmin() || $message->sent_by_user_id === $authUser->id, 403);
+
         $request->validate([
             'content'     => 'required|string|max:2000',
             'send_to_all' => 'nullable|boolean',
