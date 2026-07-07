@@ -25,7 +25,15 @@ interface Props {
     users: UserRow[];
 }
 
-interface Candidate { empId: number; name: string; areaId: number; area: string; }
+interface Candidate { empId: number; name: string; areaId: number; area: string; source: 'natural' | 'free'; flag: 'plus' | 'uncertain' | null; }
+
+const FLAG_ORDER: Record<string, number> = { plus: 0, none: 1, uncertain: 2 };
+function sortCandidates(list: Candidate[]) {
+    return list.sort((a, b) => {
+        if (a.source !== b.source) return a.source === 'natural' ? -1 : 1;
+        return FLAG_ORDER[a.flag ?? 'none'] - FLAG_ORDER[b.flag ?? 'none'];
+    });
+}
 
 const visitOpts = { preserveScroll: true, preserveState: true } as const;
 
@@ -236,14 +244,32 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
             (empsByArea.get(a.id) ?? []).forEach(emp => {
                 if (a.id === selection.areaId && emp.id === selection.employeeId) return;
                 if (busy.has(`${a.id}:${emp.id}`)) return;
-                if (scheduleVal(emp.id, day) === '24') return;
+
+                // Aznapi elérhetőség: szabad, ha üres / '+' (túlórát vállal) / '?' (bizonytalan).
+                // Kizárva, ha 'X' (nem ér rá) vagy bármilyen óraszám (aznap már dolgozik, 24 is).
+                const dayVal = scheduleVal(emp.id, day);
+                if (dayVal === 'X') return;
+                if (dayVal !== null && dayVal !== '+' && dayVal !== '?') return;
+                const flag: 'plus' | 'uncertain' | null = dayVal === '+' ? 'plus' : (dayVal === '?' ? 'uncertain' : null);
+
                 const prev1 = scheduleVal(emp.id, day - 1);
                 const prev2 = scheduleVal(emp.id, day - 2);
-                if (prev1 === '24' && needed.includes('night')) night.push({ empId: emp.id, name: emp.name, areaId: a.id, area: a.name });
-                else if (prev2 === '24' && prev1 !== '24' && needed.includes('day')) day_.push({ empId: emp.id, name: emp.name, areaId: a.id, area: a.name });
+                const base = { empId: emp.id, name: emp.name, areaId: a.id, area: a.name, flag };
+
+                // Éjszakai blokk: "természetes" jelölt, aki előző nap (D-1) 24h-t dolgozott;
+                // egyébként minden szabad ember is felajánlható.
+                if (needed.includes('night')) {
+                    night.push({ ...base, source: prev1 === '24' ? 'natural' : 'free' });
+                }
+                // Nappali blokk: "természetes" jelölt, aki két nappal korábban (D-2) volt 24h-ban,
+                // de D-1-en nem; egyébként minden szabad ember is felajánlható.
+                if (needed.includes('day')) {
+                    const naturalDay = prev2 === '24' && prev1 !== '24';
+                    day_.push({ ...base, source: naturalDay ? 'natural' : 'free' });
+                }
             });
         });
-        return { absentEmp, absentArea, day, ov, needed, night, day_ };
+        return { absentEmp, absentArea, day, ov, needed, night: sortCandidates(night), day_: sortCandidates(day_) };
     }, [selection, overrides, areas, empsByArea, scheduleMap, overrideMap]);
 
     const felvitelEmps = effectiveAreaId ? (empsByArea.get(effectiveAreaId) ?? []) : [];
@@ -468,7 +494,15 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                                                     {candidates.night.length === 0 && <div className="none">Nincs elérhető jelölt.</div>}
                                                     {candidates.night.map(c => (
                                                         <div key={`n${c.areaId}:${c.empId}`} className="cand">
-                                                            <div className="who"><span>{c.name}</span><span className="ar">{c.area}</span></div>
+                                                            <div className="who">
+                                                                <span className="cn">{c.name}</span>
+                                                                <span className="ar">{c.area}</span>
+                                                                <div className="cbadges">
+                                                                    <span className={`cbadge ${c.source}`}>{c.source === 'natural' ? '24h utáni' : 'szabad'}</span>
+                                                                    {c.flag === 'plus' && <span className="cbadge plus">túlórát vállal</span>}
+                                                                    {c.flag === 'uncertain' && <span className="cbadge uncertain">egyeztetés kell</span>}
+                                                                </div>
+                                                            </div>
                                                             <button className="btn small primary" onClick={() => assignCover(c, 'night')}>Kijelöl</button>
                                                         </div>
                                                     ))}
@@ -480,7 +514,15 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                                                     {candidates.day_.length === 0 && <div className="none">Nincs elérhető jelölt.</div>}
                                                     {candidates.day_.map(c => (
                                                         <div key={`d${c.areaId}:${c.empId}`} className="cand">
-                                                            <div className="who"><span>{c.name}</span><span className="ar">{c.area}</span></div>
+                                                            <div className="who">
+                                                                <span className="cn">{c.name}</span>
+                                                                <span className="ar">{c.area}</span>
+                                                                <div className="cbadges">
+                                                                    <span className={`cbadge ${c.source}`}>{c.source === 'natural' ? '24h utáni' : 'szabad'}</span>
+                                                                    {c.flag === 'plus' && <span className="cbadge plus">túlórát vállal</span>}
+                                                                    {c.flag === 'uncertain' && <span className="cbadge uncertain">egyeztetés kell</span>}
+                                                                </div>
+                                                            </div>
                                                             <button className="btn small primary" onClick={() => assignCover(c, 'day')}>Kijelöl</button>
                                                         </div>
                                                     ))}
@@ -578,9 +620,17 @@ const CSS = `
 .vez-app .cand-group.night h3{ color:var(--night); }
 .vez-app .cand-group.day h3{ color:var(--day); }
 .vez-app .cand{ display:flex; align-items:center; justify-content:space-between; gap:8px; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:8px 10px; margin-bottom:6px; font-size:12.5px; }
-.vez-app .cand .who{ display:flex; flex-direction:column; }
-.vez-app .cand .who span:first-child{ font-weight:600; color:#334155; }
+.vez-app .cand{ align-items:flex-start; }
+.vez-app .cand .who{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.vez-app .cand .who .cn{ font-weight:600; color:#334155; }
 .vez-app .cand .who .ar{ color:var(--ink-dim); font-size:11px; }
+.vez-app .cbadges{ display:flex; flex-wrap:wrap; gap:4px; margin-top:3px; }
+.vez-app .cbadge{ font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:6px; line-height:1.5; border:1px solid transparent; }
+.vez-app .cbadge.natural{ background:#eef2ff; color:#4338ca; border-color:#e0e7ff; }
+.vez-app .cbadge.free{ background:#f0fdf4; color:#15803d; border-color:#dcfce7; }
+.vez-app .cbadge.plus{ background:#eff6ff; color:#1d4ed8; border-color:#dbeafe; }
+.vez-app .cbadge.uncertain{ background:#fffbeb; color:#b45309; border-color:#fde68a; }
+.vez-app .cand > .btn{ flex-shrink:0; }
 .vez-app .absence-info{ background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:13px; color:#334155; }
 .vez-app .absence-info b{ color:#b45309; }
 .vez-app .slot-status{ display:flex; gap:8px; margin-bottom:12px; }

@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Nagy képernyőn a vízszintes konténer-padding kivétele, hogy a fejléc-menük
+   (pl. 6 menüpont) ne legyenek zsúfoltak. Egységesen minden lg:px-8 konténerre. */
+@media (min-width: 1024px) {
+    .lg\:px-8 {
+        padding-left: 0rem;
+        padding-right: 0rem;
+    }
+}
+
 /* ═══════════════════════════════════════════════════════════
    EREDETI ANIMÁCIÓK
 ═══════════════════════════════════════════════════════════ */
