@@ -1,8 +1,50 @@
 import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import DirectorLayout from '../../Layouts/DirectorLayout';
+import ModuleCardGrid, { type ModuleCardDef } from '../../Components/ModuleCardGrid';
 
 declare function route(name: string, params?: unknown): string;
+
+function buildModules(): ModuleCardDef[] {
+    return [
+        {
+            href: route('vezenyles.index'),
+            title: 'Vezénylés',
+            description: 'Havi beosztás rögzítése és a 24 órás szolgálatok pótlásának tervezése.',
+            iconPath: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+            accent: 'indigo',
+            features: ['Havi beosztás-tábla', 'Túlóra-pótlás tervezés', 'Változásnapló'],
+            actionLabel: 'Vezénylés megnyitása',
+        },
+        {
+            href: route('director.monthly-report'),
+            title: 'Havi riport',
+            description: 'A vezetők és irodaházak havi teljesítmény-trendjének áttekintése.',
+            iconPath: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+            accent: 'blue',
+            features: ['Havi trend elemzés', 'Vezetőnkénti bontás', 'Historikus adatok'],
+            actionLabel: 'Riport megtekintése',
+        },
+        {
+            href: route('pm.messages'),
+            title: 'Üzenetek',
+            description: 'Üzenetküldés a biztonsági vezetőknek, és a beérkezett válaszok.',
+            iconPath: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+            accent: 'orange',
+            features: ['Üzenet küldése a vezetőknek', 'Beérkezett válaszok', 'Szűrés dátum/címzett szerint'],
+            actionLabel: 'Üzenetek megnyitása',
+        },
+        {
+            href: route('director.feedback'),
+            title: 'Névtelen visszajelzések',
+            description: 'A dolgozók által névtelenül beküldött visszajelzések.',
+            iconPath: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+            accent: 'rose',
+            features: ['Dolgozói visszajelzések', 'Olvasatlan jelölés', 'Névtelen beküldés'],
+            actionLabel: 'Visszajelzések megtekintése',
+        },
+    ];
+}
 
 const NOISE_BG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")";
 
@@ -226,6 +268,7 @@ function LocationGoalSection({ leadId, loc, currentPeriod }: { leadId: number; l
 
 export default function DirectorDashboard({ leads, currentPeriod }: Props) {
     const [openId, setOpenId] = useState<number | null>(null);
+    const modules = buildModules();
 
     return (
         <DirectorLayout title="Vezérlőpult">
@@ -346,6 +389,10 @@ export default function DirectorDashboard({ leads, currentPeriod }: Props) {
                         })}
                     </div>
                 )}
+
+                {/* Modulok */}
+                <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 mt-8">Modulok</h2>
+                <ModuleCardGrid modules={modules} />
         </DirectorLayout>
     );
 }
