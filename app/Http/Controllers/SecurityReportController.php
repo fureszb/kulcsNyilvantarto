@@ -136,6 +136,8 @@ class SecurityReportController extends Controller
             403
         );
 
+        $security->load('locations:id,name');
+
         $sharedUsers = TenantUser::whereIn('id', $security->shares()->pluck('user_id'))->get();
         $allUsers    = TenantUser::where('is_active', true)->orderBy('name')->get();
         $isCreator   = $authUser->id === $security->created_by_user_id;

@@ -84,6 +84,12 @@ export default function SecurityShow({ report, sharedUsers, allUsers, isCreator 
                                 <svg className="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 Készítette: <strong className="text-slate-300 ml-0.5">{report.prepared_by}</strong>
                             </span>
+                            {(report.locations?.length ?? 0) > 0 && (
+                                <span className="flex items-center gap-1.5">
+                                    <svg className="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m4-4h.01M11 17h.01"/></svg>
+                                    <strong className="text-slate-300">{report.locations!.map(l => l.name).join(', ')}</strong>
+                                </span>
+                            )}
                         </div>
                     </div>
                     <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
