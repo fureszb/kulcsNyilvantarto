@@ -534,8 +534,9 @@ const CSS = `
 .vez-viewtabs{ display:inline-flex; gap:4px; padding:4px; background:#f1f5f9; border:1px solid var(--line); border-radius:12px; margin-bottom:16px; }
 .vez-viewtabs button{ border:none; background:transparent; color:var(--ink-dim); font-size:13px; font-weight:600; padding:8px 18px; border-radius:9px; cursor:pointer; transition:all .15s; }
 .vez-viewtabs button.active{ background:#fff; color:#2563eb; box-shadow:0 1px 3px rgba(0,0,0,.08); }
-.vez-app .layout{ display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start; }
-@media (max-width:1024px){ .vez-app .layout{ grid-template-columns:1fr; } }
+.vez-app .layout{ display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:16px; align-items:start; }
+.vez-app .layout > *{ min-width:0; }
+@media (max-width:1024px){ .vez-app .layout{ grid-template-columns:minmax(0,1fr); } }
 .vez-app .card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
 .vez-app .card + .card{ margin-top:16px; }
 .vez-app .card h2{ font-size:14px; margin:0 0 12px; font-weight:700; color:#0f172a; }
