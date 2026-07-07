@@ -28,13 +28,19 @@ class TenantUserMiddleware
             return redirect()->route('login')->with('error', 'Fiókja inaktív. Vegye fel a kapcsolatot az adminisztrátorral.');
         }
 
-        // A felügyeleti szerepkörök a saját kezdőfelületükre irányulnak
-        if ($user->isPropertyManager() || $user->isSecurityLead()) {
-            return redirect()->route('pm.dashboard');
-        }
-
-        if ($user->isAreaDirector()) {
-            return redirect()->route('director.dashboard');
+        // A PM és a területi igazgató saját, dedikált portállal rendelkezik — ha a
+        // generikus dolgozói kezdőlapra (`home`) tévednek, oda irányítjuk őket.
+        // A többi MEGOSZTOTT tenant-user route-ot (Vezénylés, Váltóüzenetek, AI,
+        // PM üzenetek, profil) viszont minden szerepkör (biztonsági vezető,
+        // igazgató, dolgozó) szabadon elérheti — ott nem szabad elterelni, mert
+        // különben ezek a menüpontok a saját dashboardra pattannak vissza.
+        if ($request->route()?->named('home')) {
+            if ($user->isPropertyManager()) {
+                return redirect()->route('pm.dashboard');
+            }
+            if ($user->isAreaDirector()) {
+                return redirect()->route('director.dashboard');
+            }
         }
 
         return $next($request);
