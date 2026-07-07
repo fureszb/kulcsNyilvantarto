@@ -112,15 +112,17 @@ class SecurityLeadController extends Controller
         $user = Auth::guard('tenant')->user();
         $locationIds = $user->managedLocations()->pluck('locations.id');
 
-        $reports = SecurityDailyReport::whereHas('locations', fn ($q) => $q->whereIn('locations.id', $locationIds))
+        $reports = SecurityDailyReport::with('locations:id,name')
+            ->whereHas('locations', fn ($q) => $q->whereIn('locations.id', $locationIds))
             ->orderByDesc('report_date')->orderByDesc('id')
             ->paginate(30);
 
         return Inertia::render('Security/Index', [
-            'reports'   => $reports,
-            'user'      => $user,
-            'isAdmin'   => false,
-            'canCreate' => true,
+            'reports'         => $reports,
+            'user'            => $user,
+            'isAdmin'         => false,
+            'canCreate'       => false,
+            'groupByLocation' => true,
         ]);
     }
 

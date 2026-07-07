@@ -198,6 +198,7 @@ export interface SecurityDailyReport {
     created_at: string;
     updated_at: string;
     shares?: SecurityReportShare[];
+    locations?: { id: number; name: string }[];
 }
 
 export interface SecurityReportShare {

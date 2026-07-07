@@ -146,7 +146,7 @@ export default function SecurityLeadTeam({ workerUsers, pmUsers, leadLocations, 
                     Nincs hozzád rendelt irodaház, ezért egyelőre nem tudsz dolgozót vagy Property Managert hozzáadni a csapatodhoz. Kérd az adminisztrátort, hogy rendeljen hozzád irodaházat.
                 </div>
             ) : (
-                <div className="max-w-2xl space-y-4">
+                <div className="max-w-[74rem] mx-auto space-y-4">
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                         <div className="flex items-center justify-between mb-1.5">
                             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Property Manager</p>
