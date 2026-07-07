@@ -37,7 +37,7 @@ export default function DirectorFeedback({ feedback }: Props) {
                 <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.038, backgroundImage: NOISE_BG, backgroundSize: '180px 180px', mixBlendMode: 'screen' }}/>
             </div>
 
-            <div className="max-w-2xl space-y-3">
+            <div className="max-w-[73rem] mx-auto space-y-3">
                 {feedback.length === 0 ? (
                     <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-400">
                         Még nem érkezett névtelen visszajelzés.
