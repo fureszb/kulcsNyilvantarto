@@ -175,6 +175,11 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
         if (!window.confirm(`Törlöd "${emp.name}" dolgozót és teljes beosztását?`)) return;
         router.delete(route('vezenyles.employees.destroy', emp.id), { data: { year, month }, ...visitOpts });
     }
+    function linkEmployeeUser(empId: number, userId: string) {
+        router.put(route('vezenyles.employees.update', empId), {
+            year, month, user_id: userId ? Number(userId) : null,
+        }, visitOpts);
+    }
     function assignCover(cand: Candidate, slot: 'night' | 'day') {
         if (!selection) return;
         router.post(route('vezenyles.overrides.store'), {
@@ -456,7 +461,20 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                                     {felvitelEmps.map(emp => (
                                         <div key={emp.id} className="emprow">
                                             <span>{emp.name}{emp.user_id ? <span className="tag">fiók</span> : null}</span>
-                                            {canEdit && <button title="Törlés" onClick={() => delEmployee(emp)}>✕</button>}
+                                            {canEdit && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    <select
+                                                        value={emp.user_id ?? ''}
+                                                        onChange={e => linkEmployeeUser(emp.id, e.target.value)}
+                                                        title="Fiók összekötése — a hozzárendelt felhasználó a saját sorát szerkesztheti"
+                                                        style={{ fontSize: 11, maxWidth: 130 }}
+                                                    >
+                                                        <option value="">— nincs fiók-kötés —</option>
+                                                        {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                                                    </select>
+                                                    <button title="Törlés" onClick={() => delEmployee(emp)}>✕</button>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

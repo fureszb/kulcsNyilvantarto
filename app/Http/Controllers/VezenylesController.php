@@ -211,6 +211,23 @@ class VezenylesController extends Controller
         return $this->redirectBack($year, $month)->with('success', 'Dolgozó hozzáadva.');
     }
 
+    /** Egy meglévő dolgozó-sor fiókhoz kötése/leválasztása — ettől tudja a
+     *  hozzárendelt felhasználó a saját sorát szerkeszteni (tervezés). */
+    public function updateEmployee(Request $request, int $employee)
+    {
+        [$year, $month] = $this->currentYm($request);
+        $data = $request->validate([
+            'user_id' => 'nullable|integer|exists:tenant.users,id',
+        ]);
+
+        $emp = VezenylesEmployee::findOrFail($employee);
+        $this->authorizeAreaAccess($emp->area_id);
+
+        $emp->update(['user_id' => $data['user_id'] ?? null]);
+
+        return $this->redirectBack($year, $month)->with('success', 'Fiók-kötés frissítve.');
+    }
+
     public function destroyEmployee(Request $request, int $employee)
     {
         [$year, $month] = $this->currentYm($request);

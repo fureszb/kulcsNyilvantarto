@@ -232,6 +232,7 @@ Route::prefix('{tenant}')
             Route::put('/areas/{area}',           [VezenylesController::class, 'updateArea'])->name('areas.update');
             Route::delete('/areas/{area}',        [VezenylesController::class, 'destroyArea'])->name('areas.destroy');
             Route::post('/employees',             [VezenylesController::class, 'storeEmployee'])->name('employees.store');
+            Route::put('/employees/{employee}',   [VezenylesController::class, 'updateEmployee'])->name('employees.update');
             Route::delete('/employees/{employee}',[VezenylesController::class, 'destroyEmployee'])->name('employees.destroy');
             Route::post('/schedule',              [VezenylesController::class, 'upsertSchedule'])->name('schedule.upsert');
             Route::post('/overrides',             [VezenylesController::class, 'assignCover'])->name('overrides.store');
