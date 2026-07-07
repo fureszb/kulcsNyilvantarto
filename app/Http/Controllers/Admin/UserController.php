@@ -28,8 +28,9 @@ class UserController extends Controller
         return Inertia::render('Admin/Users/Form', [
             'user'  => null,
             'roles' => self::ROLES,
-            'assignableLocations' => Location::orderBy('name')->get(['id', 'name']),
-            'assignableLeads'     => $this->securityLeads(),
+            'assignableLocations'  => Location::orderBy('name')->get(['id', 'name']),
+            'assignableLeads'      => $this->securityLeads(),
+            'assignableDirectors'  => $this->areaDirectors(),
         ]);
     }
 
@@ -39,16 +40,42 @@ class UserController extends Controller
         return TenantUser::where('role', 'security_lead')->orderBy('name')->get(['id', 'name']);
     }
 
-    /** A role-váltáshoz igazított hozzárendelés-szinkron. */
+    /** A hozzárendeléshez választható területi igazgatók (security_lead-hez). */
+    private function areaDirectors()
+    {
+        return TenantUser::where('role', 'area_director')->orderBy('name')->get(['id', 'name']);
+    }
+
+    /** A role-váltáshoz igazított hozzárendelés — N:1/1:1 (ER-diagram szerint). */
     private function syncAssignments(TenantUser $user, Request $request): void
     {
-        $locationIds = collect($request->input('location_ids', []))->map(fn ($id) => (int) $id)->all();
-        $leadIds     = collect($request->input('lead_ids', []))->map(fn ($id) => (int) $id)->all();
+        $singleLocationId = $request->filled('location_id') ? (int) $request->input('location_id') : null;
+        $locationIds      = collect($request->input('location_ids', []))->map(fn ($id) => (int) $id)->all();
+        $directorId       = $request->filled('director_id') ? (int) $request->input('director_id') : null;
+        $leadIds          = collect($request->input('lead_ids', []))->map(fn ($id) => (int) $id)->all();
 
-        // Minden pivotot a role szerint állítunk be; a nem illő kapcsolatokat ürítjük
-        $user->workLocations()->sync($user->role === 'user' ? $locationIds : []);
-        $user->managedLocations()->sync($user->role === 'security_lead' ? $locationIds : []);
-        $user->supervisedLeads()->sync($user->role === 'area_director' ? $leadIds : []);
+        // Dolgozó/PM → EGY irodaház (users.location_id); más role-nál üres.
+        $user->update([
+            'location_id' => in_array($user->role, ['user', 'property_manager']) ? $singleLocationId : null,
+            'director_id' => $user->role === 'security_lead' ? $directorId : null,
+        ]);
+
+        // Biztonsági vezető → irodaházak, amikért felel (locations.security_lead_id,
+        // 1:N a vezető oldaláról — a kiválasztottakat ráállítjuk, a többiről levesszük).
+        if ($user->role === 'security_lead') {
+            Location::whereIn('id', $locationIds)->update(['security_lead_id' => $user->id]);
+            Location::where('security_lead_id', $user->id)->whereNotIn('id', $locationIds)->update(['security_lead_id' => null]);
+        } else {
+            Location::where('security_lead_id', $user->id)->update(['security_lead_id' => null]);
+        }
+
+        // Területi igazgató → felügyelt biztonsági vezetők (users.director_id).
+        if ($user->role === 'area_director') {
+            TenantUser::whereIn('id', $leadIds)->where('role', 'security_lead')->update(['director_id' => $user->id]);
+            TenantUser::where('director_id', $user->id)->whereNotIn('id', $leadIds)->update(['director_id' => null]);
+        } else {
+            TenantUser::where('director_id', $user->id)->update(['director_id' => null]);
+        }
     }
 
     public function store(Request $request)
@@ -60,8 +87,10 @@ class UserController extends Controller
             'role'           => ['required', Rule::in(self::ROLES)],
             'employed_since' => 'nullable|date',
             'left_at'        => 'nullable|date',
+            'location_id'    => 'nullable|integer',
             'location_ids'   => 'nullable|array',
             'location_ids.*' => 'integer',
+            'director_id'    => 'nullable|integer',
             'lead_ids'       => 'nullable|array',
             'lead_ids.*'     => 'integer',
         ]);
@@ -93,11 +122,14 @@ class UserController extends Controller
             'overrides' => $overrides->map(fn($o) => ['exam_id' => $o->exam_id, 'max_attempts' => $o->max_attempts])->values(),
             'assignableLocations' => Location::orderBy('name')->get(['id', 'name']),
             'assignableLeads'     => $this->securityLeads(),
+            'assignableDirectors' => $this->areaDirectors(),
             // A user aktuális hozzárendelései (role-tól függően használt)
+            'assignedLocationId'  => $user->location_id,
             'assignedLocationIds' => $user->role === 'security_lead'
-                ? $user->managedLocations()->pluck('locations.id')
-                : $user->workLocations()->pluck('locations.id'),
-            'assignedLeadIds'     => $user->supervisedLeads()->pluck('users.id'),
+                ? $user->managedLocations()->pluck('id')
+                : collect(),
+            'assignedDirectorId'  => $user->director_id,
+            'assignedLeadIds'     => $user->supervisedLeads()->pluck('id'),
         ]);
     }
 
@@ -110,8 +142,10 @@ class UserController extends Controller
             'role'           => ['required', Rule::in(self::ROLES)],
             'employed_since' => 'nullable|date',
             'left_at'        => 'nullable|date',
+            'location_id'    => 'nullable|integer',
             'location_ids'   => 'nullable|array',
             'location_ids.*' => 'integer',
+            'director_id'    => 'nullable|integer',
             'lead_ids'       => 'nullable|array',
             'lead_ids.*'     => 'integer',
         ]);

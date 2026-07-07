@@ -37,7 +37,10 @@ interface Props {
     overrides?: OverrideItem[];
     assignableLocations?: IdName[];
     assignableLeads?: IdName[];
+    assignableDirectors?: IdName[];
+    assignedLocationId?: number | null;
     assignedLocationIds?: number[];
+    assignedDirectorId?: number | null;
     assignedLeadIds?: number[];
 }
 
@@ -50,7 +53,9 @@ interface FormData {
     employed_since: string;
     left_at: string;
     is_active: boolean;
+    location_id: number | '';
     location_ids: number[];
+    director_id: number | '';
     lead_ids: number[];
 }
 
@@ -64,8 +69,9 @@ const ROLE_OPTIONS: { value: string; label: string }[] = [
 
 export default function UserForm({
     user, exams = [], overrides = [],
-    assignableLocations = [], assignableLeads = [],
-    assignedLocationIds = [], assignedLeadIds = [],
+    assignableLocations = [], assignableLeads = [], assignableDirectors = [],
+    assignedLocationId = null, assignedLocationIds = [],
+    assignedDirectorId = null, assignedLeadIds = [],
 }: Props) {
     const isEdit = !!user;
     const [examOverrides, setExamOverrides] = useState<Record<number, string>>(
@@ -107,12 +113,17 @@ export default function UserForm({
         employed_since: user?.employed_since ?? '',
         left_at: user?.left_at ?? '',
         is_active: user?.is_active ?? true,
+        location_id: assignedLocationId ?? '',
         location_ids: assignedLocationIds,
+        director_id: assignedDirectorId ?? '',
         lead_ids: assignedLeadIds,
     });
 
-    // Role-függő hozzárendelés: worker/vezető → irodaházak, igazgató → vezetők
-    const needsLocations = data.role === 'user' || data.role === 'security_lead';
+    // Role-függő hozzárendelés: worker/PM → EGY irodaház, vezető → irodaházak +
+    // EGY felügyelő igazgató, igazgató → felügyelt vezetők
+    const needsSingleLocation = data.role === 'user' || data.role === 'property_manager';
+    const needsManagedLocations = data.role === 'security_lead';
+    const needsDirector = data.role === 'security_lead';
     const needsLeads = data.role === 'area_director';
 
     function toggleId(field: 'location_ids' | 'lead_ids', id: number) {
@@ -190,11 +201,29 @@ export default function UserForm({
                         </div>
 
                         {/* Role-függő hozzárendelés */}
-                        {needsLocations && (
+                        {needsSingleLocation && (
                             <div>
-                                <label className="form-label">
-                                    {data.role === 'security_lead' ? 'Kezelt irodaházak' : 'Irodaházak (hol dolgozik)'}
+                                <label className="form-label" htmlFor="location_id">
+                                    {data.role === 'property_manager' ? 'Irányított irodaház' : 'Irodaház (hol dolgozik)'}
                                 </label>
+                                <select
+                                    id="location_id"
+                                    value={data.location_id}
+                                    onChange={(e) => setData('location_id', e.target.value ? Number(e.target.value) : '')}
+                                    className="form-input"
+                                >
+                                    <option value="">— nincs kiválasztva —</option>
+                                    {assignableLocations.map(loc => (
+                                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                                    ))}
+                                </select>
+                                {errors.location_id && <p className="text-red-500 text-xs mt-1">{errors.location_id}</p>}
+                            </div>
+                        )}
+
+                        {needsManagedLocations && (
+                            <div>
+                                <label className="form-label">Kezelt irodaházak (ezekért felelős)</label>
                                 {assignableLocations.length === 0 ? (
                                     <p className="text-xs text-slate-400">Még nincs felvéve irodaház.</p>
                                 ) : (
@@ -211,6 +240,27 @@ export default function UserForm({
                                             </label>
                                         ))}
                                     </div>
+                                )}
+                                <p className="text-xs text-slate-400 mt-1">Egy irodaháznak csak egy felelős biztonsági vezetője lehet — ha egy másik vezetőhöz már hozzá van rendelve, a kiválasztással átveszed tőle.</p>
+                            </div>
+                        )}
+
+                        {needsDirector && (
+                            <div>
+                                <label className="form-label" htmlFor="director_id">Felügyelő területi igazgató</label>
+                                <select
+                                    id="director_id"
+                                    value={data.director_id}
+                                    onChange={(e) => setData('director_id', e.target.value ? Number(e.target.value) : '')}
+                                    className="form-input"
+                                >
+                                    <option value="">— nincs kiválasztva —</option>
+                                    {assignableDirectors.map(dir => (
+                                        <option key={dir.id} value={dir.id}>{dir.name}</option>
+                                    ))}
+                                </select>
+                                {assignableDirectors.length === 0 && (
+                                    <p className="text-xs text-slate-400 mt-1">Még nincs területi igazgató. Előbb hozz létre ilyen szerepkörű felhasználót.</p>
                                 )}
                             </div>
                         )}

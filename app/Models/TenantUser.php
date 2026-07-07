@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use NotificationChannels\WebPush\HasPushSubscriptions;
@@ -14,7 +15,7 @@ class TenantUser extends Authenticatable
     protected $connection = 'tenant';
     protected $table = 'users';
 
-    protected $fillable = ['name', 'email', 'password', 'role', 'is_active', 'employed_since', 'left_at', 'notes_read_at', 'messages_read_at'];
+    protected $fillable = ['name', 'email', 'password', 'role', 'is_active', 'employed_since', 'left_at', 'notes_read_at', 'messages_read_at', 'location_id', 'director_id'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -61,33 +62,30 @@ class TenantUser extends Authenticatable
         return in_array($this->role, ['admin', 'area_director']);
     }
 
-    // ── Szervezeti hierarchia relációk ──────────────────────────────
+    // ── Szervezeti hierarchia relációk (ER-diagram szerint N:1/1:1) ──
 
-    /** Worker → irodaházak, ahol dolgozik. */
-    public function workLocations(): BelongsToMany
+    /** Dolgozó/PM → az EGY irodaház, ahol dolgozik / amit vezet. */
+    public function workLocations(): BelongsTo
     {
-        return $this->belongsToMany(Location::class, 'location_user', 'user_id', 'location_id')
-            ->withTimestamps();
+        return $this->belongsTo(Location::class, 'location_id');
     }
 
-    /** Biztonsági vezető → irodaházak, amikért felel. */
-    public function managedLocations(): BelongsToMany
+    /** Biztonsági vezető → irodaházak, amikért felel (1:N — egy vezető
+     *  több irodaházért is felelhet, de egy irodaháznak csak egy felelőse van). */
+    public function managedLocations(): HasMany
     {
-        return $this->belongsToMany(Location::class, 'location_manager', 'manager_id', 'location_id')
-            ->withTimestamps();
+        return $this->hasMany(Location::class, 'security_lead_id');
     }
 
-    /** Területi igazgató → felügyelt biztonsági vezetők. */
-    public function supervisedLeads(): BelongsToMany
+    /** Területi igazgató → felügyelt biztonsági vezetők (1:N). */
+    public function supervisedLeads(): HasMany
     {
-        return $this->belongsToMany(self::class, 'director_lead', 'director_id', 'lead_id')
-            ->withTimestamps();
+        return $this->hasMany(self::class, 'director_id');
     }
 
-    /** Biztonsági vezető → őt felügyelő területi igazgatók. */
-    public function directors(): BelongsToMany
+    /** Biztonsági vezető → az EGY felügyelő területi igazgató. */
+    public function director(): BelongsTo
     {
-        return $this->belongsToMany(self::class, 'director_lead', 'lead_id', 'director_id')
-            ->withTimestamps();
+        return $this->belongsTo(self::class, 'director_id');
     }
 }

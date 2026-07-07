@@ -4,12 +4,19 @@ import { WorkerCard, type WorkerStat } from '../../Components/WorkerStatCard';
 
 const NOISE_BG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")";
 
+interface AssignedLocation {
+    id: number;
+    name: string;
+    security_lead_name?: string | null;
+}
+
 interface Props {
     workerStats: WorkerStat[];
     welcomeName?: string | null;
+    assignedLocation?: AssignedLocation | null;
 }
 
-export default function PmDashboard({ workerStats, welcomeName }: Props) {
+export default function PmDashboard({ workerStats, welcomeName, assignedLocation }: Props) {
     const [showWelcome, setShowWelcome] = useState(!!welcomeName);
     const [welcomeVisible, setWelcomeVisible] = useState(false);
     const [welcomeFading, setWelcomeFading] = useState(false);
@@ -61,9 +68,14 @@ export default function PmDashboard({ workerStats, welcomeName }: Props) {
                 {/* Content */}
                 <div className="relative z-10 px-8 py-8 flex items-center justify-between gap-6">
                     <div>
-                        <p className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-1">Property Manager Portál</p>
+                        <p className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-1">
+                            Property Manager Portál{assignedLocation ? ` — ${assignedLocation.name}` : ''}
+                        </p>
                         <h1 className="text-3xl font-extrabold text-white tracking-tight" style={{ animation: 'pmHeartbeat 4s ease-in-out infinite' }}>Dolgozók áttekintése</h1>
-                        <p className="text-slate-400 mt-1 text-sm">{workerStats.length} aktív dolgozó – oktatási és vizsgaeredmények</p>
+                        <p className="text-slate-400 mt-1 text-sm">
+                            {workerStats.length} aktív dolgozó – oktatási és vizsgaeredmények
+                            {assignedLocation?.security_lead_name && ` · Biztonsági vezető: ${assignedLocation.security_lead_name}`}
+                        </p>
                     </div>
                     <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-white/5 border border-white/10 items-center justify-center shrink-0">
                         <svg className="w-7 h-7 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,6 +86,12 @@ export default function PmDashboard({ workerStats, welcomeName }: Props) {
                 {/* Noise */}
                 <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.038, backgroundImage: NOISE_BG, backgroundSize: '180px 180px', mixBlendMode: 'screen' }}/>
             </div>
+
+            {!assignedLocation && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 text-sm text-amber-800">
+                    Jelenleg nincs irodaházhoz rendelve — kérje meg az adminisztrátort, hogy rendelje hozzá egy irodaházhoz, hogy lássa az ott dolgozókat.
+                </div>
+            )}
 
             {/* Worker grid */}
             {workerStats.length === 0 ? (

@@ -4,8 +4,9 @@ namespace App\Models;
 
 use App\Models\ItemGroup;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Location extends Model
 {
@@ -36,16 +37,20 @@ class Location extends Model
     }
 
     /** Az irodaházban dolgozó workerek. */
-    public function workers(): BelongsToMany
+    public function workers(): HasMany
     {
-        return $this->belongsToMany(TenantUser::class, 'location_user', 'location_id', 'user_id')
-            ->withTimestamps();
+        return $this->hasMany(TenantUser::class, 'location_id')->where('role', 'user');
     }
 
-    /** Az irodaházért felelős biztonsági vezetők. */
-    public function managers(): BelongsToMany
+    /** Az irodaházért felelős EGY biztonsági vezető. */
+    public function securityLead(): BelongsTo
     {
-        return $this->belongsToMany(TenantUser::class, 'location_manager', 'location_id', 'manager_id')
-            ->withTimestamps();
+        return $this->belongsTo(TenantUser::class, 'security_lead_id');
+    }
+
+    /** Az irodaházat irányító EGY Property Manager. */
+    public function propertyManager(): HasOne
+    {
+        return $this->hasOne(TenantUser::class, 'location_id')->where('role', 'property_manager');
     }
 }

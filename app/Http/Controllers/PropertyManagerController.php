@@ -32,8 +32,20 @@ class PropertyManagerController extends Controller
     public function dashboard()
     {
         $welcomeName = session()->pull('pm_welcome');
+        $authUser = Auth::guard('tenant')->user();
 
-        $workers   = TenantUser::where('role', 'user')->where('is_active', true)->orderBy('name')->get();
+        // A PM egyetlen irodaházhoz tartozik (users.location_id) — a hozzárendelt
+        // ház dolgozóit látja, plusz azt, ki az irodaház felelős biztonsági vezetője.
+        $assignedLocation = $authUser->workLocations()->with('securityLead:id,name')->first();
+
+        $workersQuery = TenantUser::where('role', 'user')->where('is_active', true)->orderBy('name');
+        if ($assignedLocation) {
+            $workersQuery->where('location_id', $assignedLocation->id);
+        } else {
+            $workersQuery->whereRaw('0 = 1'); // nincs hozzárendelt irodaház → nincs kit mutatni
+        }
+        $workers = $workersQuery->get();
+
         $trainings = Training::where('is_active', true)->get();
 
         $workerIds       = $workers->pluck('id');
@@ -42,7 +54,15 @@ class PropertyManagerController extends Controller
 
         $workerStats = $workers->map(fn($w) => $this->statsService->buildStats($w, $trainings, $allTrainResults, $allExamResults));
 
-        return Inertia::render('PM/Dashboard', ['workerStats' => $workerStats, 'welcomeName' => $welcomeName]);
+        return Inertia::render('PM/Dashboard', [
+            'workerStats'      => $workerStats,
+            'welcomeName'      => $welcomeName,
+            'assignedLocation' => $assignedLocation ? [
+                'id'   => $assignedLocation->id,
+                'name' => $assignedLocation->name,
+                'security_lead_name' => $assignedLocation->securityLead?->name,
+            ] : null,
+        ]);
     }
 
     public function worker(TenantUser $user)
@@ -51,9 +71,12 @@ class PropertyManagerController extends Controller
 
         $authUser = Auth::guard('tenant')->user();
         if ($authUser->isSecurityLead()) {
-            $managedLocationIds = $authUser->managedLocations()->pluck('locations.id');
+            $managedLocationIds = $authUser->managedLocations()->pluck('id');
             $worksHere = $user->workLocations()->whereIn('locations.id', $managedLocationIds)->exists();
             abort_unless($worksHere, 403);
+        }
+        if ($authUser->isPropertyManager()) {
+            abort_unless($authUser->location_id && $user->location_id === $authUser->location_id, 403);
         }
 
         $trainings      = Training::where('is_active', true)->withCount('steps')->orderBy('sort_order')->get();
