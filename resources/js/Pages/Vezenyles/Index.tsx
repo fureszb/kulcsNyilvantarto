@@ -4,6 +4,8 @@ import { useOwnLayout } from '../../hooks/useOwnLayout';
 
 declare function route(name: string, params?: unknown): string;
 
+const NOISE_BG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")";
+
 const HU_MONTHS = ['Január', 'Február', 'Március', 'Április', 'Május', 'Június', 'Július', 'Augusztus', 'Szeptember', 'Október', 'November', 'December'];
 
 interface Area { id: number; name: string; location_id: number | null; }
@@ -299,29 +301,30 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
             <div className="vez-app">
                 <style>{CSS}</style>
 
-                {/* Fejléc / eszköztár */}
-                <div className="vez-head">
-                    <div className="vez-head-title">
-                        <div className="vez-head-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        </div>
+                {/* Hero */}
+                <div className="-mx-4 sm:-mx-6 lg:-mx-8 relative overflow-hidden rounded-2xl mb-8 shadow-2xl"
+                    style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)' }}>
+                    <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
+                    <div className="relative z-10 px-8 py-8 flex items-center justify-between gap-6 flex-wrap">
                         <div>
-                            <h1>Vezénylés</h1>
-                            <p>{HU_MONTHS[month - 1]} {year} — beosztás és pótlás tervezés</p>
+                            <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Vezénylés</p>
+                            <h1 className="text-3xl font-extrabold text-white tracking-tight">Beosztás és pótlás tervezés</h1>
+                            <p className="text-slate-400 mt-1 text-sm">{HU_MONTHS[month - 1]} {year} — az adatok automatikusan mentődnek</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <select className="vez-hero-select" value={month} onChange={e => goto(year, parseInt(e.target.value, 10))}>
+                                {HU_MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                            </select>
+                            <input type="number" className="vez-hero-input" style={{ width: 84 }} value={year} onChange={e => goto(parseInt(e.target.value, 10) || year, month)} />
+                            {canImport && (
+                                <label className={`vez-hero-btn ${importing ? 'disabled' : ''}`}>
+                                    {importing ? 'Import…' : 'Excel import'}
+                                    <input ref={fileRef} type="file" accept=".xlsx" multiple disabled={importing} onChange={handleImportFile} />
+                                </label>
+                            )}
                         </div>
                     </div>
-                    <div className="vez-head-controls">
-                        <select value={month} onChange={e => goto(year, parseInt(e.target.value, 10))}>
-                            {HU_MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-                        </select>
-                        <input type="number" style={{ width: 84 }} value={year} onChange={e => goto(parseInt(e.target.value, 10) || year, month)} />
-                        {canImport && (
-                            <label className={`btn ${importing ? 'disabled' : ''}`}>
-                                {importing ? 'Import…' : 'Excel import'}
-                                <input ref={fileRef} type="file" accept=".xlsx" multiple disabled={importing} onChange={handleImportFile} />
-                            </label>
-                        )}
-                    </div>
+                    <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.038, backgroundImage: NOISE_BG, backgroundSize: '180px 180px', mixBlendMode: 'screen' }}/>
                 </div>
 
                 {/* Nézetváltó */}
@@ -609,13 +612,11 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
 const CSS = `
 .vez-app{ --line:#e2e8f0; --ink:#1e293b; --ink-dim:#64748b; --amber:#f59e0b; --night:#2563eb; --day:#dc2626; --ok:#059669; }
 .vez-app *{ box-sizing:border-box; }
-.vez-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
-.vez-head-title{ display:flex; align-items:center; gap:12px; }
-.vez-head-icon{ width:44px; height:44px; border-radius:14px; background:#eff6ff; border:1px solid #dbeafe; color:#2563eb; display:flex; align-items:center; justify-content:center; }
-.vez-head-icon svg{ width:22px; height:22px; }
-.vez-head-title h1{ margin:0; font-size:20px; font-weight:800; color:#0f172a; letter-spacing:-.01em; }
-.vez-head-title p{ margin:2px 0 0; font-size:12.5px; color:var(--ink-dim); }
-.vez-head-controls{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.vez-hero-select, .vez-hero-input{ background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); color:#e2e8f0; padding:8px 10px; border-radius:10px; font-size:12.5px; outline:none; }
+.vez-hero-select:focus, .vez-hero-input:focus{ border-color:rgba(255,255,255,.3); }
+.vez-hero-btn{ background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); color:#cbd5e1; padding:8px 13px; border-radius:10px; cursor:pointer; font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; transition:all .15s; }
+.vez-hero-btn:hover{ background:rgba(255,255,255,.1); color:#fff; }
+.vez-hero-btn.disabled{ opacity:.5; cursor:not-allowed; pointer-events:none; }
 .vez-app .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .vez-app .btn{ background:#fff; border:1px solid var(--line); color:#334155; padding:8px 13px; border-radius:10px; cursor:pointer; font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; text-decoration:none; transition:all .15s; }
 .vez-app .btn:hover{ border-color:#93c5fd; color:#2563eb; }
