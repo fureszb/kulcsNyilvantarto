@@ -392,7 +392,7 @@ export default function DirectorDashboard({ leads, currentPeriod }: Props) {
 
                 {/* Modulok */}
                 <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 mt-8">Modulok</h2>
-                <ModuleCardGrid modules={modules} />
+                <ModuleCardGrid modules={modules} gridKey="director-modules" />
         </DirectorLayout>
     );
 }
