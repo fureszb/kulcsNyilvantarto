@@ -1,5 +1,6 @@
 import { useMemo, useState, useRef } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
+import AppLayout from '../../Layouts/AppLayout';
 import type { PageProps } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
@@ -41,8 +42,7 @@ function cellKind(val: string | null | undefined) {
 }
 
 export default function VezenylesIndex({ year, month, areas, employees, schedule, overrides, changelog, users }: Props) {
-    const page = usePage<PageProps>();
-    const flash = page.props.flash;
+    usePage<PageProps>();
 
     const [currentView, setCurrentView] = useState<'felvitel' | 'potlas'>('felvitel');
     const [selectedAreaId, setSelectedAreaId] = useState<number | null>(areas[0]?.id ?? null);
@@ -53,7 +53,6 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
     const [importing, setImporting] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
 
-    // Ha az adatok frissülnek és a kiválasztott terület eltűnt, essünk vissza az elsőre.
     const effectiveAreaId = useMemo(() => {
         if (selectedAreaId && areas.some(a => a.id === selectedAreaId)) return selectedAreaId;
         return areas[0]?.id ?? null;
@@ -199,7 +198,6 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                     }
                     if (!emps.length) return;
 
-                    // Hónap + terület kitalálása a munkalap nevéből
                     const n = normalize(sn);
                     const monthIdx = monthsLower.findIndex(m => n.includes(m.slice(0, 4)));
                     if (monthIdx < 0) return;
@@ -219,7 +217,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
         }
     }
 
-    // ── Jelöltek számítása (kliens oldali, mint az eredeti) ──────────────────
+    // ── Jelöltek számítása (kliens oldali) ───────────────────────────────────
     const candidates = useMemo(() => {
         if (!selection) return null;
         const absentEmp = empById.get(selection.employeeId);
@@ -251,52 +249,53 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
     const felvitelEmps = effectiveAreaId ? (empsByArea.get(effectiveAreaId) ?? []) : [];
     const potlasArea = areas[Math.min(currentAreaTab, Math.max(0, areas.length - 1))];
     const potlasEmps = potlasArea ? (empsByArea.get(potlasArea.id) ?? []) : [];
-
     const days = Array.from({ length: nd }, (_, i) => i + 1);
 
     return (
-        <div className="vez-app">
-            <style>{CSS}</style>
+        <AppLayout title="Vezénylés">
+            <div className="vez-app">
+                <style>{CSS}</style>
 
-            {(flash?.success || flash?.error) && (
-                <div className={`vez-toast ${flash?.error ? 'err' : 'ok'}`}>{flash?.error || flash?.success}</div>
-            )}
-
-            <div className="topbar">
-                <div>
-                    <h1>Vezénylés <span>/ Beosztás</span></h1>
-                    <div className="status">{HU_MONTHS[month - 1]} {year} — az adatok automatikusan mentődnek.</div>
+                {/* Fejléc / eszköztár */}
+                <div className="vez-head">
+                    <div className="vez-head-title">
+                        <div className="vez-head-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        <div>
+                            <h1>Vezénylés</h1>
+                            <p>{HU_MONTHS[month - 1]} {year} — beosztás és pótlás tervezés</p>
+                        </div>
+                    </div>
+                    <div className="vez-head-controls">
+                        <select value={month} onChange={e => goto(year, parseInt(e.target.value, 10))}>
+                            {HU_MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                        </select>
+                        <input type="number" style={{ width: 84 }} value={year} onChange={e => goto(parseInt(e.target.value, 10) || year, month)} />
+                        <label className={`btn ${importing ? 'disabled' : ''}`}>
+                            {importing ? 'Import…' : 'Excel import'}
+                            <input ref={fileRef} type="file" accept=".xlsx" multiple disabled={importing} onChange={handleImportFile} />
+                        </label>
+                    </div>
                 </div>
-                <div className="row">
-                    <select value={month} onChange={e => goto(year, parseInt(e.target.value, 10))}>
-                        {HU_MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-                    </select>
-                    <input type="number" style={{ width: 84 }} value={year} onChange={e => goto(parseInt(e.target.value, 10) || year, month)} />
-                    <label className={`btn ${importing ? 'disabled' : ''}`}>
-                        {importing ? 'Import…' : 'Régi Excel import'}
-                        <input ref={fileRef} type="file" accept=".xlsx" multiple disabled={importing} onChange={handleImportFile} />
-                    </label>
-                    <Link href={route('home')} className="btn">Vissza</Link>
+
+                {/* Nézetváltó */}
+                <div className="vez-viewtabs">
+                    <button className={currentView === 'felvitel' ? 'active' : ''} onClick={() => setCurrentView('felvitel')}>Felvitel</button>
+                    <button className={currentView === 'potlas' ? 'active' : ''} onClick={() => setCurrentView('potlas')}>Pótlás tervezés</button>
                 </div>
-            </div>
 
-            <div className="menu">
-                <div className={`tab ${currentView === 'felvitel' ? 'active' : ''}`} onClick={() => setCurrentView('felvitel')}>Felvitel</div>
-                <div className={`tab ${currentView === 'potlas' ? 'active' : ''}`} onClick={() => setCurrentView('potlas')}>Pótlás tervezés</div>
-            </div>
-
-            {/* ── FELVITEL ── */}
-            {currentView === 'felvitel' && (
-                <div className="view active">
+                {/* ── FELVITEL ── */}
+                {currentView === 'felvitel' && (
                     <div className="layout">
                         <div className="col-main">
                             <div className="card">
                                 <h2>Beosztás rögzítése <span className="n">({HU_MONTHS[month - 1]} {year})</span></h2>
                                 <div className="legend">
-                                    <span><i className="sw" style={{ background: 'rgba(217,82,74,.4)' }} /> hétvége</span>
+                                    <span><i className="sw" style={{ background: 'rgba(239,68,68,.18)' }} /> hétvége</span>
                                     <span><i className="sw" style={{ background: 'var(--amber)' }} /> 24 órás szolgálat</span>
-                                    <span><i className="sw" style={{ background: 'rgba(255,255,255,.1)' }} /> egyéb óraszám</span>
-                                    <span><i className="sw" style={{ background: 'rgba(255,255,255,.06)' }} /> ?, X, + jelölés</span>
+                                    <span><i className="sw" style={{ background: '#e2e8f0' }} /> egyéb óraszám</span>
+                                    <span><i className="sw" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }} /> ?, X, + jelölés</span>
                                 </div>
                                 <div className="gridwrap">
                                     {!effectiveAreaId ? (
@@ -328,7 +327,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                                                                 if (isWeekend(year, month, d)) cls += ' weekend-col';
                                                                 return <td key={d} className={cls} onClick={() => editCell(emp.id, d)}>{val ?? ''}</td>;
                                                             })}
-                                                            <td className="cell-num">{total}</td>
+                                                            <td className="cell-total">{total}</td>
                                                         </tr>
                                                     );
                                                 })}
@@ -356,7 +355,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                                     <input type="text" placeholder="Új dolgozó neve" style={{ flex: 1 }} value={newEmpName}
                                         onChange={e => setNewEmpName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addEmployee(); }} />
                                 </div>
-                                <div className="row" style={{ marginTop: 6 }}>
+                                <div className="row" style={{ marginTop: 8 }}>
                                     <select style={{ flex: 1 }} value={newEmpUserId} onChange={e => setNewEmpUserId(e.target.value)}>
                                         <option value="">— nincs fiók-kötés —</option>
                                         {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
@@ -367,7 +366,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                                     {felvitelEmps.length === 0 && <div className="none">Még nincs dolgozó ezen a területen.</div>}
                                     {felvitelEmps.map(emp => (
                                         <div key={emp.id} className="emprow">
-                                            <span>{emp.name}{emp.user_id ? <span style={{ color: 'var(--ink-dim)', fontSize: 11 }}> · fiók</span> : null}</span>
+                                            <span>{emp.name}{emp.user_id ? <span className="tag">fiók</span> : null}</span>
                                             <button title="Törlés" onClick={() => delEmployee(emp)}>✕</button>
                                         </div>
                                     ))}
@@ -375,28 +374,26 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* ── PÓTLÁS ── */}
-            {currentView === 'potlas' && (
-                <div className="view active">
+                {/* ── PÓTLÁS ── */}
+                {currentView === 'potlas' && (
                     <div className="layout">
                         <div className="col-main">
                             <div className="card">
                                 <h2>Beosztás <span className="n">({HU_MONTHS[month - 1]} {year})</span></h2>
                                 <div className="legend">
-                                    <span><i className="sw" style={{ background: 'rgba(217,82,74,.4)' }} /> hétvége</span>
+                                    <span><i className="sw" style={{ background: 'rgba(239,68,68,.18)' }} /> hétvége</span>
                                     <span><i className="sw" style={{ background: 'var(--amber)' }} /> 24 órás szolgálat</span>
-                                    <span><i className="sw" style={{ background: 'rgba(79,142,247,.5)' }} /> éjszakai 12h túlóra</span>
-                                    <span><i className="sw" style={{ background: 'rgba(224,90,78,.5)' }} /> nappali 12h túlóra</span>
-                                    <span><i className="sw" style={{ background: 'rgba(76,175,125,.5)' }} /> teljesen pótolva</span>
+                                    <span><i className="sw" style={{ background: 'rgba(59,130,246,.35)' }} /> éjszakai 12h túlóra</span>
+                                    <span><i className="sw" style={{ background: 'rgba(239,68,68,.30)' }} /> nappali 12h túlóra</span>
+                                    <span><i className="sw" style={{ background: 'rgba(16,185,129,.40)' }} /> teljesen pótolva</span>
                                     <span><i className="sw cell-covered-partial" style={{ width: 12, height: 12 }} /> részben pótolva</span>
                                 </div>
                                 <div className="tabs">
                                     {areas.map((a, idx) => (
-                                        <div key={a.id} className={`tab2 ${idx === currentAreaTab ? 'active' : ''}`}
-                                            onClick={() => { setCurrentAreaTab(idx); setSelection(null); }}>{a.name}</div>
+                                        <button key={a.id} className={`tab2 ${idx === currentAreaTab ? 'active' : ''}`}
+                                            onClick={() => { setCurrentAreaTab(idx); setSelection(null); }}>{a.name}</button>
                                     ))}
                                 </div>
                                 <div className="gridwrap">
@@ -447,7 +444,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                             </div>
                         </div>
                         <div className="col-side">
-                            <div className="card side">
+                            <div className="card">
                                 <h2>Kiesés kezelése</h2>
                                 <div>
                                     {!candidates ? (
@@ -472,7 +469,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                                                     {candidates.night.map(c => (
                                                         <div key={`n${c.areaId}:${c.empId}`} className="cand">
                                                             <div className="who"><span>{c.name}</span><span className="ar">{c.area}</span></div>
-                                                            <button className="btn small" onClick={() => assignCover(c, 'night')}>Kijelöl</button>
+                                                            <button className="btn small primary" onClick={() => assignCover(c, 'night')}>Kijelöl</button>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -484,7 +481,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                                                     {candidates.day_.map(c => (
                                                         <div key={`d${c.areaId}:${c.empId}`} className="cand">
                                                             <div className="who"><span>{c.name}</span><span className="ar">{c.area}</span></div>
-                                                            <button className="btn small" onClick={() => assignCover(c, 'day')}>Kijelöl</button>
+                                                            <button className="btn small primary" onClick={() => assignCover(c, 'day')}>Kijelöl</button>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -507,91 +504,94 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        </AppLayout>
     );
 }
 
 const CSS = `
-.vez-app{ --bg:#14181f; --panel:#1c222c; --panel2:#232a36; --line:#2e3646; --ink:#e8ecf1; --ink-dim:#8b95a7; --amber:#d99a3f; --night:#4f8ef7; --day:#e05a4e; --ok:#4caf7d; --weekend:#d9524a;
-  font-family:"IBM Plex Sans","Segoe UI",Arial,sans-serif; min-height:100vh; background:var(--bg); color:var(--ink); }
+.vez-app{ --line:#e2e8f0; --ink:#1e293b; --ink-dim:#64748b; --amber:#f59e0b; --night:#2563eb; --day:#dc2626; --ok:#059669; }
 .vez-app *{ box-sizing:border-box; }
-.vez-app .topbar{ padding:14px 22px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; background:linear-gradient(180deg,#171c24,#14181f); }
-.vez-app .topbar h1{ font-size:19px; margin:0; font-weight:700; }
-.vez-app .topbar h1 span{ color:var(--amber); }
+.vez-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+.vez-head-title{ display:flex; align-items:center; gap:12px; }
+.vez-head-icon{ width:44px; height:44px; border-radius:14px; background:#eff6ff; border:1px solid #dbeafe; color:#2563eb; display:flex; align-items:center; justify-content:center; }
+.vez-head-icon svg{ width:22px; height:22px; }
+.vez-head-title h1{ margin:0; font-size:20px; font-weight:800; color:#0f172a; letter-spacing:-.01em; }
+.vez-head-title p{ margin:2px 0 0; font-size:12.5px; color:var(--ink-dim); }
+.vez-head-controls{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .vez-app .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-.vez-app .btn{ background:var(--panel2); border:1px solid var(--line); color:var(--ink); padding:8px 13px; border-radius:7px; cursor:pointer; font-size:12.5px; display:inline-flex; align-items:center; text-decoration:none; }
-.vez-app .btn:hover{ border-color:var(--amber); }
-.vez-app .btn.primary{ background:var(--amber); color:#1b1305; border-color:var(--amber); font-weight:600; }
-.vez-app .btn.danger:hover{ border-color:var(--weekend); color:var(--weekend); }
-.vez-app .btn.small{ padding:4px 9px; font-size:11.5px; }
-.vez-app .btn.disabled{ opacity:.5; cursor:not-allowed; pointer-events:none; }
+.vez-app .btn{ background:#fff; border:1px solid var(--line); color:#334155; padding:8px 13px; border-radius:10px; cursor:pointer; font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; text-decoration:none; transition:all .15s; }
+.vez-app .btn:hover{ border-color:#93c5fd; color:#2563eb; }
+.vez-app .btn.primary{ background:#2563eb; color:#fff; border-color:#2563eb; }
+.vez-app .btn.primary:hover{ background:#1d4ed8; color:#fff; }
+.vez-app .btn.danger:hover{ border-color:#fca5a5; color:var(--day); }
+.vez-app .btn.small{ padding:6px 10px; font-size:11.5px; border-radius:8px; }
+.vez-app .btn.disabled{ opacity:.55; cursor:not-allowed; pointer-events:none; }
 .vez-app input[type=file]{ display:none; }
-.vez-app select, .vez-app input[type=number], .vez-app input[type=text]{ background:var(--panel2); border:1px solid var(--line); color:var(--ink); padding:7px 9px; border-radius:7px; font-size:12.5px; }
-.vez-app .menu{ display:flex; gap:6px; padding:12px 22px 0; }
-.vez-app .menu .tab{ padding:9px 16px; border-radius:8px 8px 0 0; border:1px solid var(--line); border-bottom:none; cursor:pointer; font-size:13px; color:var(--ink-dim); background:var(--panel2); }
-.vez-app .menu .tab.active{ color:#141a24; background:var(--amber); border-color:var(--amber); font-weight:700; }
-.vez-app .view{ padding:16px 22px 40px; }
+.vez-app select, .vez-app input[type=number], .vez-app input[type=text]{ background:#fff; border:1px solid var(--line); color:#334155; padding:8px 10px; border-radius:10px; font-size:12.5px; outline:none; }
+.vez-app select:focus, .vez-app input:focus{ border-color:#93c5fd; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+.vez-viewtabs{ display:inline-flex; gap:4px; padding:4px; background:#f1f5f9; border:1px solid var(--line); border-radius:12px; margin-bottom:16px; }
+.vez-viewtabs button{ border:none; background:transparent; color:var(--ink-dim); font-size:13px; font-weight:600; padding:8px 18px; border-radius:9px; cursor:pointer; transition:all .15s; }
+.vez-viewtabs button.active{ background:#fff; color:#2563eb; box-shadow:0 1px 3px rgba(0,0,0,.08); }
 .vez-app .layout{ display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start; }
-@media (max-width:980px){ .vez-app .layout{ grid-template-columns:1fr; } }
-.vez-app .card{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; }
+@media (max-width:1024px){ .vez-app .layout{ grid-template-columns:1fr; } }
+.vez-app .card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
 .vez-app .card + .card{ margin-top:16px; }
-.vez-app .card h2{ font-size:14px; margin:0 0 10px; }
+.vez-app .card h2{ font-size:14px; margin:0 0 12px; font-weight:700; color:#0f172a; }
 .vez-app .card h2 .n{ color:var(--ink-dim); font-weight:400; }
-.vez-app .hint{ font-size:11.5px; color:var(--ink-dim); margin-top:8px; line-height:1.5; }
+.vez-app .hint{ font-size:11.5px; color:var(--ink-dim); margin-top:10px; line-height:1.5; }
 .vez-app .none{ color:var(--ink-dim); font-size:12.5px; font-style:italic; }
-.vez-app .status{ font-size:11.5px; color:var(--ink-dim); margin-top:4px; }
 .vez-app table.grid{ border-collapse:collapse; width:100%; font-size:11.5px; }
 .vez-app table.grid th, .vez-app table.grid td{ border:1px solid var(--line); padding:0; text-align:center; min-width:26px; height:26px; }
-.vez-app table.grid th{ color:var(--ink-dim); font-weight:500; background:var(--panel2); position:sticky; top:0; }
-.vez-app table.grid th.weekend, .vez-app table.grid td.weekend-col{ background:rgba(217,82,74,.18); }
-.vez-app table.grid th.weekend{ color:var(--weekend); }
-.vez-app table.grid td.name, .vez-app table.grid th.name{ text-align:left; padding-left:8px; min-width:150px; position:sticky; left:0; background:var(--panel); z-index:2; white-space:nowrap; }
-.vez-app table.grid th.name{ background:var(--panel2); z-index:3; }
-.vez-app .gridwrap{ overflow:auto; max-height:560px; border-radius:8px; }
-.vez-app .cell-empty{ cursor:pointer; }
-.vez-app .cell-empty:hover{ outline:2px dashed #ffffff33; outline-offset:-2px; }
-.vez-app .cell-work{ background:var(--amber); color:#1b1305; font-weight:700; cursor:pointer; }
-.vez-app .cell-work:hover{ outline:2px solid #fff5; outline-offset:-2px; }
-.vez-app .cell-work.removed{ background:transparent; color:var(--day); text-decoration:line-through; border:1px dashed var(--day); }
-.vez-app td.selected{ outline:2px solid #fff; outline-offset:-2px; }
-.vez-app .cell-ot-night{ background:rgba(79,142,247,.25); color:var(--night); font-weight:600; }
-.vez-app .cell-ot-day{ background:rgba(224,90,78,.25); color:var(--day); font-weight:600; }
-.vez-app .cell-covered{ background:rgba(76,175,125,.35); color:var(--ok); font-weight:700; cursor:pointer; }
-.vez-app .cell-covered-partial{ background:linear-gradient(135deg,rgba(76,175,125,.35) 50%,rgba(217,154,63,.25) 50%); color:var(--ink); font-weight:700; cursor:pointer; }
-.vez-app .cell-num{ background:rgba(255,255,255,.06); color:var(--ink-dim); font-weight:600; cursor:pointer; }
-.vez-app .cell-sym{ background:rgba(255,255,255,.04); font-weight:700; cursor:pointer; }
-.vez-app .cell-sym.x{ color:var(--weekend); }
-.vez-app .cell-sym.q{ color:var(--amber); }
+.vez-app table.grid th{ color:var(--ink-dim); font-weight:600; background:#f8fafc; position:sticky; top:0; z-index:1; }
+.vez-app table.grid th.weekend{ color:var(--day); background:#fef2f2; }
+.vez-app table.grid td.weekend-col{ background:#fef4f4; }
+.vez-app table.grid td.name, .vez-app table.grid th.name{ text-align:left; padding-left:10px; min-width:150px; position:sticky; left:0; background:#fff; z-index:2; white-space:nowrap; font-weight:600; color:#334155; }
+.vez-app table.grid th.name{ background:#f8fafc; z-index:3; }
+.vez-app .gridwrap{ overflow:auto; max-height:560px; border:1px solid var(--line); border-radius:12px; }
+.vez-app .cell-empty{ cursor:pointer; background:#fff; }
+.vez-app .cell-empty:hover{ outline:2px dashed #94a3b8; outline-offset:-2px; }
+.vez-app .cell-work{ background:var(--amber); color:#451a03; font-weight:800; cursor:pointer; }
+.vez-app .cell-work:hover{ outline:2px solid #b45309; outline-offset:-2px; }
+.vez-app .cell-work.removed{ background:#fff; color:var(--day); text-decoration:line-through; border:1px dashed var(--day); }
+.vez-app td.selected{ outline:2px solid #0f172a; outline-offset:-2px; }
+.vez-app .cell-ot-night{ background:rgba(37,99,235,.14); color:#1d4ed8; font-weight:700; }
+.vez-app .cell-ot-day{ background:rgba(220,38,38,.12); color:#b91c1c; font-weight:700; }
+.vez-app .cell-covered{ background:rgba(16,185,129,.22); color:#047857; font-weight:800; cursor:pointer; }
+.vez-app .cell-covered-partial{ background:linear-gradient(135deg,rgba(16,185,129,.28) 50%,rgba(245,158,11,.28) 50%); color:#334155; font-weight:800; cursor:pointer; }
+.vez-app .cell-num{ background:#f1f5f9; color:#475569; font-weight:600; cursor:pointer; }
+.vez-app .cell-total{ background:#e0e7ff; color:#3730a3; font-weight:800; }
+.vez-app .cell-sym{ background:#f8fafc; font-weight:800; cursor:pointer; }
+.vez-app .cell-sym.x{ color:var(--day); }
+.vez-app .cell-sym.q{ color:#d97706; }
 .vez-app .cell-sym.plus{ color:var(--night); }
-.vez-app .legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--ink-dim); margin-bottom:10px; }
+.vez-app .legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--ink-dim); margin-bottom:12px; }
 .vez-app .legend span{ display:inline-flex; align-items:center; gap:5px; }
 .vez-app .sw{ width:12px; height:12px; border-radius:3px; display:inline-block; }
 .vez-app .tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
-.vez-app .tab2{ padding:7px 12px; border-radius:7px; border:1px solid var(--line); cursor:pointer; font-size:12.5px; color:var(--ink-dim); background:var(--panel2); }
-.vez-app .tab2.active{ color:#141a24; background:var(--amber); border-color:var(--amber); font-weight:600; }
+.vez-app .tab2{ padding:7px 13px; border-radius:9px; border:1px solid var(--line); cursor:pointer; font-size:12.5px; color:var(--ink-dim); background:#fff; font-weight:600; }
+.vez-app .tab2.active{ color:#2563eb; background:#eff6ff; border-color:#bfdbfe; }
 .vez-app .cand-group{ margin-bottom:14px; }
-.vez-app .cand-group h3{ font-size:12px; margin:0 0 6px; text-transform:uppercase; letter-spacing:.5px; }
+.vez-app .cand-group h3{ font-size:11px; margin:0 0 8px; text-transform:uppercase; letter-spacing:.5px; font-weight:700; }
 .vez-app .cand-group.night h3{ color:var(--night); }
 .vez-app .cand-group.day h3{ color:var(--day); }
-.vez-app .cand{ display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--panel2); border:1px solid var(--line); border-radius:7px; padding:7px 9px; margin-bottom:6px; font-size:12.5px; }
+.vez-app .cand{ display:flex; align-items:center; justify-content:space-between; gap:8px; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:8px 10px; margin-bottom:6px; font-size:12.5px; }
 .vez-app .cand .who{ display:flex; flex-direction:column; }
+.vez-app .cand .who span:first-child{ font-weight:600; color:#334155; }
 .vez-app .cand .who .ar{ color:var(--ink-dim); font-size:11px; }
-.vez-app .absence-info{ background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:12px; font-size:13px; }
-.vez-app .absence-info b{ color:var(--amber); }
+.vez-app .absence-info{ background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:13px; color:#334155; }
+.vez-app .absence-info b{ color:#b45309; }
 .vez-app .slot-status{ display:flex; gap:8px; margin-bottom:12px; }
-.vez-app .slot-pill{ flex:1; border-radius:7px; padding:8px 10px; font-size:12px; border:1px solid var(--line); background:var(--panel2); }
-.vez-app .slot-pill.done{ border-color:var(--ok); color:var(--ok); }
+.vez-app .slot-pill{ flex:1; border-radius:10px; padding:9px 11px; font-size:12px; border:1px solid var(--line); background:#f8fafc; color:#334155; }
+.vez-app .slot-pill.done{ border-color:#a7f3d0; background:#ecfdf5; color:#047857; }
 .vez-app .slot-pill .rv{ background:none; border:none; color:var(--ink-dim); cursor:pointer; font-size:11px; text-decoration:underline; padding:0; margin-top:4px; }
-.vez-app .log{ display:flex; flex-direction:column; gap:6px; max-height:320px; overflow:auto; }
-.vez-app .logrow{ font-size:12px; background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:6px 9px; }
+.vez-app .log{ display:flex; flex-direction:column; gap:6px; max-height:340px; overflow:auto; }
+.vez-app .logrow{ font-size:12px; background:#f8fafc; border:1px solid var(--line); border-radius:9px; padding:7px 10px; color:#334155; }
 .vez-app .logrow .d{ color:var(--ink-dim); }
-.vez-app .emplist{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
-.vez-app .emprow{ display:flex; align-items:center; justify-content:space-between; background:var(--panel2); border:1px solid var(--line); border-radius:7px; padding:6px 9px; font-size:12.5px; }
-.vez-app .emprow button{ background:none; border:none; color:var(--ink-dim); cursor:pointer; }
-.vez-app .emprow button:hover{ color:var(--weekend); }
-.vez-app .vez-toast{ position:fixed; top:16px; right:16px; z-index:999; padding:10px 16px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.4); }
-.vez-app .vez-toast.ok{ background:#153b2b; color:#7ee0a8; border:1px solid #2f6b4c; }
-.vez-app .vez-toast.err{ background:#3b1717; color:#f0a0a0; border:1px solid #6b2f2f; }
+.vez-app .emplist{ display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+.vez-app .emprow{ display:flex; align-items:center; justify-content:space-between; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:8px 11px; font-size:12.5px; color:#334155; }
+.vez-app .emprow .tag{ margin-left:6px; font-size:10px; color:#2563eb; background:#eff6ff; border:1px solid #dbeafe; padding:1px 6px; border-radius:6px; }
+.vez-app .emprow button{ background:none; border:none; color:#94a3b8; cursor:pointer; font-size:13px; }
+.vez-app .emprow button:hover{ color:var(--day); }
 `;

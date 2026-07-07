@@ -55,6 +55,7 @@ interface ModuleDef {
     actionLabel: string;
     badgeKey?: 'newNotes' | 'newMessages';
     onlyNonPm?: boolean;
+    adminOnly?: boolean;
     featured?: boolean;
 }
 
@@ -133,6 +134,17 @@ const ALL_MODULES: ModuleDef[] = [
         accentColor: 'rose',
         features: ['Napi biztonsági jelentés', 'Digitális aláírás', 'Jelentési előzmények'],
         actionLabel: 'Jelentés kitöltése',
+    },
+    {
+        id: 'vezenyles',
+        routeName: 'vezenyles.index',
+        title: 'Vezénylés',
+        description: 'Havi beosztás rögzítése és a 24 órás szolgálatok pótlásának tervezése.',
+        iconPath: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+        accentColor: 'indigo',
+        features: ['Havi beosztás-tábla', 'Túlóra-pótlás tervezés', 'Változásnapló'],
+        actionLabel: 'Vezénylés megnyitása',
+        adminOnly: true,
     },
 ];
 
@@ -935,8 +947,10 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
         return () => { clearTimeout(t0); clearTimeout(t1); clearTimeout(t2); };
     }, [welcomeName]);
 
+    const canVezenyles = !!user && (user.role === 'admin' || user.role === 'area_director');
     const visibleModules = ALL_MODULES.filter(m => {
         if (m.onlyNonPm && !isNotPm) return false;
+        if (m.adminOnly && !canVezenyles) return false;
         if (m.id === 'security' && !securityModuleVisible && isNotPm) return false;
         return true;
     });
@@ -986,6 +1000,9 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
             { route: 'notes.index', label: 'Váltóüzenetek', match: 'notes.*', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z', badge: nav?.newNotes, badgeColor: 'bg-rose-500' },
             { route: 'messages.index', label: 'PM üzenetek', match: 'messages.*', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', badge: nav?.newMessages, badgeColor: 'bg-amber-500' },
             { route: 'ai.chat', label: 'AI Asszisztens', match: 'ai.*', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' },
+        ] : []),
+        ...(canVezenyles ? [
+            { route: 'vezenyles.index', label: 'Vezénylés', match: 'vezenyles.*', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
         ] : []),
     ] as Array<{ route: string; label: string; match?: string; icon: string; badge?: number; badgeColor?: string }>;
 
