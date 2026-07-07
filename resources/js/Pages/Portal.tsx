@@ -11,6 +11,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import PushToggle from '../Components/PushToggle';
+import FeedbackWidget from '../Components/FeedbackWidget';
 import type { PageProps } from '../types';
 
 // ── SVG noise data URI ────────────────────────────────────
@@ -1041,8 +1042,8 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
             </div>
 
             {/* ─── Sticky nav ─────────────────────────────── */}
-            <div
-                className="safe-top sticky top-0 z-30 relative transition-all duration-300"
+            <header
+                className="safe-top sticky top-0 z-30 transition-all duration-300"
                 style={scrolled ? {
                     background: 'rgba(15,23,42,0.82)',
                     backdropFilter: 'blur(20px) saturate(1.4)',
@@ -1089,6 +1090,7 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                         <div className="flex items-center gap-1.5">
                             <LiveClock />
                             <PushToggle />
+                            {user && <div className="hidden sm:block"><FeedbackWidget /></div>}
                             {user && (
                                 <>
                                     <Link href={route('profile.edit')} className="hidden sm:flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 hover:bg-white/10 transition-colors">
@@ -1148,6 +1150,10 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                             </Link>
                         ))}
                         <div className="pt-2 border-t border-white/5">
+                            <div className="flex items-center gap-3 px-3 py-2.5">
+                                <FeedbackWidget />
+                                <span className="text-sm font-medium text-slate-400">Névtelen visszajelzés</span>
+                            </div>
                             <form onSubmit={logout}>
                                 <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
                                     <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
@@ -1157,7 +1163,7 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                         </div>
                     </div>
                 )}
-            </div>
+            </header>
 
             {/* ─── Main ───────────────────────────────────── */}
             <main className={`${animReady ? 'app-loaded' : ''} flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6`}>
