@@ -3,9 +3,11 @@
 @tailwind utilities;
 
 /* Nagy képernyőn a vízszintes konténer-padding kivétele, hogy a fejléc-menük
-   (pl. 6 menüpont) ne legyenek zsúfoltak. Egységesen minden lg:px-8 konténerre. */
+   (pl. 6 menüpont) ne legyenek zsúfoltak. Egységesen minden lg:px-8 konténerre.
+   Duplázott osztály (magasabb specificitás), hogy a Vite media-query-csoportosítás
+   utáni sorrendtől függetlenül felülírja a Tailwind lg:px-8 (2rem) szabályát. */
 @media (min-width: 1024px) {
-    .lg\:px-8 {
+    .lg\:px-8.lg\:px-8 {
         padding-left: 0rem;
         padding-right: 0rem;
     }
