@@ -1,5 +1,7 @@
 import SecurityLeadLayout from '../../Layouts/SecurityLeadLayout';
 import ModuleCardGrid, { type ModuleCardDef } from '../../Components/ModuleCardGrid';
+import { DashboardHero } from '../../Components/ui/DashboardHero';
+import { Card } from '../../Components/ui/Card';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -80,8 +82,6 @@ function buildModules(): ModuleCardDef[] {
     ];
 }
 
-const NOISE_BG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")";
-
 interface Goal {
     target_completion_pct: number;
     target_turnover_pct: number;
@@ -159,27 +159,17 @@ export default function SecurityLeadDashboard({ lead, currentPeriod }: Props) {
 
     return (
         <SecurityLeadLayout title="Vezérlőpult">
-            {/* Hero */}
-            <div className="-mx-4 sm:-mx-6 lg:-mx-8 relative overflow-hidden rounded-2xl mb-8 shadow-2xl"
-                style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)' }}>
-                <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
-                <div className="relative z-10 px-8 py-8 flex items-center justify-between gap-6">
-                    <div>
-                        <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Biztonsági Vezető Portál</p>
-                        <h1 className="text-3xl font-extrabold text-white tracking-tight">Teljesítmények</h1>
-                        <p className="text-slate-400 mt-1 text-sm">{currentPeriod.year}. {currentPeriod.month}. hó · {o.location_count} irodaház · {o.active_workers} aktív dolgozó</p>
-                    </div>
-                    <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-white/5 border border-white/10 items-center justify-center shrink-0">
-                        <svg className="w-7 h-7 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                    </div>
-                </div>
-                <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.038, backgroundImage: NOISE_BG, backgroundSize: '180px 180px', mixBlendMode: 'screen' }}/>
-            </div>
+            <DashboardHero
+                eyebrow="Biztonsági Vezető Portál"
+                eyebrowColor="text-blue-400"
+                title="Teljesítmények"
+                subtitle={`${currentPeriod.year}. ${currentPeriod.month}. hó · ${o.location_count} irodaház · ${o.active_workers} aktív dolgozó`}
+                iconPath="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                pulseTitle={false}
+            />
 
             {/* Összesített kártya */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+            <Card className="p-5 mb-4">
                 <div className="flex items-center justify-between mb-3">
                     <h2 className="text-sm font-bold text-slate-800">Összesített teljesítmény</h2>
                     {lead.goal ? (
@@ -195,18 +185,18 @@ export default function SecurityLeadDashboard({ lead, currentPeriod }: Props) {
                     <Bar label="Készültség" value={o.completion_pct} tone="bg-gradient-to-r from-emerald-500 to-teal-500" target={lead.goal?.target_completion_pct} />
                     <Bar label="Fluktuáció" value={o.turnover_pct} tone="bg-gradient-to-r from-orange-400 to-rose-500" target={lead.goal?.target_turnover_pct} />
                 </div>
-            </div>
+            </Card>
 
             {/* Irodaházankénti bontás */}
             <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 mt-6">Irodaházak</h2>
             {lead.locations.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
+                <Card className="p-8 text-center">
                     <p className="text-sm text-slate-500">Még nincs hozzád rendelve irodaház.</p>
-                </div>
+                </Card>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {lead.locations.map(loc => (
-                        <div key={loc.location_id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                        <Card key={loc.location_id} className="p-5">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-1.5 min-w-0">
                                     <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +223,7 @@ export default function SecurityLeadDashboard({ lead, currentPeriod }: Props) {
                             ) : (
                                 <p className="text-[10px] text-slate-300 italic mt-1.5">Nincs irodaházi célkitűzés</p>
                             )}
-                        </div>
+                        </Card>
                     ))}
                 </div>
             )}

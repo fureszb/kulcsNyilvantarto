@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import { Card, CardHeader } from '../../Components/ui/Card';
 import { IconBadge } from '../../Components/ui/IconBadge';
+import { DashboardHero } from '../../Components/ui/DashboardHero';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -78,6 +79,13 @@ const QUICK_ACTIONS = [
 export default function Dashboard({ stats, recentChecks }: Props) {
     return (
         <AdminLayout title="Áttekintés">
+            <DashboardHero
+                eyebrow="Adminisztrátor Portál"
+                eyebrowColor="text-blue-400"
+                title="Rendszer áttekintés"
+                subtitle={`${stats.locations} helyszín · ${stats.checks_today} mai ellenőrzés · ${stats.checks_total} összes ellenőrzés`}
+                iconPath="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2zm10 0a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1h-4a1 1 0 01-1-1v-5z"
+            />
 
             {/* Stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
