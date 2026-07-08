@@ -45,6 +45,9 @@ Route::get('/cortex', fn () => \Inertia\Inertia::render('Cortex/Landing'))->name
 // Vizuális demo: Komoot.com nyitóoldalának 1:1 stílus-másolata, csak megtekintésre (linkek nem működnek)
 Route::get('/demo/komoot', fn () => \Inertia\Inertia::render('Demo/KomootHome'))->name('demo.komoot');
 
+// Vizuális demo: a valós tenant Portal (kezdőlap) minden eleme Komoot-stílusban, csak megtekintésre
+Route::get('/demo/komoot-portal', fn () => \Inertia\Inertia::render('Demo/KomootPortal'))->name('demo.komoot-portal');
+
 // Storage file streaming with proper byte-range support (required for Safari/iOS video playback).
 // Nginx or Traefik strip Accept-Ranges from responses; serving through BinaryFileResponse
 // adds correct Range/Accept-Ranges headers that WebKit needs.
