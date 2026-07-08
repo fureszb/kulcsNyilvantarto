@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useForm, Link } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'motion/react';
 import AppLayout from '../../Layouts/AppLayout';
 import type { Location, ItemGroup, Item } from '../../types';
 
@@ -109,40 +110,46 @@ export default function CheckShow({ location, groups, ungroupedItems }: Props) {
 
                         {/* Progress card */}
                         {hasItems && (
-                            <div
+                            <motion.div
+                                animate={done ? { scale: [1, 1.015, 1] } : { scale: 1 }}
+                                transition={{ duration: 0.4, ease: 'easeOut' }}
                                 className="bg-white rounded-2xl border-2 p-5 transition-colors duration-300"
                                 style={{ borderColor: done ? '#86efac' : '#e2e8f0' }}
                             >
                                 <div className="flex items-center justify-between mb-2.5">
+                                    <AnimatePresence mode="wait">
+                                        <motion.span
+                                            key={done ? 'done' : 'progress'}
+                                            initial={{ opacity: 0, y: -6 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.25 }}
+                                            className="text-sm"
+                                            style={{
+                                                color: done ? '#15803d' : '#475569',
+                                                fontWeight: done ? '700' : '600',
+                                            }}
+                                        >
+                                            {done ? '✓ Minden tétel ellenőrizve!' : 'Ellenőrzés folyamatban...'}
+                                        </motion.span>
+                                    </AnimatePresence>
                                     <span
-                                        className="text-sm transition-colors duration-300"
-                                        style={{
-                                            color: done ? '#15803d' : '#475569',
-                                            fontWeight: done ? '700' : '600',
-                                        }}
-                                    >
-                                        {done ? 'Minden tétel ellenőrizve!' : 'Ellenőrzés folyamatban...'}
-                                    </span>
-                                    <span
-                                        className="text-sm font-bold transition-colors duration-300"
+                                        className="text-sm font-bold transition-colors duration-300 tabular-nums"
                                         style={{ color: done ? '#15803d' : '#1d4ed8' }}
                                     >
                                         {pct}%
                                     </span>
                                 </div>
                                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full rounded-full transition-all duration-300"
-                                        style={{
-                                            width: `${pct}%`,
-                                            backgroundColor: done ? '#22c55e' : '#2563eb',
-                                        }}
+                                    <motion.div
+                                        className="h-full rounded-full"
+                                        animate={{ width: `${pct}%`, backgroundColor: done ? '#22c55e' : '#2563eb' }}
+                                        transition={{ width: { duration: 0.4, ease: 'easeOut' }, backgroundColor: { duration: 0.3 } }}
                                     />
                                 </div>
                                 <p className="text-xs text-slate-400 mt-2">
                                     {checkedCount} / {total} tétel megvolt
                                 </p>
-                            </div>
+                            </motion.div>
                         )}
 
                         {/* Items card */}
@@ -185,9 +192,14 @@ export default function CheckShow({ location, groups, ungroupedItems }: Props) {
                                                         onClick={e => { e.stopPropagation(); toggleGroup(groupIds); }}
                                                     >
                                                         {allG && (
-                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24">
+                                                            <motion.svg
+                                                                initial={{ scale: 0 }}
+                                                                animate={{ scale: 1 }}
+                                                                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                                                                className="w-3.5 h-3.5" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24"
+                                                            >
                                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
-                                                            </svg>
+                                                            </motion.svg>
                                                         )}
                                                         {someG && !allG && (
                                                             <svg className="w-3 h-3" fill="none" stroke="#3b82f6" strokeWidth="3" viewBox="0 0 24 24">
@@ -281,15 +293,17 @@ export default function CheckShow({ location, groups, ungroupedItems }: Props) {
                         </div>
 
                         {/* Submit */}
-                        <button
+                        <motion.button
                             type="submit"
                             disabled={processing}
-                            className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-bold text-base text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300"
+                            whileHover={processing ? undefined : { scale: 1.01 }}
+                            whileTap={processing ? undefined : { scale: 0.98 }}
+                            animate={done ? { scale: [1, 1.03, 1] } : { scale: 1 }}
+                            className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-bold text-base text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-300"
                             style={{
                                 backgroundColor: done ? '#16a34a' : '#1e3a5f',
                                 opacity: processing ? 0.65 : 1,
                                 cursor: processing ? 'wait' : 'pointer',
-                                focusRingColor: '#2563eb',
                             }}
                         >
                             {processing ? (
@@ -308,7 +322,7 @@ export default function CheckShow({ location, groups, ungroupedItems }: Props) {
                                     Befejezés &amp; Küldés
                                 </span>
                             )}
-                        </button>
+                        </motion.button>
 
                         <Link
                             href={route('keys.show', location.id)}
@@ -334,8 +348,9 @@ function CheckItemRow({ item, checked, onToggle, indented = false }: CheckItemRo
     const isCard = item.type === 'card';
 
     return (
-        <div
+        <motion.div
             onClick={onToggle}
+            whileTap={{ scale: 0.99 }}
             className={`flex items-center gap-3 py-4 cursor-pointer border-b border-slate-50 last:border-0 transition-colors duration-150 ${
                 indented ? 'px-3' : 'px-6'
             } ${checked ? 'bg-green-50' : 'hover:bg-slate-50'}`}
@@ -349,9 +364,14 @@ function CheckItemRow({ item, checked, onToggle, indented = false }: CheckItemRo
                 }}
             >
                 {checked && (
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24">
+                    <motion.svg
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                        className="w-3.5 h-3.5" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24"
+                    >
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
-                    </svg>
+                    </motion.svg>
                 )}
             </div>
 
@@ -392,6 +412,6 @@ function CheckItemRow({ item, checked, onToggle, indented = false }: CheckItemRo
                     </svg>
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 }
