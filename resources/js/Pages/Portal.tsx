@@ -41,6 +41,7 @@ interface Props {
     checksToday: number;
     trainingsCompleted: number;
     locations: LocationInfo[];
+    venueMode?: 'buildings' | 'tenants';
     securityModuleVisible: boolean;
     emergencyContacts: EmergencyContact[];
 }
@@ -514,7 +515,11 @@ function SortableCard({ def, badge, index }: { def: ModuleDef; badge?: number; i
     );
 }
 
-function LocationGrid({ locations }: { locations: LocationInfo[] }) {
+function LocationGrid({ locations, mode = 'buildings' }: { locations: LocationInfo[]; mode?: 'buildings' | 'tenants' }) {
+    const heading = mode === 'tenants' ? 'Bérlők az irodaházban' : 'Helyszínek a házban';
+    const unitLabel = mode === 'tenants' ? 'bérlő' : 'helyszín';
+    const unitLabelDative = mode === 'tenants' ? 'bérlőhöz' : 'helyszínhez';
+    const eyebrowLabel = mode === 'tenants' ? 'Bérlő' : 'Helyszín';
     const [selected, setSelected] = useState<LocationInfo | null>(null);
     const [visible, setVisible] = useState(false);
     const [closing, setClosing] = useState(false);
@@ -550,9 +555,9 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                         <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Helyszínek a házban</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{heading}</span>
                     </div>
-                    <span className="text-xs text-slate-400 tabular-nums">{locations.length} helyszín</span>
+                    <span className="text-xs text-slate-400 tabular-nums">{locations.length} {unitLabel}</span>
                 </div>
 
                 <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -662,7 +667,7 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                                 )}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1">Helyszín</p>
+                                <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1">{eyebrowLabel}</p>
                                 <h2 className="text-xl font-extrabold text-slate-900 leading-tight">{selected.name}</h2>
                                 <p className="text-xs text-slate-400 mt-1">{selected.itemsCount} regisztrált kulcs / kártya</p>
                             </div>
@@ -712,7 +717,7 @@ function LocationGrid({ locations }: { locations: LocationInfo[] }) {
                                 </div>
                             )}
                             {!selected.description && !selected.responsible_person && !selected.email && (
-                                <p className="text-sm text-slate-400 italic">Nincs további információ ehhez a helyszínhez.</p>
+                                <p className="text-sm text-slate-400 italic">Nincs további információ ehhez a {unitLabelDative}.</p>
                             )}
                         </div>
 
@@ -895,7 +900,7 @@ function CountUp({ target, duration = 800 }: { target: number; duration?: number
     return <>{val}</>;
 }
 
-export default function Portal({ welcomeName, checksToday, trainingsCompleted, locations, securityModuleVisible, emergencyContacts }: Props) {
+export default function Portal({ welcomeName, checksToday, trainingsCompleted, locations, venueMode = 'buildings', securityModuleVisible, emergencyContacts }: Props) {
     const page = usePage<PageProps>();
     const { auth, tenant, nav } = page.props;
     const user       = auth.user;
@@ -1267,7 +1272,7 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                 )}
 
                 <div className="app-page-enter" style={{ animationDelay: '120ms' }}>
-                    <LocationGrid locations={locations} />
+                    <LocationGrid locations={locations} mode={venueMode} />
                 </div>
 
                 {/* ── Module grid header ──────────────────── */}
