@@ -104,10 +104,10 @@ export default function Dashboard({ stats, recentChecks }: Props) {
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
 
                 {/* Quick actions */}
-                <Card>
+                <Card className="md:col-span-2">
                     <CardHeader className="justify-start">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Gyors műveletek</p>
                     </CardHeader>
@@ -133,7 +133,7 @@ export default function Dashboard({ stats, recentChecks }: Props) {
                 </Card>
 
                 {/* Recent checks */}
-                <Card>
+                <Card className="md:col-span-3">
                     <CardHeader>
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Legutóbbi ellenőrzések</p>
                         <Link href={route('history.index')} className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">Összes →</Link>
