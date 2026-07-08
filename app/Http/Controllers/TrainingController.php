@@ -57,28 +57,6 @@ class TrainingController extends Controller
         ]);
     }
 
-    public function exam(Training $training)
-    {
-        if (!$training->is_active) abort(404);
-
-        $steps = $training->steps()->with('answers')->get();
-
-        $stepsData = $steps->map(function ($step) {
-            return [
-                'id'            => $step->id,
-                'question'      => $step->question,
-                'question_type' => $step->question_type ?? 'radio',
-                'answers'       => $step->answers->map(fn($a) => [
-                    'id'         => $a->id,
-                    'text'       => $a->text,
-                    'is_correct' => $a->is_correct,
-                ])->values(),
-            ];
-        })->values();
-
-        return Inertia::render('Training/Exam', ['training' => $training, 'stepsData' => $stepsData]);
-    }
-
     public function sendResult(Request $request, Training $training)
     {
         $request->validate([

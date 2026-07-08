@@ -105,8 +105,6 @@ Route::prefix('{tenant}')
             Route::get('/training',                          [TrainingController::class, 'index'])->name('training.index');
             Route::get('/training/{training}',               [TrainingController::class, 'show'])->name('training.show');
             Route::post('/training/{training}/result',       [TrainingController::class, 'sendResult'])->name('training.result');
-            Route::get('/training/{training}/exam',          [TrainingController::class, 'exam'])->name('training.exam');
-            Route::post('/training/{training}/exam/result',  [TrainingController::class, 'sendResult'])->name('training.exam.result');
 
             // Vizsgák
             Route::get('/exam',                         [ExamController::class, 'index'])->name('exam.index');
