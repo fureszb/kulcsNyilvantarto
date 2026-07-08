@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import { motion } from 'motion/react';
 import AppLayout from '../../Layouts/AppLayout';
 import PmLayout from '../../Layouts/PmLayout';
 import type { Check, CheckItem, PageProps } from '../../types';
@@ -176,7 +177,12 @@ export default function CheckResult({ check, groupedCheckItems, ungroupedCheckIt
             <div className="max-w-5xl mx-auto">
 
                 {/* Hero – aurora */}
-                <div ref={heroRef} className="relative overflow-hidden rounded-2xl mb-8 shadow-2xl"
+                <motion.div
+                    ref={heroRef}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                    className="relative overflow-hidden rounded-2xl mb-8 shadow-2xl"
                     style={{ background: 'linear-gradient(135deg,#0d1829 0%,#0f1f3d 40%,#0d1829 100%)' }}>
                     {/* Aurora blobs */}
                     <div className="absolute top-[-50%] left-[-15%] w-[55%] h-[200%] bg-blue-600/20 rounded-full blur-3xl aurora-blob-1 pointer-events-none"/>
@@ -204,12 +210,17 @@ export default function CheckResult({ check, groupedCheckItems, ungroupedCheckIt
                                     </svg>
                                     Ellenőrizte: <strong className="text-slate-300 ml-0.5">{check.checked_by}</strong>
                                 </span>
-                                <span className={`flex items-center gap-1.5 ${pct === 100 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                <motion.span
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={pct === 100 ? { opacity: 1, scale: [0.9, 1.06, 1] } : { opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+                                    className={`flex items-center gap-1.5 ${pct === 100 ? 'text-emerald-400' : 'text-amber-400'}`}
+                                >
                                     <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
                                     <strong>{checkedItems}/{totalItems}</strong>&nbsp;tétel ({pct}%)
-                                </span>
+                                </motion.span>
                             </div>
                         </div>
                         <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
@@ -231,7 +242,7 @@ export default function CheckResult({ check, groupedCheckItems, ungroupedCheckIt
                             )}
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Flash */}
                 {flash?.success && (
@@ -243,7 +254,12 @@ export default function CheckResult({ check, groupedCheckItems, ungroupedCheckIt
                     </div>
                 )}
 
-                <div className="space-y-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
+                    className="space-y-4"
+                >
 
                     {/* Megjegyzés */}
                     {(check.notes || check.extra_email) && (
@@ -356,7 +372,7 @@ export default function CheckResult({ check, groupedCheckItems, ungroupedCheckIt
                         </div>
                     )}
 
-                </div>
+                </motion.div>
             </div>
         </Layout>
     );
