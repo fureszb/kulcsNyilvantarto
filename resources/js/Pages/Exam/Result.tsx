@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { motion } from 'motion/react';
 import AppLayout from '../../Layouts/AppLayout';
 
 declare function route(name: string, params?: unknown): string;
@@ -62,7 +63,11 @@ export default function ExamResult({ result, isAdmin }: Props) {
     return (
         <AppLayout title={`Vizsga eredmény – ${result.exam_title}`}>
             {/* Hero */}
-            <div className="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
+            <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
                 <div className="absolute -top-16 -right-16 w-48 h-48 bg-amber-600/20 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }} />
                 <div className="relative px-8 py-7">
@@ -87,10 +92,14 @@ export default function ExamResult({ result, isAdmin }: Props) {
                         </div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Összegzés */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-5">
+            <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+                className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-5">
                 <div className={`px-6 py-4 ${headerClass}`}>
                     <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Vizsga összesítő</p>
                     <p className="text-white font-bold text-lg mt-0.5">{result.exam_title}</p>
@@ -119,7 +128,7 @@ export default function ExamResult({ result, isAdmin }: Props) {
                         <p className="text-xs text-slate-400 font-mono">IP: {result.ip_address}</p>
                     )}
                 </div>
-            </div>
+            </motion.div>
 
             {result.tab_violations > 0 && (
                 <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-5 flex items-start gap-3">
@@ -140,7 +149,12 @@ export default function ExamResult({ result, isAdmin }: Props) {
                         {result.results.map((r, idx) => {
                             const correct = r.is_correct;
                             return (
-                                <div key={idx} className={`p-5 ${correct ? 'bg-green-50/30' : 'bg-red-50/30'}`}>
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3, delay: Math.min(idx * 0.05, 0.5) }}
+                                    className={`p-5 ${correct ? 'bg-green-50/30' : 'bg-red-50/30'}`}>
                                     <div className="flex items-start gap-3 mb-3">
                                         <span className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-xs font-bold mt-0.5 ${correct ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>{idx + 1}</span>
                                         <p className="font-semibold text-slate-800 text-sm leading-snug flex-1">{r.question}</p>
@@ -200,7 +214,7 @@ export default function ExamResult({ result, isAdmin }: Props) {
                                             </span>
                                         </div>
                                     )}
-                                </div>
+                                </motion.div>
                             );
                         })}
                     </div>

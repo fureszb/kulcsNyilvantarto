@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from '@inertiajs/react';
+import { motion } from 'motion/react';
 import AppLayout from '../../Layouts/AppLayout';
 import type { Exam } from '../../types';
 
@@ -237,7 +238,11 @@ export default function ExamShow({
     return (
         <AppLayout title={exam.title}>
             {/* Hero */}
-            <div className="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
+            <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
                 <div className="absolute -top-16 -right-16 w-48 h-48 bg-amber-600/20 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }} />
                 <div className="relative px-8 py-7">
@@ -286,11 +291,16 @@ export default function ExamShow({
                         </div>
                     )}
                 </div>
-            </div>
+            </motion.div>
 
             {/* Blocked */}
             {!started && blocked && (
-                <div className="max-w-md mx-auto">
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+                    className="max-w-md mx-auto"
+                >
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center">
                         <div className="w-14 h-14 bg-red-50 border border-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                             <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -312,12 +322,17 @@ export default function ExamShow({
                             Vissza a vizsgákhoz
                         </Link>
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {/* Start */}
             {!started && !blocked && (
-                <div className="max-w-md mx-auto">
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+                    className="max-w-md mx-auto"
+                >
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8">
                         <div className="w-14 h-14 bg-amber-50 border border-amber-100 rounded-2xl flex items-center justify-center mb-5">
                             <svg className="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,12 +382,17 @@ export default function ExamShow({
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>
                         </button>
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {/* Kérdések */}
             {started && !completed && step && (
-                <div className="max-w-2xl mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8">
+                <motion.div
+                    key={currentStep}
+                    initial={{ opacity: 0, x: 16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    className="max-w-2xl mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8">
                     <p className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">
                         {currentStep + 1}. kérdés / {steps.length}
                     </p>
@@ -443,7 +463,7 @@ export default function ExamShow({
                     )}
 
                     {advancing && <p className="text-xs text-slate-400 mt-4 text-center animate-pulse">Következő kérdés...</p>}
-                </div>
+                </motion.div>
             )}
 
             {/* Submitting */}
@@ -456,7 +476,12 @@ export default function ExamShow({
 
             {/* Eredmény */}
             {completed && !submitting && serverResult && (
-                <div className="space-y-5">
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                    className="space-y-5"
+                >
                     {submitError && (
                         <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">{submitError}</div>
                     )}
@@ -474,9 +499,14 @@ export default function ExamShow({
                                     <h2 className="text-2xl font-extrabold text-white mt-0.5">{exam.title}</h2>
                                     <p className="text-white/70 text-sm mt-1">Vizsgázó: <span className="text-white font-semibold">{participantName}</span></p>
                                 </div>
-                                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                                <motion.div
+                                    initial={{ scale: 0, rotate: -10 }}
+                                    animate={{ scale: 1, rotate: 0 }}
+                                    transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.15 }}
+                                    className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0"
+                                >
                                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                                </div>
+                                </motion.div>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 divide-x divide-slate-100">
@@ -499,7 +529,12 @@ export default function ExamShow({
                         </div>
                         <div className="divide-y divide-slate-100">
                             {serverResult.results.map((r, idx) => (
-                                <div key={idx} className={`p-5 ${r.is_correct ? 'bg-green-50/30' : 'bg-red-50/30'}`}>
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3, delay: Math.min(idx * 0.05, 0.5) }}
+                                    className={`p-5 ${r.is_correct ? 'bg-green-50/30' : 'bg-red-50/30'}`}>
                                     <div className="flex items-start gap-3 mb-4">
                                         <span className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-xs font-bold mt-0.5 ${r.is_correct ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>{idx + 1}</span>
                                         <p className="font-semibold text-slate-800 text-sm">{r.question}</p>
@@ -543,7 +578,7 @@ export default function ExamShow({
                                             )}
                                         </div>
                                     )}
-                                </div>
+                                </motion.div>
                             ))}
                         </div>
                     </div>
@@ -554,7 +589,7 @@ export default function ExamShow({
                             Vissza a vizsgákhoz
                         </Link>
                     </div>
-                </div>
+                </motion.div>
             )}
         </AppLayout>
     );
