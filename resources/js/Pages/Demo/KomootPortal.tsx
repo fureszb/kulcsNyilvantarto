@@ -40,7 +40,7 @@ function LiveClock() {
         const t = setInterval(tick, 1000);
         return () => clearInterval(t);
     }, []);
-    return <span className="text-xs font-semibold text-[#64748b] tabular-nums hidden sm:inline">{time}</span>;
+    return <span className="text-xs font-semibold text-white/70 tabular-nums hidden sm:inline">{time}</span>;
 }
 
 function CountUp({ target, duration = 900 }: { target: number; duration?: number }) {
@@ -65,23 +65,26 @@ export default function KomootPortal() {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] antialiased" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
+        <div className="min-h-screen bg-[#f1f3ff] text-[#0f172a] antialiased" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
             <title>Kezdőlap — demo (Komoot stílus)</title>
 
             {/* ── Sticky nav (a valós Portal.tsx fejléce, Komoot "app-mode" stílusban) ── */}
-            <header className="sticky top-0 z-30 bg-[#f8fafc]/90 backdrop-blur-md border-b border-[#e2e8f0]">
+            <header
+                className="sticky top-0 z-30 shadow-lg shadow-indigo-900/10"
+                style={{ background: 'linear-gradient(90deg,#2563eb 0%,#4f46e5 55%,#6d28d9 100%)' }}
+            >
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 gap-4">
                     <a href="#" onClick={e => e.preventDefault()} className="flex items-center gap-2 shrink-0">
-                        <div className="w-7 h-7 rounded-full bg-[#5c6e35] flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
                             <KeyRound className="w-4 h-4 text-white" strokeWidth={2.5} />
                         </div>
-                        <span className="font-extrabold text-[#0f172a] hidden sm:block">kulcsnyilvántartó</span>
+                        <span className="font-extrabold text-white hidden sm:block">kulcsnyilvántartó</span>
                     </a>
 
                     <nav className="hidden lg:flex items-center gap-1">
                         {NAV_LINKS.map((l, i) => (
                             <a key={l} href="#" onClick={e => e.preventDefault()}
-                                className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${i === 0 ? 'bg-[#e9e4d4] text-[#0f172a]' : 'text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#0f172a]'}`}>
+                                className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${i === 0 ? 'bg-white/20 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}>
                                 {l}
                             </a>
                         ))}
@@ -89,27 +92,27 @@ export default function KomootPortal() {
 
                     <div className="flex items-center gap-2 shrink-0">
                         <LiveClock />
-                        <button className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] transition-colors">
+                        <button className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-white/80 hover:bg-white/10 transition-colors">
                             <Bell className="w-4 h-4" />
                         </button>
-                        <a href="#" onClick={e => e.preventDefault()} className="hidden sm:flex items-center gap-1.5 bg-white border border-[#e2e8f0] rounded-full pl-1 pr-3 py-1 hover:bg-[#f1f5f9] transition-colors">
+                        <a href="#" onClick={e => e.preventDefault()} className="hidden sm:flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full pl-1 pr-3 py-1 hover:bg-white/20 transition-colors">
                             <div className="w-6 h-6 rounded-full bg-[#c8d96f] flex items-center justify-center">
                                 <User className="w-3.5 h-3.5 text-[#1b2a15]" />
                             </div>
-                            <span className="text-xs font-semibold text-[#0f172a]">Kovács Anna</span>
+                            <span className="text-xs font-semibold text-white">Kovács Anna</span>
                         </a>
-                        <button className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] transition-colors">
+                        <button className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-white/80 hover:bg-white/10 transition-colors">
                             <LogOut className="w-4 h-4" />
                         </button>
-                        <button onClick={() => setMobileOpen(o => !o)} className="lg:hidden p-2 text-[#0f172a]">
+                        <button onClick={() => setMobileOpen(o => !o)} className="lg:hidden p-2 text-white">
                             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                         </button>
                     </div>
                 </div>
                 {mobileOpen && (
-                    <div className="lg:hidden px-4 pb-3 flex flex-col gap-1 border-t border-[#e2e8f0]">
+                    <div className="lg:hidden px-4 pb-3 flex flex-col gap-1 border-t border-white/15">
                         {NAV_LINKS.map(l => (
-                            <a key={l} href="#" onClick={e => e.preventDefault()} className="text-[#0f172a] text-sm py-2.5 border-b border-[#e2e8f0]">{l}</a>
+                            <a key={l} href="#" onClick={e => e.preventDefault()} className="text-white/90 text-sm py-2.5 border-b border-white/10">{l}</a>
                         ))}
                     </div>
                 )}
@@ -188,7 +191,7 @@ export default function KomootPortal() {
                         <p className="text-sm font-bold text-[#0f172a]">Értesítési lista</p>
                         <p className="text-xs text-[#94a3b8] mt-0.5">Kattintson a vészhelyzeti kapcsolatok megtekintéséhez</p>
                     </div>
-                    <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-[#f8fafc] text-[#64748b] text-[10px] font-semibold">6 kapcsolat</span>
+                    <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-[#f1f3ff] text-[#64748b] text-[10px] font-semibold">6 kapcsolat</span>
                     <div className="w-7 h-7 rounded-full border border-[#e2e8f0] flex items-center justify-center group-hover:bg-[#a13f4c] group-hover:border-[#a13f4c] transition-all">
                         <ChevronRight className="w-3.5 h-3.5 text-[#94a3b8] group-hover:text-white transition-colors" />
                     </div>
@@ -201,7 +204,7 @@ export default function KomootPortal() {
                     transition={{ duration: 0.5, delay: 0.15 }}
                     className="bg-white border border-[#e2e8f0] rounded-2xl shadow-sm overflow-hidden mb-8"
                 >
-                    <div className="px-5 py-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+                    <div className="px-5 py-3 bg-[#f1f3ff] border-b border-[#e2e8f0] flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Building2 className="w-4 h-4 text-[#94a3b8]" />
                             <span className="text-xs font-bold text-[#64748b] uppercase tracking-wider">Helyszínek a házban</span>
@@ -221,7 +224,7 @@ export default function KomootPortal() {
                                     <div className="w-9 h-9 rounded-xl bg-[#f1f5f9] flex items-center justify-center shrink-0">
                                         <Building2 className="w-4 h-4 text-[#5c6e35]" />
                                     </div>
-                                    <span className="text-[10px] font-semibold text-[#94a3b8] bg-[#f8fafc] px-2 py-0.5 rounded-full whitespace-nowrap">{loc.items} db</span>
+                                    <span className="text-[10px] font-semibold text-[#94a3b8] bg-[#f1f3ff] px-2 py-0.5 rounded-full whitespace-nowrap">{loc.items} db</span>
                                 </div>
                                 <p className="text-sm font-bold text-[#0f172a] leading-snug">{loc.name}</p>
                                 <div className="flex items-center justify-between mt-auto pt-0.5">
