@@ -21,10 +21,15 @@ export default {
                 sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
             },
             colors: {
-                corp: {
-                    dark: '#1e3a5f',
-                    mid:  '#2c5282',
-                    light: '#ebf4ff',
+                // Szemantikus alias-réteg a projektben MÁR élő színekre (nav/footer
+                // "chrome" héj + kék akcent), hogy új komponensek ne hex-kódot vagy
+                // találomra választott slate/blue árnyalatot írjanak be, hanem a
+                // meglévő brand-jelentést. Nem helyettesíti a nyers Tailwind
+                // paletta-osztályokat (bg-slate-900 stb. érintetlen marad).
+                brand: {
+                    chrome: '#0f172a',   // header/footer sötét héj (AppLayout, app.blade.php loader)
+                    accent: '#3b82f6',   // kék CTA/akcent (logó, loader, linkek)
+                    'accent-light': '#60a5fa',
                 },
             },
             keyframes: {

@@ -502,6 +502,13 @@ html.no-progress #nprogress { display: none !important; }
 
 :root {
     --font-helvetica: "Helvetica Regular", ui-sans-serif, system-ui, sans-serif;
+
+    /* Design tokenek — ugyanaz a chrome/accent szín, mint a tailwind.config.js
+       brand.* csoportja, hogy inline style-ban (pl. AppLayout header, app.blade.php
+       loader) se kelljen külön hex-kódot karbantartani két helyen. */
+    --brand-chrome: #0f172a;
+    --brand-accent: #3b82f6;
+    --brand-accent-light: #60a5fa;
 }
 
 .cortex-landing {
