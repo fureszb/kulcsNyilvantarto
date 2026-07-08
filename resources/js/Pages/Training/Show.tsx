@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from '@inertiajs/react';
+import { motion } from 'motion/react';
 import AppLayout from '../../Layouts/AppLayout';
 import VideoPlayer from '../../Components/VideoPlayer';
 import type { Training } from '../../types';
@@ -256,7 +257,11 @@ export default function TrainingShow({ training, stepsData, participantName = ''
         )}
         <AppLayout title={training.title}>
             {/* Hero */}
-            <div className="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
+            <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
                 <div className="absolute -top-16 -right-16 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
                 <div
                     className="absolute inset-0 opacity-[0.025] pointer-events-none"
@@ -299,11 +304,16 @@ export default function TrainingShow({ training, stepsData, participantName = ''
                         </div>
                     )}
                 </div>
-            </div>
+            </motion.div>
 
             {/* Start képernyő */}
             {!started && (
-                <div className="max-w-md mx-auto">
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+                    className="max-w-md mx-auto"
+                >
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8">
                         <div className="w-14 h-14 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center mb-5">
                             <svg className="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,12 +340,17 @@ export default function TrainingShow({ training, stepsData, participantName = ''
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>
                         </button>
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {/* Kiértékelő lap */}
             {completed && (
-                <div className="space-y-5">
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                    className="space-y-5"
+                >
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                         <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-8 py-6">
                             <div className="flex items-start justify-between gap-4">
@@ -344,11 +359,16 @@ export default function TrainingShow({ training, stepsData, participantName = ''
                                     <h2 className="text-2xl font-extrabold text-white mt-0.5">{training.title}</h2>
                                     <p className="text-indigo-200 text-sm mt-1">Kitöltő: <span className="text-white font-semibold">{participantName}</span></p>
                                 </div>
-                                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                                <motion.div
+                                    initial={{ scale: 0, rotate: -10 }}
+                                    animate={{ scale: 1, rotate: 0 }}
+                                    transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.15 }}
+                                    className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0"
+                                >
                                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"/>
                                     </svg>
-                                </div>
+                                </motion.div>
                             </div>
                             <div className="mt-4 flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2.5 w-fit">
                                 <svg className="w-4 h-4 text-indigo-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -416,7 +436,13 @@ export default function TrainingShow({ training, stepsData, participantName = ''
                                 </thead>
                                 <tbody>
                                     {results.map((r, idx) => (
-                                        <tr key={idx} className="border-b border-slate-50 hover:bg-slate-50/80 transition-colors">
+                                        <motion.tr
+                                            key={idx}
+                                            initial={{ opacity: 0, x: -8 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ duration: 0.3, delay: Math.min(idx * 0.05, 0.5) }}
+                                            className="border-b border-slate-50 hover:bg-slate-50/80 transition-colors"
+                                        >
                                             <td className="px-5 py-3.5 text-sm text-slate-400">{idx + 1}</td>
                                             <td className="px-5 py-3.5 text-sm text-slate-700 font-medium">{r.question}</td>
                                             <td className="px-5 py-3.5 text-center">
@@ -435,7 +461,7 @@ export default function TrainingShow({ training, stepsData, participantName = ''
                                                     </span>
                                                 )}
                                             </td>
-                                        </tr>
+                                        </motion.tr>
                                     ))}
                                 </tbody>
                             </table>
@@ -458,7 +484,7 @@ export default function TrainingShow({ training, stepsData, participantName = ''
                             Újra elvégzés
                         </button>
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {/* Lépések */}
@@ -538,10 +564,10 @@ export default function TrainingShow({ training, stepsData, participantName = ''
                                             >
                                                 <span className={`w-6 h-6 rounded-full border-2 shrink-0 flex items-center justify-center text-xs font-bold ${isRight ? 'border-green-500 bg-green-500 text-white' : isWrong ? 'border-red-400 bg-red-100 text-red-600' : 'border-slate-300'}`}>
                                                     {isRight && (
-                                                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                                                        <motion.svg initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 20 }} className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></motion.svg>
                                                     )}
                                                     {isWrong && !answer.is_correct && (
-                                                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+                                                        <motion.svg initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 20 }} className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></motion.svg>
                                                     )}
                                                 </span>
                                                 <span>{answer.text}</span>
@@ -572,7 +598,7 @@ export default function TrainingShow({ training, stepsData, participantName = ''
                                             >
                                                 <span className={`w-6 h-6 rounded-md border-2 shrink-0 flex items-center justify-center text-xs font-bold ${isRight ? 'border-green-500 bg-green-500 text-white' : isWrong ? 'border-red-400 bg-red-100 text-red-600' : isChecked ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-slate-300'}`}>
                                                     {(isRight || (isChecked && !isWrong)) && (
-                                                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                                                        <motion.svg initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 20 }} className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></motion.svg>
                                                     )}
                                                 </span>
                                                 <span>{answer.text}</span>
