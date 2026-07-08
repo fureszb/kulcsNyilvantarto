@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { motion } from 'motion/react';
 import AppLayout from '../Layouts/AppLayout';
 import type { Location } from '../types';
 
@@ -12,9 +13,14 @@ export default function Home({ locations }: Props) {
     return (
         <AppLayout title="Helyszín választó">
             {/* Hero */}
-            <div className="relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl">
-                <div className="absolute -top-24 -right-24 w-72 h-72 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none" />
+            <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+                className="relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl"
+            >
+                <div className="absolute -top-24 -right-24 w-72 h-72 bg-blue-600/20 rounded-full blur-3xl pointer-events-none aurora-blob-1" />
+                <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none aurora-blob-2" />
                 <div
                     className="absolute inset-0 opacity-[0.025] pointer-events-none"
                     style={{
@@ -39,7 +45,7 @@ export default function Home({ locations }: Props) {
                         </svg>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {locations.length === 0 ? (
                 <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center shadow-sm">
@@ -54,9 +60,14 @@ export default function Home({ locations }: Props) {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                    {locations.map((location) => (
-                        <Link
+                    {locations.map((location, index) => (
+                        <motion.div
                             key={location.id}
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.5), ease: 'easeOut' }}
+                        >
+                        <Link
                             href={route('keys.show', location.id)}
                             className="group relative overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-lg hover:shadow-blue-100/80 hover:border-blue-200 motion-safe:hover:-translate-y-1 transition-all duration-300 cursor-pointer"
                         >
@@ -103,6 +114,7 @@ export default function Home({ locations }: Props) {
                                 </div>
                             </div>
                         </Link>
+                        </motion.div>
                     ))}
                 </div>
             )}
