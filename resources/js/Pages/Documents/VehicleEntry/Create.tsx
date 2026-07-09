@@ -1,5 +1,8 @@
 import { useForm } from '@inertiajs/react';
-import { useOwnLayout } from '../../../hooks/useOwnLayout';
+import { Car } from 'lucide-react';
+import FormShell from '../../../Components/Documents/FormShell';
+import { Field, TextInput, Textarea, SubmitButton } from '../../../Components/Documents/FormField';
+import SelectField from '../../../Components/Documents/SelectField';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -39,72 +42,44 @@ export default function VehicleEntryCreate({ locations }: Props) {
         post(route('documents.vehicle-entry.store'));
     }
 
-    const Layout = useOwnLayout();
-
     return (
-        <Layout title="Gépjármű beléptető nyilvántartás">
-            <div className="max-w-2xl mx-auto">
-                <h1 className="text-xl font-bold text-slate-800 mb-6">Gépjármű beléptető nyilvántartás</h1>
+        <FormShell title="Gépjármű beléptető nyilvántartás" subtitle="Fizikai-biztonsági nyilvántartás" icon={Car}>
+            <form onSubmit={handleSubmit} className="space-y-5">
+                <Field label="Irodaház (opcionális)">
+                    <SelectField
+                        value={data.location_id === '' ? '' : String(data.location_id)}
+                        placeholder="Nincs kiválasztva"
+                        options={locations.map(l => ({ value: String(l.id), label: l.name }))}
+                        onChange={v => setData('location_id', v ? Number(v) : '')}
+                    />
+                </Field>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1.5">Irodaház (opcionális)</label>
-                        <select
-                            value={data.location_id}
-                            onChange={e => setData('location_id', e.target.value ? Number(e.target.value) : '')}
-                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white transition text-sm focus:outline-none"
-                        >
-                            <option value="">Nincs kiválasztva</option>
-                            {locations.map(l => (
-                                <option key={l.id} value={l.id}>{l.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                <Field label="Rendszám" required error={errors.license_plate}>
+                    <TextInput type="text" value={data.license_plate} onChange={e => setData('license_plate', e.target.value)} required />
+                </Field>
 
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1.5">Rendszám</label>
-                        <input type="text" value={data.license_plate} onChange={e => setData('license_plate', e.target.value)} required
-                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white transition text-sm focus:outline-none"/>
-                        {errors.license_plate && <p className="mt-1 text-xs text-rose-600">{errors.license_plate}</p>}
-                    </div>
+                <Field label="Cégnév/név" required error={errors.company_or_name}>
+                    <TextInput type="text" value={data.company_or_name} onChange={e => setData('company_or_name', e.target.value)} required />
+                </Field>
 
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1.5">Cégnév/név</label>
-                        <input type="text" value={data.company_or_name} onChange={e => setData('company_or_name', e.target.value)} required
-                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white transition text-sm focus:outline-none"/>
-                        {errors.company_or_name && <p className="mt-1 text-xs text-rose-600">{errors.company_or_name}</p>}
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Field label="Dátum" required>
+                        <TextInput type="date" value={data.entry_date} onChange={e => setData('entry_date', e.target.value)} required />
+                    </Field>
+                    <Field label="Belépési idő" required>
+                        <TextInput type="time" value={data.entry_time} onChange={e => setData('entry_time', e.target.value)} required />
+                    </Field>
+                    <Field label="Kilépési idő">
+                        <TextInput type="time" value={data.exit_time} onChange={e => setData('exit_time', e.target.value)} />
+                    </Field>
+                </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Dátum</label>
-                            <input type="date" value={data.entry_date} onChange={e => setData('entry_date', e.target.value)} required
-                                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white transition text-sm focus:outline-none"/>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Belépési idő</label>
-                            <input type="time" value={data.entry_time} onChange={e => setData('entry_time', e.target.value)} required
-                                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white transition text-sm focus:outline-none"/>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Kilépési idő</label>
-                            <input type="time" value={data.exit_time} onChange={e => setData('exit_time', e.target.value)}
-                                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white transition text-sm focus:outline-none"/>
-                        </div>
-                    </div>
+                <Field label="Megjegyzés">
+                    <Textarea value={data.notes} onChange={e => setData('notes', e.target.value)} rows={3} />
+                </Field>
 
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1.5">Megjegyzés</label>
-                        <textarea value={data.notes} onChange={e => setData('notes', e.target.value)} rows={3}
-                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white transition text-sm focus:outline-none"/>
-                    </div>
-
-                    <button type="submit" disabled={processing}
-                        className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors cursor-pointer">
-                        {processing ? 'Mentés…' : 'Dokumentum létrehozása és PDF generálása'}
-                    </button>
-                </form>
-            </div>
-        </Layout>
+                <SubmitButton processing={processing} />
+            </form>
+        </FormShell>
     );
 }

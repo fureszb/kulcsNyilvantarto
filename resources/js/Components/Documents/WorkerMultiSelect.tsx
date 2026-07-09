@@ -52,13 +52,13 @@ export default function WorkerMultiSelect({ label, workers, value, onChange }: P
             {selected.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-2">
                     {selected.map(w => (
-                        <span key={w.id} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-blue-100 border border-blue-200 text-xs font-semibold text-blue-800">
-                            <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                        <span key={w.id} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-amber-100 border border-amber-200 text-xs font-semibold text-amber-800">
+                            <span className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
                                 {w.name.charAt(0).toUpperCase()}
                             </span>
                             <span>{w.name}</span>
                             <button type="button" onClick={() => remove(w.id)}
-                                className="ml-0.5 w-5 h-5 rounded-full flex items-center justify-center hover:bg-blue-300 transition-colors cursor-pointer text-blue-500 hover:text-blue-800 shrink-0">
+                                className="ml-0.5 w-5 h-5 rounded-full flex items-center justify-center hover:bg-amber-300 transition-colors cursor-pointer text-amber-600 hover:text-amber-900 shrink-0">
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
@@ -68,7 +68,7 @@ export default function WorkerMultiSelect({ label, workers, value, onChange }: P
                 </div>
             )}
 
-            <div ref={wrapRef} className="flex items-center gap-2 px-3 rounded-xl border border-slate-200 bg-slate-50 focus-within:border-blue-400 focus-within:bg-white transition">
+            <div ref={wrapRef} className="flex items-center gap-2 px-3 rounded-xl border border-slate-200 bg-slate-50 focus-within:border-amber-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-amber-100 transition">
                 <svg className="w-4 h-4 text-slate-400 shrink-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M17 11A6 6 0 111 11a6 6 0 0116 0z"/>
                 </svg>
@@ -90,8 +90,8 @@ export default function WorkerMultiSelect({ label, workers, value, onChange }: P
                             {candidates.map(w => (
                                 <li key={w.id}>
                                     <button type="button" onMouseDown={() => add(w)}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-blue-50 transition-colors text-left cursor-pointer">
-                                        <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 transition-colors text-left cursor-pointer">
+                                        <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0">
                                             {w.name.charAt(0).toUpperCase()}
                                         </span>
                                         <span className="text-sm text-slate-800 truncate">{w.name}</span>

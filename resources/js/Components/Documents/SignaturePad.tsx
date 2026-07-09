@@ -58,7 +58,7 @@ export default function SignaturePad({ label, value, onChange }: Props) {
             </div>
             <canvas
                 ref={canvasRef}
-                className="w-full h-32 rounded-xl border border-slate-200 bg-white touch-none"
+                className="w-full h-32 rounded-xl border border-slate-200 bg-white touch-none focus-within:border-amber-400"
             />
         </div>
     );

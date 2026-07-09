@@ -8,6 +8,8 @@
                     <div class="sign-box">
                         @if (!empty($signatureImages[$r['key']]))
                             <img src="{{ $signatureImages[$r['key']] }}">
+                        @else
+                            <span class="sign-box-empty">nincs aláírás</span>
                         @endif
                     </div>
                     <p class="sign-role">{{ $r['label'] }}</p>

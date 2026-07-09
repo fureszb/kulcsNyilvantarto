@@ -1,5 +1,8 @@
 import { useForm } from '@inertiajs/react';
-import { useOwnLayout } from '../../../hooks/useOwnLayout';
+import { AlertOctagon } from 'lucide-react';
+import FormShell from '../../../Components/Documents/FormShell';
+import { Field, TextInput, Textarea, SectionCard, SubmitButton } from '../../../Components/Documents/FormField';
+import SelectField from '../../../Components/Documents/SelectField';
 import SignaturePad from '../../../Components/Documents/SignaturePad';
 
 declare function route(name: string, params?: unknown): string;
@@ -59,16 +62,17 @@ const NOISE_OPTIONS = [
 ];
 const AREA_OPTIONS = [['altalanos', 'Általános'], ['szakszeru', 'Szakszerű'], ['helyi_ismeretre_vallo', 'Helyi ismeretre valló']];
 
-function Select({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[][] }) {
+function EnumField({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[][] }) {
     return (
-        <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">{label}</label>
-            <select value={value} onChange={e => onChange(e.target.value)} required
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-400 transition text-sm focus:outline-none">
-                <option value="">Válassz…</option>
-                {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-            </select>
-        </div>
+        <Field label={label} required>
+            <SelectField
+                value={value}
+                placeholder="Válassz…"
+                options={options.map(([v, l]) => ({ value: v, label: l }))}
+                onChange={onChange}
+                surface="card"
+            />
+        </Field>
     );
 }
 
@@ -100,91 +104,72 @@ export default function BombThreatCreate({ locations }: Props) {
         post(route('documents.bomb-threat.store'));
     }
 
-    const Layout = useOwnLayout();
-    const inputCls = 'w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white transition text-sm focus:outline-none';
-
     return (
-        <Layout title="Robbantással fenyegetés">
-            <div className="max-w-2xl mx-auto">
-                <h1 className="text-xl font-bold text-slate-800 mb-6">Robbantással fenyegetés</h1>
+        <FormShell title="Robbantással fenyegetés" subtitle="Fizikai-biztonsági jegyzőkönyv" icon={AlertOctagon}>
+            <form onSubmit={handleSubmit} className="space-y-5">
+                <Field label="Irodaház (opcionális)">
+                    <SelectField
+                        value={data.location_id === '' ? '' : String(data.location_id)}
+                        placeholder="Nincs kiválasztva"
+                        options={locations.map(l => ({ value: String(l.id), label: l.name }))}
+                        onChange={v => setData('location_id', v ? Number(v) : '')}
+                    />
+                </Field>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1.5">Irodaház (opcionális)</label>
-                        <select value={data.location_id} onChange={e => setData('location_id', e.target.value ? Number(e.target.value) : '')} className={inputCls}>
-                            <option value="">Nincs kiválasztva</option>
-                            {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                        </select>
-                    </div>
+                <Field label="Elhangzott beszélgetés leírása" required error={errors.call_transcript}>
+                    <Textarea value={data.call_transcript} onChange={e => setData('call_transcript', e.target.value)} required rows={5} />
+                </Field>
 
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1.5">Elhangzott beszélgetés leírása</label>
-                        <textarea value={data.call_transcript} onChange={e => setData('call_transcript', e.target.value)} required rows={5} className={inputCls}/>
-                        {errors.call_transcript && <p className="mt-1 text-xs text-rose-600">{errors.call_transcript}</p>}
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Select label="Hívó neme" value={data.caller_gender} onChange={v => setData('caller_gender', v)} options={GENDER_OPTIONS} />
-                        <Select label="Életkora" value={data.caller_age_group} onChange={v => setData('caller_age_group', v)} options={AGE_OPTIONS} />
-                        <Select label="Beszédstílusa" value={data.speech_style} onChange={v => setData('speech_style', v)} options={SPEECH_OPTIONS} />
-                        <Select label="Hangszíne" value={data.voice_tone} onChange={v => setData('voice_tone', v)} options={VOICE_OPTIONS} />
-                        <Select label="Érzelmi állapota" value={data.emotional_state} onChange={v => setData('emotional_state', v)} options={EMOTION_OPTIONS} />
-                        <Select label="Háttérzaj" value={data.background_noise} onChange={v => setData('background_noise', v)} options={NOISE_OPTIONS} />
-                        <Select label="Területi jártasság" value={data.area_familiarity} onChange={v => setData('area_familiarity', v)} options={AREA_OPTIONS} />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1.5">Egyéb észrevételek</label>
-                        <textarea value={data.other_remarks} onChange={e => setData('other_remarks', e.target.value)} rows={2} className={inputCls}/>
-                    </div>
-
+                <SectionCard title="A hívó jellemzői">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Hívás dátuma</label>
-                            <input type="datetime-local" value={data.call_datetime} onChange={e => setData('call_datetime', e.target.value)} required className={inputCls}/>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Hívó száma</label>
-                            <input type="text" value={data.caller_phone_number} onChange={e => setData('caller_phone_number', e.target.value)} className={inputCls}/>
-                        </div>
+                        <EnumField label="Hívó neme" value={data.caller_gender} onChange={v => setData('caller_gender', v)} options={GENDER_OPTIONS} />
+                        <EnumField label="Életkora" value={data.caller_age_group} onChange={v => setData('caller_age_group', v)} options={AGE_OPTIONS} />
+                        <EnumField label="Beszédstílusa" value={data.speech_style} onChange={v => setData('speech_style', v)} options={SPEECH_OPTIONS} />
+                        <EnumField label="Hangszíne" value={data.voice_tone} onChange={v => setData('voice_tone', v)} options={VOICE_OPTIONS} />
+                        <EnumField label="Érzelmi állapota" value={data.emotional_state} onChange={v => setData('emotional_state', v)} options={EMOTION_OPTIONS} />
+                        <EnumField label="Háttérzaj" value={data.background_noise} onChange={v => setData('background_noise', v)} options={NOISE_OPTIONS} />
+                        <EnumField label="Területi jártasság" value={data.area_familiarity} onChange={v => setData('area_familiarity', v)} options={AREA_OPTIONS} />
                     </div>
+                </SectionCard>
 
-                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-4">
-                        <p className="text-xs font-bold text-slate-500 uppercase">Hívást fogadta</p>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Név</label>
-                            <input type="text" value={data.receiver_name} onChange={e => setData('receiver_name', e.target.value)} required className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-400 transition text-sm focus:outline-none"/>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Beosztás</label>
-                            <input type="text" value={data.receiver_position} onChange={e => setData('receiver_position', e.target.value)} required className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-400 transition text-sm focus:outline-none"/>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Születési idő</label>
-                            <input type="date" value={data.receiver_birth_date} onChange={e => setData('receiver_birth_date', e.target.value)} required className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-400 transition text-sm focus:outline-none"/>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Anyja neve</label>
-                            <input type="text" value={data.receiver_mother_name} onChange={e => setData('receiver_mother_name', e.target.value)} required className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-400 transition text-sm focus:outline-none"/>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Lakcím</label>
-                            <input type="text" value={data.receiver_address} onChange={e => setData('receiver_address', e.target.value)} required className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-400 transition text-sm focus:outline-none"/>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Szem. ig. szám</label>
-                            <input type="text" value={data.receiver_id_card_number} onChange={e => setData('receiver_id_card_number', e.target.value)} required className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-400 transition text-sm focus:outline-none"/>
-                        </div>
-                    </div>
+                <Field label="Egyéb észrevételek">
+                    <Textarea value={data.other_remarks} onChange={e => setData('other_remarks', e.target.value)} rows={2} />
+                </Field>
 
-                    <SignaturePad label="Hívást fogadó aláírása" value={data.signature_hivast_fogado} onChange={v => setData('signature_hivast_fogado', v)} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Field label="Hívás dátuma" required>
+                        <TextInput type="datetime-local" value={data.call_datetime} onChange={e => setData('call_datetime', e.target.value)} required />
+                    </Field>
+                    <Field label="Hívó száma">
+                        <TextInput type="text" value={data.caller_phone_number} onChange={e => setData('caller_phone_number', e.target.value)} />
+                    </Field>
+                </div>
 
-                    <button type="submit" disabled={processing}
-                        className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors cursor-pointer">
-                        {processing ? 'Mentés…' : 'Dokumentum létrehozása és PDF generálása'}
-                    </button>
-                </form>
-            </div>
-        </Layout>
+                <SectionCard title="Hívást fogadta">
+                    <Field label="Név" required>
+                        <TextInput surface="card" type="text" value={data.receiver_name} onChange={e => setData('receiver_name', e.target.value)} required />
+                    </Field>
+                    <Field label="Beosztás" required>
+                        <TextInput surface="card" type="text" value={data.receiver_position} onChange={e => setData('receiver_position', e.target.value)} required />
+                    </Field>
+                    <Field label="Születési idő" required>
+                        <TextInput surface="card" type="date" value={data.receiver_birth_date} onChange={e => setData('receiver_birth_date', e.target.value)} required />
+                    </Field>
+                    <Field label="Anyja neve" required>
+                        <TextInput surface="card" type="text" value={data.receiver_mother_name} onChange={e => setData('receiver_mother_name', e.target.value)} required />
+                    </Field>
+                    <Field label="Lakcím" required>
+                        <TextInput surface="card" type="text" value={data.receiver_address} onChange={e => setData('receiver_address', e.target.value)} required />
+                    </Field>
+                    <Field label="Szem. ig. szám" required>
+                        <TextInput surface="card" type="text" value={data.receiver_id_card_number} onChange={e => setData('receiver_id_card_number', e.target.value)} required />
+                    </Field>
+                </SectionCard>
+
+                <SignaturePad label="Hívást fogadó aláírása" value={data.signature_hivast_fogado} onChange={v => setData('signature_hivast_fogado', v)} />
+
+                <SubmitButton processing={processing} />
+            </form>
+        </FormShell>
     );
 }
