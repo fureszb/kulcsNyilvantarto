@@ -78,7 +78,7 @@ export default function KomootPortal() {
                         <div className="w-7 h-7 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
                             <KeyRound className="w-4 h-4 text-white" strokeWidth={2.5} />
                         </div>
-                        <span className="font-extrabold text-white hidden sm:block">kulcsnyilvántartó</span>
+                        <span className="font-extrabold text-white hidden sm:block">Cortex</span>
                     </a>
 
                     <nav className="hidden lg:flex items-center gap-1">
