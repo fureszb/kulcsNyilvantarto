@@ -7,7 +7,14 @@ export default function PushToggle() {
     const { status, busy, subscribe, unsubscribe } = usePushNotifications();
     const [showIosHelp, setShowIosHelp] = useState(false);
 
-    if (status === 'loading' || status === 'unsupported') return null;
+    // 'unsupported': stabil, nem villódzó állapot — nyugodtan foglalhat 0 helyet.
+    if (status === 'unsupported') return null;
+    // 'loading': ez minden Inertia-navigációnál újra lefut (a layout remountol),
+    // és amíg a service worker / push-subscription lekérdezése (akár ~1s) fut,
+    // a gombnak MOST IS foglalnia kell a végleges helyét — különben a fejléc
+    // jobb oldali elemei (nav, óra) minden oldalváltáskor arrébb ugranak, amikor
+    // a gomb nulla szélességből hirtelen 32px-re nő.
+    if (status === 'loading') return <div className="w-8 h-8 shrink-0" aria-hidden="true" />;
 
     function handleClick() {
         if (busy) return;
