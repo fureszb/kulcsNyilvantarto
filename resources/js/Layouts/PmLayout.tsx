@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { getEcho } from '../echo';
-import FeedbackWidget from '../Components/FeedbackWidget';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -283,7 +282,6 @@ export default function PmLayout({ children, title }: Props) {
 
                         {/* Right side */}
                         <div className="flex items-center gap-2">
-                            <div className="hidden sm:block"><FeedbackWidget /></div>
                             {/* User chip – desktop */}
                             <div className="hidden sm:flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
                                 <div className="w-6 h-6 rounded-lg bg-amber-500/30 border border-amber-500/40 flex items-center justify-center shrink-0">
@@ -344,10 +342,6 @@ export default function PmLayout({ children, title }: Props) {
                                 );
                             })}
                             <div className="pt-2 border-t border-white/5 mt-2">
-                                <div className="flex items-center gap-3 px-3 py-2.5">
-                                    <FeedbackWidget />
-                                    <span className="text-sm font-medium text-slate-400">Névtelen visszajelzés</span>
-                                </div>
                                 <form onSubmit={logout}>
                                     <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

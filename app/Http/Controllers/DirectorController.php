@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\DirectorLeadGoal;
-use App\Models\DirectorMessage;
 use App\Models\TenantUser;
 use App\Services\PerformanceStatsService;
 use Carbon\Carbon;
@@ -51,17 +50,10 @@ class DirectorController extends Controller
             return $lead;
         }, $leadsData);
 
-        // A névtelen visszajelzés a tenant összes igazgatójának szól, nem csak
-        // annak, akit a küldéskor rögzítettünk a to_user_id-ba (lásd feedback()).
-        $unreadMessages = DirectorMessage::where('is_anonymous', true)
-            ->whereNull('read_at')
-            ->count();
-
         return Inertia::render('Director/Dashboard', [
             'welcomeName'    => $user->name,
             'leads'          => $leads,
             'currentPeriod'  => ['year' => $now->year, 'month' => $now->month],
-            'unreadFeedback' => $unreadMessages,
         ]);
     }
 
@@ -110,40 +102,6 @@ class DirectorController extends Controller
         return Inertia::render('Director/MonthlyReport', [
             'welcomeName' => $user->name,
             'history'     => $stats->monthlyHistory($user),
-        ]);
-    }
-
-    /** A tenant összes igazgatója látja az összes névtelen dolgozói visszajelzést —
-     *  a to_user_id a küldéskor csak egy (tetszőleges) aktív igazgatóra mutat a
-     *  kötelező oszlop miatt, de itt szándékosan nem szűrünk rá, mert több igazgató
-     *  esetén mindegyiküknek látnia kell mindent. */
-    public function feedback(): Response
-    {
-        $user = Auth::guard('tenant')->user();
-
-        $unreadCount = DirectorMessage::where('is_anonymous', true)
-            ->whereNull('read_at')
-            ->count();
-
-        $feedback = DirectorMessage::where('is_anonymous', true)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(fn ($m) => [
-                'id'         => $m->id,
-                'content'    => $m->content,
-                'created_at' => $m->created_at->format('Y.m.d H:i'),
-                'is_new'     => is_null($m->read_at),
-            ]);
-
-        // Olvasottnak jelöljük (bármelyik igazgató megnyitja, mindenkinél olvasottá válik)
-        DirectorMessage::where('is_anonymous', true)
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
-
-        return Inertia::render('Director/Feedback', [
-            'welcomeName' => $user->name,
-            'feedback'    => $feedback,
-            'unreadCount' => $unreadCount,
         ]);
     }
 }

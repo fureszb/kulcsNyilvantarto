@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
 import PushToggle from '../Components/PushToggle';
-import FeedbackWidget from '../Components/FeedbackWidget';
 import { getEcho } from '../echo';
 import type { PageProps } from '../types';
 
@@ -141,7 +140,6 @@ export default function AppLayout({ children, title }: Props) {
 
                             {user && (
                                 <>
-                                    <div className="hidden sm:block"><FeedbackWidget /></div>
                                     <Link href={route('profile.edit')}
                                         className="hidden sm:flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 hover:bg-white/10 transition-colors">
                                         <div className="w-5 h-5 rounded-md bg-blue-500/30 border border-blue-500/40 flex items-center justify-center shrink-0">
@@ -202,10 +200,6 @@ export default function AppLayout({ children, title }: Props) {
                         ))}
                         {user && (
                             <>
-                                <div className="flex items-center gap-3 px-3 py-2.5">
-                                    <FeedbackWidget />
-                                    <span className="text-sm font-medium text-slate-400">Névtelen visszajelzés</span>
-                                </div>
                                 <Link href={route('profile.edit')} onClick={() => setMobileOpen(false)}
                                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-all">
                                     <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>

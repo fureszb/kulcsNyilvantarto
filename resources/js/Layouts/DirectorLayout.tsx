@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
-import FeedbackWidget from '../Components/FeedbackWidget';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -11,8 +10,6 @@ interface Props {
 export default function DirectorLayout({ children, title }: Props) {
     const page = usePage<PageProps>();
     const { auth, tenant, flash } = page.props;
-    // A dashboard átadja; más oldalon nincs → nincs badge
-    const unreadFeedback = (page.props as { unreadFeedback?: number }).unreadFeedback ?? 0;
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
@@ -89,13 +86,6 @@ export default function DirectorLayout({ children, title }: Props) {
             label: 'Üzenetek',
             icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
             matchRoute: 'pm.messages*',
-        },
-        {
-            route: 'director.feedback',
-            label: 'Névtelen visszajelzések',
-            icon: 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z',
-            matchRoute: 'director.feedback',
-            badge: unreadFeedback,
         },
         {
             route: 'vezenyles.index',
@@ -240,12 +230,6 @@ export default function DirectorLayout({ children, title }: Props) {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}/>
                                             </svg>
                                             {item.label}
-                                            {item.badge && item.badge > 0 ? (
-                                                <span className="absolute -top-0.5 -right-0.5">
-                                                    <span className="absolute -inset-0.5 rounded-full bg-rose-500 animate-ping opacity-40"/>
-                                                    <span className="relative min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-rose-500 text-white text-[9px] font-bold leading-none px-0.5">{item.badge > 9 ? '9+' : item.badge}</span>
-                                                </span>
-                                            ) : null}
                                         </Link>
                                     );
                                 })}
@@ -253,7 +237,6 @@ export default function DirectorLayout({ children, title }: Props) {
 
                             {/* Right side */}
                             <div className="flex items-center gap-2">
-                                <div className="hidden sm:block"><FeedbackWidget /></div>
                                 <div className="hidden sm:flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
                                     <div className="w-6 h-6 rounded-lg bg-indigo-500/30 border border-indigo-500/40 flex items-center justify-center shrink-0">
                                         <span className="text-xs font-bold text-indigo-300 leading-none">{userInitial}</span>
@@ -304,17 +287,10 @@ export default function DirectorLayout({ children, title }: Props) {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}/>
                                             </svg>
                                             {item.label}
-                                            {item.badge && item.badge > 0 ? (
-                                                <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold px-1">{item.badge > 9 ? '9+' : item.badge}</span>
-                                            ) : null}
                                         </Link>
                                     );
                                 })}
                                 <div className="pt-2 border-t border-white/5 mt-2">
-                                    <div className="flex items-center gap-3 px-3 py-2.5">
-                                        <FeedbackWidget />
-                                        <span className="text-sm font-medium text-slate-400">Névtelen visszajelzés</span>
-                                    </div>
                                     <form onSubmit={logout}>
                                         <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>

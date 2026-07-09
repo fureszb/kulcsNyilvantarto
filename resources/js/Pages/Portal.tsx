@@ -11,7 +11,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import PushToggle from '../Components/PushToggle';
-import FeedbackWidget from '../Components/FeedbackWidget';
 import type { PageProps } from '../types';
 
 // ── SVG noise data URI ────────────────────────────────────
@@ -1085,7 +1084,6 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                         <div className="flex items-center gap-1.5">
                             <LiveClock />
                             <PushToggle />
-                            {user && <div className="hidden sm:block"><FeedbackWidget /></div>}
                             {user && (
                                 <>
                                     <Link href={route('profile.edit')} className="hidden sm:flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-2.5 py-1 hover:bg-white/20 transition-colors">
@@ -1144,10 +1142,6 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                             </Link>
                         ))}
                         <div className="pt-2 border-t border-white/10">
-                            <div className="flex items-center gap-3 px-3 py-2.5">
-                                <FeedbackWidget />
-                                <span className="text-sm font-medium text-white/70">Névtelen visszajelzés</span>
-                            </div>
                             <form onSubmit={logout}>
                                 <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:text-red-300 hover:bg-red-500/15 transition-colors cursor-pointer">
                                     <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>

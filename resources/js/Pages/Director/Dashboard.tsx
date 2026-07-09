@@ -36,15 +36,6 @@ function buildModules(): ModuleCardDef[] {
             features: ['Üzenet küldése a vezetőknek', 'Beérkezett válaszok', 'Szűrés dátum/címzett szerint'],
             actionLabel: 'Üzenetek megnyitása',
         },
-        {
-            href: route('director.feedback'),
-            title: 'Névtelen visszajelzések',
-            description: 'A dolgozók által névtelenül beküldött visszajelzések.',
-            iconPath: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
-            accent: 'rose',
-            features: ['Dolgozói visszajelzések', 'Olvasatlan jelölés', 'Névtelen beküldés'],
-            actionLabel: 'Visszajelzések megtekintése',
-        },
     ];
 }
 
@@ -87,7 +78,6 @@ interface Props {
     welcomeName: string;
     leads: Lead[];
     currentPeriod: { year: number; month: number };
-    unreadFeedback: number;
 }
 
 function scoreClasses(score: number): string {

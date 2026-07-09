@@ -22,7 +22,6 @@ use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DirectorController;
 use App\Http\Controllers\SecurityLeadController;
 use App\Http\Controllers\ExamController;
-use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LandingController;
@@ -155,10 +154,6 @@ Route::prefix('{tenant}')
             // Profil
             Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
-            // Névtelen visszajelzés az igazgatónak — bármely szerepkör elérheti
-            Route::post('/feedback',      [FeedbackController::class, 'store'])->name('feedback.store');
-            Route::get('/feedback/mine',  [FeedbackController::class, 'index'])->name('feedback.index');
         });
 
         // Web Push feliratkozás — tenant guard-dal (worker, admin és PM egyaránt)
@@ -204,7 +199,6 @@ Route::prefix('{tenant}')
             Route::get('/',                              [DirectorController::class, 'dashboard'])->name('dashboard');
             Route::post('/leads/{leadId}/goals',         [DirectorController::class, 'setGoal'])->name('set-goal');
             Route::get('/monthly-report',                [DirectorController::class, 'monthlyReport'])->name('monthly-report');
-            Route::get('/feedback',                      [DirectorController::class, 'feedback'])->name('feedback');
         });
 
         // Biztonsági vezető portál

@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
-import FeedbackWidget from '../Components/FeedbackWidget';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -100,10 +99,6 @@ export default function AdminLayout({ children, title, headerActions }: Props) {
                                     <svg className="w-[1.125rem] h-[1.125rem] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                     <span className="truncate">{auth.user.name}</span>
                                 </Link>
-                                <div className="w-full flex items-center gap-3 px-3 py-2.5">
-                                    <FeedbackWidget />
-                                    <span className="text-sm font-medium text-slate-400">Névtelen visszajelzés</span>
-                                </div>
                             </>
                         )}
                         <form onSubmit={logout}>

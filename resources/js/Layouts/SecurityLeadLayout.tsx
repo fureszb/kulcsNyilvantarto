@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
-import FeedbackWidget from '../Components/FeedbackWidget';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -198,8 +197,6 @@ export default function SecurityLeadLayout({ children, title }: Props) {
 
                             {/* Right side */}
                             <div className="flex items-center gap-2">
-                                <FeedbackWidget />
-
                                 <div className="relative hidden sm:block">
                                     <button
                                         type="button"
