@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
+import MobileNavDrawer from '../Components/MobileNavDrawer';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -242,54 +243,54 @@ export default function SecurityLeadLayout({ children, title }: Props) {
                         </div>
                     </div>
 
-                    {/* Mobile nav drawer */}
-                    {mobileOpen && (
-                        <div className="lg:hidden border-t border-white/10">
-                            <div className="px-4 py-3 space-y-1">
-                                <div className="flex items-center gap-2.5 px-3 py-2.5 mb-2 border-b border-white/10">
-                                    <div className="w-7 h-7 rounded-lg bg-cyan-500/30 border border-cyan-500/40 flex items-center justify-center shrink-0">
-                                        <span className="text-xs font-bold text-cyan-300 leading-none">{userInitial}</span>
-                                    </div>
-                                    <span className="text-sm font-medium text-white">{userName}</span>
-                                </div>
-                                {navLinks.map(item => {
-                                    const active = route().current(item.matchRoute);
-                                    return (
-                                        <Link
-                                            key={item.route}
-                                            href={route(item.route)}
-                                            onClick={() => setMobileOpen(false)}
-                                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${active ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}/></svg>
-                                            {item.label}
-                                        </Link>
-                                    );
-                                })}
-                                <div className="pt-2 border-t border-white/10 mt-2">
-                                    <Link href={route('profile.edit')} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                        Profil szerkesztése
-                                    </Link>
-                                    <Link href={route('security-lead.team')} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                        Csapat
-                                    </Link>
-                                    <Link href={route('home')} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                                        Kezdőlap (dolgozói nézet)
-                                    </Link>
-                                    <form onSubmit={logout}>
-                                        <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:text-red-300 hover:bg-red-500/15 transition-colors cursor-pointer">
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                                            Kilépés
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </header>
+
+                <MobileNavDrawer
+                    open={mobileOpen}
+                    onClose={() => setMobileOpen(false)}
+                    hiddenFrom="lg"
+                    brandLabel="Biztonsági Vezető"
+                    items={navLinks.map(item => ({
+                        key: item.route,
+                        href: route(item.route),
+                        label: item.label,
+                        icon: item.icon,
+                        active: route().current(item.matchRoute),
+                    }))}
+                >
+                    <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/75">
+                        <span className="w-8 h-8 rounded-lg bg-cyan-500/30 border border-cyan-500/40 flex items-center justify-center shrink-0">
+                            <span className="text-xs font-bold text-cyan-300 leading-none">{userInitial}</span>
+                        </span>
+                        {userName}
+                    </div>
+                    <Link href={route('profile.edit')} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/75 hover:text-white hover:bg-white/10 transition-colors">
+                        <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        </span>
+                        Profil szerkesztése
+                    </Link>
+                    <Link href={route('security-lead.team')} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/75 hover:text-white hover:bg-white/10 transition-colors">
+                        <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </span>
+                        Csapat
+                    </Link>
+                    <Link href={route('home')} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/75 hover:text-white hover:bg-white/10 transition-colors">
+                        <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        </span>
+                        Kezdőlap (dolgozói nézet)
+                    </Link>
+                    <form onSubmit={logout}>
+                        <button type="submit" className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/75 hover:text-white hover:bg-white/10 transition-colors cursor-pointer">
+                            <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                            </span>
+                            Kilépés
+                        </button>
+                    </form>
+                </MobileNavDrawer>
 
                 {/* Main */}
                 <main className="flex-1 w-full overflow-x-hidden bg-slate-50">

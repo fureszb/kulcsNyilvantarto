@@ -11,6 +11,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import PushToggle from '../Components/PushToggle';
+import MobileNavDrawer from '../Components/MobileNavDrawer';
 import type { PageProps } from '../types';
 
 // ── SVG noise data URI ────────────────────────────────────
@@ -1121,37 +1122,41 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                     </div>
                 </div>
 
-                {/* Mobile nav */}
-                {mobileOpen && (
-                    <div className="sm:hidden border-t border-white/10 px-4 py-3 space-y-1">
-                        {user && (
-                            <div className="flex items-center gap-2 px-3 py-2 mb-1 border-b border-white/10">
-                                <div className="w-7 h-7 rounded-lg bg-white/25 border border-white/30 flex items-center justify-center shrink-0">
-                                    <span className="text-xs font-bold text-white">{user.name.charAt(0)}</span>
-                                </div>
-                                <span className="text-sm font-medium text-white">{user.name}</span>
-                            </div>
-                        )}
-                        {navLinks.map(nl => (
-                            <Link key={nl.route} href={route(nl.route)} onClick={() => setMobileOpen(false)}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${route().current(nl.match ?? nl.route) ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={nl.icon}/>
-                                </svg>
-                                {nl.label}
-                            </Link>
-                        ))}
-                        <div className="pt-2 border-t border-white/10">
-                            <form onSubmit={logout}>
-                                <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:text-red-300 hover:bg-red-500/15 transition-colors cursor-pointer">
-                                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                                    Kilépés
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                )}
             </header>
+
+            <MobileNavDrawer
+                open={mobileOpen}
+                onClose={() => setMobileOpen(false)}
+                brandLabel={tenantName}
+                items={navLinks.map(nl => ({
+                    key: nl.route,
+                    href: route(nl.route),
+                    label: nl.label,
+                    icon: nl.icon,
+                    active: route().current(nl.match ?? nl.route),
+                    badge: nl.badge,
+                    badgeColor: nl.badgeColor,
+                }))}
+            >
+                {user && (
+                    <>
+                        <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/75">
+                            <span className="w-8 h-8 rounded-lg bg-white/25 border border-white/30 flex items-center justify-center shrink-0">
+                                <span className="text-xs font-bold text-white">{user.name.charAt(0)}</span>
+                            </span>
+                            {user.name}
+                        </div>
+                        <form onSubmit={logout}>
+                            <button type="submit" className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/75 hover:text-white hover:bg-white/10 transition-colors cursor-pointer">
+                                <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                </span>
+                                Kilépés
+                            </button>
+                        </form>
+                    </>
+                )}
+            </MobileNavDrawer>
 
             {/* ─── Main ───────────────────────────────────── */}
             <main className={`${animReady ? 'app-loaded' : ''} flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6`}>

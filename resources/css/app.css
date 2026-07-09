@@ -33,20 +33,26 @@
 
 @keyframes pageEnter    { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 @keyframes fadeInOnly   { from { opacity:0; } to { opacity:1; } }
+@keyframes fadeOutOnly  { from { opacity:1; } to { opacity:0; } }
 @keyframes slideInRight { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:none; } }
 @keyframes slideOutRight{ from { opacity:1; transform:none; } to { opacity:0; transform:translateX(24px); } }
 @keyframes toastProgress{ from { width:100%; } to { width:0%; } }
 @keyframes pwaSheetIn   { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:none; } }
 @keyframes pwaSheetOut  { from { opacity:1; transform:none; } to { opacity:0; transform:translateY(100%); } }
+@keyframes drawerPanelIn  { from { transform:translateX(100%); } to { transform:translateX(0); } }
+@keyframes drawerPanelOut { from { transform:translateX(0); } to { transform:translateX(100%); } }
 
 @layer utilities {
     .animate-page-enter  { animation: pageEnter     0.22s ease-out                       both; }
     .animate-fade-in     { animation: fadeInOnly    0.25s ease-out                       both; }
+    .animate-fade-out    { animation: fadeOutOnly   0.22s ease-in                        both; }
     .animate-slide-in-r  { animation: slideInRight  0.28s cubic-bezier(0.16,1,0.3,1)    both; }
     .animate-slide-out-r { animation: slideOutRight 0.22s ease-in                        both; }
     .animate-toast-bar   { animation: toastProgress 5s linear                            forwards; }
     .animate-pwa-sheet-in  { animation: pwaSheetIn  0.38s cubic-bezier(0.16,1,0.3,1)     both; }
     .animate-pwa-sheet-out { animation: pwaSheetOut 0.22s ease-in                         both; }
+    .animate-drawer-in   { animation: drawerPanelIn  0.32s cubic-bezier(0.16,1,0.3,1)    both; }
+    .animate-drawer-out  { animation: drawerPanelOut 0.24s ease-in                        both; }
 }
 
 @layer base {
