@@ -56,7 +56,7 @@
 }
 
 @layer base {
-    html { font-family: 'Inter', sans-serif; }
+    html { font-family: 'Inter', sans-serif; scrollbar-gutter: stable; }
     [x-cloak] { display: none !important; }
     input, select, textarea { font-size: max(16px, 1em); }
 }
