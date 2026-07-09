@@ -70,8 +70,8 @@ export default function KomootPortal() {
 
             {/* ── Sticky nav (a valós Portal.tsx fejléce, Komoot "app-mode" stílusban) ── */}
             <header
-                className="sticky top-0 z-30 shadow-lg shadow-indigo-900/10"
-                style={{ background: 'linear-gradient(90deg,#2563eb 0%,#4f46e5 55%,#6d28d9 100%)' }}
+                className="sticky top-0 z-30 shadow-lg shadow-indigo-900/10 gradient-drift"
+                style={{ backgroundImage: 'linear-gradient(90deg, rgb(7, 29, 79) 0%, #0032a1 55%, rgb(10, 2, 22) 100%)' }}
             >
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 gap-4">
                     <a href="#" onClick={e => e.preventDefault()} className="flex items-center gap-2 shrink-0">

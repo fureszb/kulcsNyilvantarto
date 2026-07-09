@@ -88,6 +88,15 @@
 .aurora-blob-2 { animation: auroraFloat2 7s ease-in-out infinite; }
 .aurora-blob-3 { animation: auroraFloat3 6s ease-in-out infinite; }
 
+/* Lassú gradiens-eltolás — állandóan látható sávokhoz (fejléc), ahol egy
+   teljes "úszó blob" effekt túl nyugtalan lenne. A háttérnek nagyobb
+   background-size kell (pl. 200% 200%) ahhoz, hogy az eltolás látszódjon. */
+@keyframes gradientDrift {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+.gradient-drift { background-size: 220% 220%; animation: gradientDrift 12s ease-in-out infinite; }
+
 /* ═══════════════════════════════════════════════════════════
    2. BORDER BEAM — pásztázó fény a kártya tetején
 ═══════════════════════════════════════════════════════════ */
