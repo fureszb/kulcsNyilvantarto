@@ -14,7 +14,7 @@ class StoreKeyCardHandoverRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'location_id' => ['nullable', 'integer', 'exists:locations,id'],
+            'location_id' => ['nullable', 'integer', 'exists:tenant.locations,id'],
             'key_card_number_or_name' => ['required', 'string', 'max:255'],
             'company_or_workplace' => ['required', 'string', 'max:255'],
             'issued_at' => ['required', 'date'],

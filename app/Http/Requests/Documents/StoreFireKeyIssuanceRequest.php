@@ -14,7 +14,7 @@ class StoreFireKeyIssuanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'location_id' => ['nullable', 'integer', 'exists:locations,id'],
+            'location_id' => ['nullable', 'integer', 'exists:tenant.locations,id'],
             'seal_number' => ['required', 'string', 'max:100'],
             'seal_removed' => ['required', 'boolean'],
             'seal_applied' => ['required', 'boolean'],

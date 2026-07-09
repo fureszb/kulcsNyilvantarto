@@ -15,7 +15,7 @@ class StoreBombThreatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'location_id' => ['nullable', 'integer', 'exists:locations,id'],
+            'location_id' => ['nullable', 'integer', 'exists:tenant.locations,id'],
             'call_transcript' => ['required', 'string', 'max:5000'],
             'caller_gender' => ['required', Rule::in(['ferfi', 'no'])],
             'caller_age_group' => ['required', Rule::in(['fiatal', 'kozepkoru', 'idos', 'gyermek_lany', 'gyermek_fiu'])],

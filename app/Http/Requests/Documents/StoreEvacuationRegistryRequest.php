@@ -14,7 +14,7 @@ class StoreEvacuationRegistryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'location_id' => ['nullable', 'integer', 'exists:locations,id'],
+            'location_id' => ['nullable', 'integer', 'exists:tenant.locations,id'],
             'tenant_name' => ['required', 'string', 'max:255'],
             'remained_in_building' => ['nullable', 'string', 'max:2000'],
             'fire_safety_officer_name' => ['required', 'string', 'max:255'],

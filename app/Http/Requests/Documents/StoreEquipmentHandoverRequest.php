@@ -14,7 +14,7 @@ class StoreEquipmentHandoverRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'location_id' => ['nullable', 'integer', 'exists:locations,id'],
+            'location_id' => ['nullable', 'integer', 'exists:tenant.locations,id'],
             'equipment_name' => ['required', 'string', 'max:255'],
             'issued_at' => ['required', 'date'],
             'issued_to_name' => ['required', 'string', 'max:255'],

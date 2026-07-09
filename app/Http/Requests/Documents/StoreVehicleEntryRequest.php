@@ -14,7 +14,7 @@ class StoreVehicleEntryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'location_id' => ['nullable', 'integer', 'exists:locations,id'],
+            'location_id' => ['nullable', 'integer', 'exists:tenant.locations,id'],
             'license_plate' => ['required', 'string', 'max:20'],
             'company_or_name' => ['required', 'string', 'max:255'],
             'entry_date' => ['required', 'date'],

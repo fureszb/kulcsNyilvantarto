@@ -14,7 +14,7 @@ class StoreEvacuationReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'location_id' => ['nullable', 'integer', 'exists:locations,id'],
+            'location_id' => ['nullable', 'integer', 'exists:tenant.locations,id'],
             'prepared_by' => ['required', 'string', 'max:255'],
             'prepared_by_position' => ['required', 'string', 'max:255'],
             'location_text' => ['required', 'string', 'max:255'],

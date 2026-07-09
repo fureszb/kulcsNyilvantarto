@@ -14,13 +14,13 @@ class StoreLostFoundReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'location_id' => ['nullable', 'integer', 'exists:locations,id'],
+            'location_id' => ['nullable', 'integer', 'exists:tenant.locations,id'],
             'subject' => ['required', 'string', 'max:255'],
             'recorded_at' => ['required', 'date'],
             'location_text' => ['required', 'string', 'max:255'],
-            'representative_user_id' => ['nullable', 'integer', 'exists:users,id'],
-            'witness_user_id' => ['nullable', 'integer', 'exists:users,id'],
-            'guard_user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'representative_user_id' => ['nullable', 'integer', 'exists:tenant.users,id'],
+            'witness_user_id' => ['nullable', 'integer', 'exists:tenant.users,id'],
+            'guard_user_id' => ['nullable', 'integer', 'exists:tenant.users,id'],
             'content_description' => ['required', 'string', 'max:2000'],
             'handed_over_at' => ['nullable', 'date'],
             'recipient_name' => ['required', 'string', 'max:255'],
