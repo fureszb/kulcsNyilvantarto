@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from '@inertiajs/react';
 import type { MobileNavItem } from './MobileNavDrawer';
 
@@ -33,11 +33,23 @@ export default function AppHeader({
     const navHiddenClass = hiddenFrom === 'lg' ? 'hidden lg:flex' : 'hidden sm:flex';
     const toggleHiddenClass = hiddenFrom === 'lg' ? 'lg:hidden' : 'sm:hidden';
 
+    const [scrolled, setScrolled] = useState(false);
+    useEffect(() => {
+        function onScroll() { setScrolled(window.scrollY > 12); }
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
     return (
-        <header
-            className="safe-top sticky top-0 z-30 shadow-lg shadow-indigo-900/10 gradient-drift"
-            style={{ backgroundImage: 'linear-gradient(90deg, rgb(7, 29, 79) 0%, #0032a1 55%, rgb(10, 2, 22) 100%)' }}
-        >
+        <header className={`safe-top sticky top-0 z-30 shadow-lg shadow-indigo-900/10 transition-[backdrop-filter] duration-300 ${scrolled ? 'backdrop-blur-md' : ''}`}>
+            <div
+                className="absolute inset-0 gradient-drift transition-opacity duration-300 ease-out"
+                style={{
+                    backgroundImage: 'linear-gradient(90deg, rgb(7, 29, 79) 0%, #0032a1 55%, rgb(10, 2, 22) 100%)',
+                    opacity: scrolled ? 0.82 : 1,
+                }}
+            />
             <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }} />
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16 border-b border-white/10">
