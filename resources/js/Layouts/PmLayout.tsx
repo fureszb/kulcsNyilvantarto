@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
+import AppHeader from '../Components/AppHeader';
 import { getEcho } from '../echo';
 import type { PageProps } from '../types';
 
@@ -107,6 +108,16 @@ export default function PmLayout({ children, title }: Props) {
             badge: newReplies,
         },
     ];
+
+    const headerNavItems = navLinks.map(item => ({
+        key: item.route,
+        href: route(item.route),
+        label: item.label,
+        icon: item.icon,
+        active: route().current(item.matchRoute),
+        badge: item.badge,
+        badgeColor: 'bg-amber-500',
+    }));
 
     return (
         <div className={`pm-layout min-h-screen overflow-x-hidden bg-[#0f172a] flex flex-col${loaded ? ' pm-loaded app-loaded' : ''}`}>
@@ -222,102 +233,38 @@ export default function PmLayout({ children, title }: Props) {
             <div className="app-page-enter flex flex-col flex-1">
 
             {/* Header */}
-            <header
-                className="safe-top sticky top-0 z-30 shadow-lg shadow-indigo-900/10 gradient-drift"
-                style={{ backgroundImage: 'linear-gradient(90deg, rgb(7, 29, 79) 0%, #0032a1 55%, rgb(10, 2, 22) 100%)' }}
+            <AppHeader
+                brandHref={route('pm.dashboard')}
+                brandLabel={tenantName}
+                brandSublabel="Property Manager"
+                brandIcon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                navItems={headerNavItems}
+                mobileMenuOpen={mobileOpen}
+                onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
             >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-
-                        {/* Brand */}
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
-                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                                </svg>
-                            </div>
-                            <div className="leading-tight">
-                                <Link href={route('pm.dashboard')} className="text-sm font-bold text-white block hover:text-amber-300 transition-colors">
-                                    {tenantName}
-                                </Link>
-                                <span className="text-xs text-amber-400 font-semibold uppercase tracking-wider">Property Manager</span>
-                            </div>
-                        </div>
-
-                        {/* Desktop nav */}
-                        <nav className="hidden sm:flex items-center gap-1">
-                            {navLinks.map((item) => {
-                                const active = route().current(item.matchRoute);
-                                return (
-                                    <Link
-                                        key={item.route}
-                                        href={route(item.route)}
-                                        className={`relative flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${active ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}/>
-                                        </svg>
-                                        {item.label}
-                                        {item.badge && item.badge > 0 ? (
-                                            <span className="absolute -top-0.5 -right-0.5">
-                                                <span className="absolute -inset-0.5 rounded-full bg-amber-500 animate-ping opacity-40"/>
-                                                <span className="relative min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-amber-500 text-white text-[9px] font-bold leading-none px-0.5">{item.badge > 9 ? '9+' : item.badge}</span>
-                                            </span>
-                                        ) : null}
-                                    </Link>
-                                );
-                            })}
-                        </nav>
-
-                        {/* Right side */}
-                        <div className="flex items-center gap-2">
-                            {/* User chip – desktop */}
-                            <div className="hidden sm:flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-full px-3 py-1.5">
-                                <div className="w-6 h-6 rounded-lg bg-amber-500/30 border border-amber-500/40 flex items-center justify-center shrink-0">
-                                    <span className="text-xs font-bold text-amber-300 leading-none">{userInitial}</span>
-                                </div>
-                                <span className="text-xs font-medium text-white">{userName}</span>
-                            </div>
-                            {/* Logout – desktop */}
-                            <form onSubmit={logout} className="hidden sm:block">
-                                <button type="submit" title="Kilépés" aria-label="Kilépés" className="flex w-8 h-8 rounded-full items-center justify-center text-white/80 hover:text-red-300 hover:bg-white/10 transition-colors cursor-pointer">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                    </svg>
-                                </button>
-                            </form>
-                            {/* Mobile hamburger */}
-                            <button
-                                type="button"
-                                onClick={() => setMobileOpen(!mobileOpen)}
-                                className="sm:hidden flex items-center justify-center w-9 h-9 rounded-full bg-white/10 border border-white/20 text-white/80 hover:text-white hover:bg-white/20 transition-colors cursor-pointer"
-                            >
-                                {mobileOpen ? (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                ) : (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                                )}
-                            </button>
-                        </div>
+                {/* User chip – desktop */}
+                <div className="hidden sm:flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-full px-3 py-1.5">
+                    <div className="w-6 h-6 rounded-lg bg-amber-500/30 border border-amber-500/40 flex items-center justify-center shrink-0">
+                        <span className="text-xs font-bold text-amber-300 leading-none">{userInitial}</span>
                     </div>
+                    <span className="text-xs font-medium text-white">{userName}</span>
                 </div>
-
-            </header>
+                {/* Logout – desktop */}
+                <form onSubmit={logout} className="hidden sm:block">
+                    <button type="submit" title="Kilépés" aria-label="Kilépés" className="flex w-8 h-8 rounded-full items-center justify-center text-white/80 hover:text-red-300 hover:bg-white/10 transition-colors cursor-pointer">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
+                </form>
+            </AppHeader>
 
             <MobileNavDrawer
                 open={mobileOpen}
                 onClose={() => setMobileOpen(false)}
                 brandLabel={tenantName}
                 brandSublabel="Property Manager"
-                items={navLinks.map(item => ({
-                    key: item.route,
-                    href: route(item.route),
-                    label: item.label,
-                    icon: item.icon,
-                    active: route().current(item.matchRoute),
-                    badge: item.badge,
-                    badgeColor: 'bg-amber-500',
-                }))}
+                items={headerNavItems}
             >
                 <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/75">
                     <span className="w-8 h-8 rounded-lg bg-amber-500/30 border border-amber-500/40 flex items-center justify-center shrink-0">

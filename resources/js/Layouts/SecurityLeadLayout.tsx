@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
+import AppHeader from '../Components/AppHeader';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -75,6 +76,14 @@ export default function SecurityLeadLayout({ children, title }: Props) {
             matchRoute: 'ai.*',
         },
     ];
+
+    const headerNavItems = navLinks.map(item => ({
+        key: item.route,
+        href: route(item.route),
+        label: item.label,
+        icon: item.icon,
+        active: route().current(item.matchRoute),
+    }));
 
     return (
         <div className={`pm-layout min-h-screen overflow-x-hidden bg-[#0f172a] flex flex-col${loaded ? ' pm-loaded app-loaded' : ''}`}>
@@ -151,112 +160,65 @@ export default function SecurityLeadLayout({ children, title }: Props) {
 
             <div className="app-page-enter flex flex-col flex-1">
                 {/* Header */}
-                <header
-                    className="safe-top sticky top-0 z-30 shadow-lg shadow-indigo-900/10 gradient-drift"
-                    style={{ backgroundImage: 'linear-gradient(90deg, rgb(7, 29, 79) 0%, #0032a1 55%, rgb(10, 2, 22) 100%)' }}
+                <AppHeader
+                    brandHref={route('security-lead.dashboard')}
+                    brandLabel="Biztonsági Vezető"
+                    brandIcon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    navItems={headerNavItems}
+                    mobileMenuOpen={mobileOpen}
+                    onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
+                    hiddenFrom="lg"
                 >
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between h-16">
-                            {/* Brand */}
-                            <Link href={route('security-lead.dashboard')} className="flex items-center gap-3 group shrink-0">
-                                <div className="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center group-hover:bg-white/25 transition-colors shrink-0">
-                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                    </svg>
-                                </div>
-                                <span className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">Biztonsági Vezető</span>
-                            </Link>
-
-                            {/* Desktop nav */}
-                            <nav className="hidden lg:flex items-center gap-0.5">
-                                {navLinks.map(item => {
-                                    const active = route().current(item.matchRoute);
-                                    return (
-                                        <Link
-                                            key={item.route}
-                                            href={route(item.route)}
-                                            className={`relative flex items-center gap-1.5 px-2.5 py-2 rounded-full text-xs font-medium transition-colors ${active ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
-                                        >
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}/></svg>
-                                            {item.label}
-                                        </Link>
-                                    );
-                                })}
-                            </nav>
-
-                            {/* Right side */}
-                            <div className="flex items-center gap-2">
-                                <div className="relative hidden sm:block">
-                                    <button
-                                        type="button"
-                                        onClick={() => setProfileMenuOpen(v => !v)}
-                                        className="flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-full px-3 py-1.5 hover:bg-white/20 transition-colors cursor-pointer"
-                                    >
-                                        <div className="w-6 h-6 rounded-lg bg-cyan-500/30 border border-cyan-500/40 flex items-center justify-center shrink-0">
-                                            <span className="text-xs font-bold text-cyan-300 leading-none">{userInitial}</span>
-                                        </div>
-                                        <span className="text-xs font-medium text-white">{userName}</span>
-                                        <svg className={`w-3 h-3 text-white/60 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
-                                    </button>
-
-                                    {profileMenuOpen && (
-                                        <>
-                                            <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)} />
-                                            <div className="absolute right-0 top-11 z-50 w-52 py-1.5 rounded-xl bg-slate-800 border border-white/10 shadow-xl overflow-hidden">
-                                                <Link
-                                                    href={route('profile.edit')}
-                                                    onClick={() => setProfileMenuOpen(false)}
-                                                    className="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-                                                >
-                                                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                                    Profil szerkesztése
-                                                </Link>
-                                                <Link
-                                                    href={route('security-lead.team')}
-                                                    onClick={() => setProfileMenuOpen(false)}
-                                                    className="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-                                                >
-                                                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                                    Csapat
-                                                </Link>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                                <form onSubmit={logout} className="hidden sm:block">
-                                    <button type="submit" title="Kilépés" aria-label="Kilépés" className="flex w-8 h-8 rounded-full items-center justify-center text-white/80 hover:text-red-300 hover:bg-white/10 transition-colors cursor-pointer">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                                    </button>
-                                </form>
-                                <button
-                                    type="button"
-                                    onClick={() => setMobileOpen(!mobileOpen)}
-                                    className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full bg-white/10 border border-white/20 text-white/80 hover:text-white hover:bg-white/20 transition-colors cursor-pointer"
-                                >
-                                    {mobileOpen ? (
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    ) : (
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                                    )}
-                                </button>
+                    <div className="relative hidden sm:block">
+                        <button
+                            type="button"
+                            onClick={() => setProfileMenuOpen(v => !v)}
+                            className="flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-full px-3 py-1.5 hover:bg-white/20 transition-colors cursor-pointer"
+                        >
+                            <div className="w-6 h-6 rounded-lg bg-cyan-500/30 border border-cyan-500/40 flex items-center justify-center shrink-0">
+                                <span className="text-xs font-bold text-cyan-300 leading-none">{userInitial}</span>
                             </div>
-                        </div>
-                    </div>
+                            <span className="text-xs font-medium text-white">{userName}</span>
+                            <svg className={`w-3 h-3 text-white/60 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
 
-                </header>
+                        {profileMenuOpen && (
+                            <>
+                                <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)} />
+                                <div className="absolute right-0 top-11 z-50 w-52 py-1.5 rounded-xl bg-slate-800 border border-white/10 shadow-xl overflow-hidden">
+                                    <Link
+                                        href={route('profile.edit')}
+                                        onClick={() => setProfileMenuOpen(false)}
+                                        className="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                                    >
+                                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                        Profil szerkesztése
+                                    </Link>
+                                    <Link
+                                        href={route('security-lead.team')}
+                                        onClick={() => setProfileMenuOpen(false)}
+                                        className="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                                    >
+                                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Csapat
+                                    </Link>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                    <form onSubmit={logout} className="hidden sm:block">
+                        <button type="submit" title="Kilépés" aria-label="Kilépés" className="flex w-8 h-8 rounded-full items-center justify-center text-white/80 hover:text-red-300 hover:bg-white/10 transition-colors cursor-pointer">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        </button>
+                    </form>
+                </AppHeader>
 
                 <MobileNavDrawer
                     open={mobileOpen}
                     onClose={() => setMobileOpen(false)}
                     hiddenFrom="lg"
                     brandLabel="Biztonsági Vezető"
-                    items={navLinks.map(item => ({
-                        key: item.route,
-                        href: route(item.route),
-                        label: item.label,
-                        icon: item.icon,
-                        active: route().current(item.matchRoute),
-                    }))}
+                    items={headerNavItems}
                 >
                     <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/75">
                         <span className="w-8 h-8 rounded-lg bg-cyan-500/30 border border-cyan-500/40 flex items-center justify-center shrink-0">

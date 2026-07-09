@@ -3,21 +3,10 @@ import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
 import PushToggle from '../Components/PushToggle';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
+import AppHeader from '../Components/AppHeader';
+import LiveClock from '../Components/LiveClock';
 import { getEcho } from '../echo';
 import type { PageProps } from '../types';
-
-function LiveClock() {
-    const [time, setTime] = useState('');
-    useEffect(() => {
-        function tick() {
-            setTime(new Date().toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' }));
-        }
-        tick();
-        const t = setInterval(tick, 1000);
-        return () => clearInterval(t);
-    }, []);
-    return <span className="text-xs font-semibold text-white/70 tabular-nums hidden sm:inline">{time}</span>;
-}
 
 interface Props {
     children: ReactNode;
@@ -83,79 +72,40 @@ export default function AppLayout({ children, title }: Props) {
         <div className="relative min-h-screen overflow-x-hidden bg-slate-50 text-slate-800 antialiased flex flex-col">
             {title && <title>{title} – {tenantName}</title>}
 
-            <header
-                className="safe-top sticky top-0 z-30 shadow-lg shadow-indigo-900/10 gradient-drift"
-                style={{ backgroundImage: 'linear-gradient(90deg, rgb(7, 29, 79) 0%, #0032a1 55%, rgb(10, 2, 22) 100%)' }}
+            <AppHeader
+                brandHref={route('home')}
+                brandLabel={tenantName}
+                navItems={navItems}
+                mobileMenuOpen={mobileOpen}
+                onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
             >
-                <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16 border-b border-white/10">
-                        {/* Brand */}
-                        <Link href={route('home')} className="flex items-center gap-2.5 group shrink-0">
-                            <div className="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center group-hover:bg-white/25 transition-colors shrink-0">
-                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                                </svg>
+                <LiveClock />
+                <PushToggle />
+
+                {user && (
+                    <>
+                        <Link href={route('profile.edit')}
+                            className="hidden sm:flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-2.5 py-1 hover:bg-white/20 transition-colors">
+                            <div className="w-5 h-5 rounded-md bg-white/25 border border-white/30 flex items-center justify-center shrink-0">
+                                <span className="text-[9px] font-bold text-white leading-none">{user.name.charAt(0)}</span>
                             </div>
-                            <span className="text-white font-bold text-sm hidden sm:block">{tenantName}</span>
+                            <span className="text-xs font-medium text-white max-w-[100px] truncate">{user.name}</span>
                         </Link>
-
-                        {/* Desktop nav */}
-                        <nav className="hidden sm:flex items-center gap-0.5">
-                            {navItems.map(nl => (
-                                <Link key={nl.key} href={nl.href}
-                                    className={`relative flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors ${nl.active ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={nl.icon}/></svg>
-                                    {nl.label}
-                                    {!!nl.badge && nl.badge > 0 && (
-                                        <span className="absolute -top-0.5 -right-0.5">
-                                            <span className={`absolute -inset-0.5 rounded-full ${nl.badgeColor} animate-ping opacity-40`}/>
-                                            <span className={`relative min-w-[14px] h-[14px] flex items-center justify-center rounded-full ${nl.badgeColor} text-white text-[9px] font-bold leading-none px-0.5`}>{nl.badge > 9 ? '9+' : nl.badge}</span>
-                                        </span>
-                                    )}
-                                </Link>
-                            ))}
-                        </nav>
-
-                        {/* Right side */}
-                        <div className="flex items-center gap-1.5">
-                            <LiveClock />
-                            <PushToggle />
-
-                            {user && (
-                                <>
-                                    <Link href={route('profile.edit')}
-                                        className="hidden sm:flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-2.5 py-1 hover:bg-white/20 transition-colors">
-                                        <div className="w-5 h-5 rounded-md bg-white/25 border border-white/30 flex items-center justify-center shrink-0">
-                                            <span className="text-[9px] font-bold text-white leading-none">{user.name.charAt(0)}</span>
-                                        </div>
-                                        <span className="text-xs font-medium text-white max-w-[100px] truncate">{user.name}</span>
-                                    </Link>
-                                    <form onSubmit={logout} className="hidden sm:block">
-                                        <button type="submit" title="Kilépés" aria-label="Kilépés" className="flex w-8 h-8 rounded-full items-center justify-center text-white/80 hover:text-red-300 hover:bg-white/10 transition-colors cursor-pointer">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                                        </button>
-                                    </form>
-                                    {user.is_admin && (
-                                        <Link href={route('admin.settings.edit')}
-                                            className={`hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${route().current('admin.*') ? 'bg-white/20 text-white' : 'bg-white/10 border border-white/20 text-white/70 hover:text-white hover:bg-white/20'}`}>
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                            Admin
-                                        </Link>
-                                    )}
-                                </>
-                            )}
-                            <button
-                                onClick={() => setMobileOpen(!mobileOpen)}
-                                className="sm:hidden flex items-center justify-center w-8 h-8 rounded-full bg-white/10 border border-white/20 text-white/80 hover:text-white hover:bg-white/20 transition-colors"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        <form onSubmit={logout} className="hidden sm:block">
+                            <button type="submit" title="Kilépés" aria-label="Kilépés" className="flex w-8 h-8 rounded-full items-center justify-center text-white/80 hover:text-red-300 hover:bg-white/10 transition-colors cursor-pointer">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                             </button>
-                        </div>
-                    </div>
-                </div>
-
-            </header>
+                        </form>
+                        {user.is_admin && (
+                            <Link href={route('admin.settings.edit')}
+                                className={`hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${route().current('admin.*') ? 'bg-white/20 text-white' : 'bg-white/10 border border-white/20 text-white/70 hover:text-white hover:bg-white/20'}`}>
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                Admin
+                            </Link>
+                        )}
+                    </>
+                )}
+            </AppHeader>
 
             <MobileNavDrawer
                 open={mobileOpen}
