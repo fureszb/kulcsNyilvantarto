@@ -56,7 +56,13 @@
 }
 
 @layer base {
-    html { font-family: 'Inter', sans-serif; scrollbar-gutter: stable; }
+    /* overflow-y:scroll = univerzálisan (minden böngészőben, öröktől fogva)
+       támogatott garancia arra, hogy a függőleges scrollbar helye MINDIG
+       le van foglalva — a scrollbar-gutter:stable ugyanezt célozná meg
+       modernebb böngészőkben, de kiegészítésként hagyjuk, nem árt. Enélkül
+       egy rövidebb és egy hosszabb (görgetést igénylő) oldal között a
+       tartalom szélessége a scrollbar szélességével (~15-17px) ugrott. */
+    html { font-family: 'Inter', sans-serif; scrollbar-gutter: stable; overflow-y: scroll; }
     [x-cloak] { display: none !important; }
     input, select, textarea { font-size: max(16px, 1em); }
 }
