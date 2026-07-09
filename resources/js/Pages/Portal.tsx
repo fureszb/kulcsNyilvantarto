@@ -873,12 +873,7 @@ function LiveClock() {
         return () => clearInterval(t);
     }, []);
     return (
-        <div className="hidden sm:flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-2.5 py-1">
-            <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span className="text-xs font-semibold text-white/80 tabular-nums">{time}</span>
-        </div>
+        <span className="text-xs font-semibold text-white/70 tabular-nums hidden sm:inline">{time}</span>
     );
 }
 
@@ -1054,7 +1049,7 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                 {/* Dot grid */}
                 <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)', backgroundSize: '32px 32px' }}/>
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-14 border-b border-white/10">
+                    <div className="flex items-center justify-between h-16 border-b border-white/10">
                         <Link href={route('home')} className="flex items-center gap-2.5 group shrink-0">
                             <div className="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center group-hover:bg-white/25 transition-colors shrink-0">
                                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1100,11 +1095,10 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                                         <span className="text-xs font-medium text-white max-w-[100px] truncate">{user.name}</span>
                                     </Link>
                                     <form onSubmit={logout} className="hidden sm:block">
-                                        <button type="submit" className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium text-white/70 hover:text-red-300 hover:border-red-400/40 hover:bg-red-500/15 transition-all cursor-pointer">
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <button type="submit" title="Kilépés" aria-label="Kilépés" className="flex w-8 h-8 rounded-full items-center justify-center text-white/80 hover:text-red-300 hover:bg-white/10 transition-colors cursor-pointer">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                                             </svg>
-                                            Kilépés
                                         </button>
                                     </form>
                                     {user.is_admin && (
