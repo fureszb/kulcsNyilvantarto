@@ -56,6 +56,7 @@ class ActivityLog extends Model
             'pm_message.sent'    => 'PM üzenet',
             'pm_message.updated' => 'PM üzenet módosítva',
             'pm_message.deleted' => 'PM üzenet törölve',
+            'document.created'   => 'Dokumentum',
             default              => $this->event_type,
         };
     }
@@ -76,6 +77,7 @@ class ActivityLog extends Model
             'pm_message.sent'    => 'amber',
             'pm_message.updated' => 'amber',
             'pm_message.deleted' => 'amber',
+            'document.created'   => 'cyan',
             default              => 'slate',
         };
     }

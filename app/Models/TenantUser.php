@@ -62,6 +62,13 @@ class TenantUser extends Authenticatable
         return in_array($this->role, ['admin', 'area_director']);
     }
 
+    /** Ki hozhat létre biztonsági dokumentumot/jegyzőkönyvet — PM és területi
+     *  igazgató csak megtekintheti, nem rögzíthet eseményt. */
+    public function canCreateDocuments(): bool
+    {
+        return in_array($this->role, ['user', 'security_lead', 'admin']);
+    }
+
     // ── Szervezeti hierarchia relációk (ER-diagram szerint N:1/1:1) ──
 
     /** Dolgozó/PM → az EGY irodaház, ahol dolgozik / amit vezet. */

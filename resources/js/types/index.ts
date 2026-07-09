@@ -309,3 +309,26 @@ export interface PaginationLink {
     label: string;
     active: boolean;
 }
+
+export type DocumentType =
+    | 'feljegyzeses_jegyzokonyv'
+    | 'gepjarmu_beleptetes'
+    | 'eszkoz_atadas_atvetel'
+    | 'karfelveteli_jegyzokonyv'
+    | 'kiuritesi_jegyzokonyv'
+    | 'kiuritesi_nyilvantartas'
+    | 'kulcs_kartya_atadas_atvetel'
+    | 'talalt_targy_jegyzokonyv'
+    | 'robbantasi_fenyegetes'
+    | 'tuzkulcs_tuzkazetta_kiadas';
+
+export interface DocumentSummary {
+    id: number;
+    document_type: DocumentType;
+    status: string;
+    pdf_path: string | null;
+    finalized_at: string | null;
+    created_at: string;
+    location?: { id: number; name: string } | null;
+    created_by?: TenantUserBasic | null;
+}

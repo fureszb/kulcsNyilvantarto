@@ -20,6 +20,17 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DirectorController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\Documents\IncidentReportController;
+use App\Http\Controllers\Documents\VehicleEntryController;
+use App\Http\Controllers\Documents\EquipmentHandoverController;
+use App\Http\Controllers\Documents\DamageReportController;
+use App\Http\Controllers\Documents\EvacuationReportController;
+use App\Http\Controllers\Documents\EvacuationRegistryController;
+use App\Http\Controllers\Documents\KeyCardHandoverController;
+use App\Http\Controllers\Documents\LostFoundReportController;
+use App\Http\Controllers\Documents\BombThreatController;
+use App\Http\Controllers\Documents\FireKeyIssuanceController;
 use App\Http\Controllers\SecurityLeadController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\HistoryController;
@@ -154,6 +165,45 @@ Route::prefix('{tenant}')
             // Profil
             Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+            // Dokumentumok / jegyzőkönyvek (megtekintés: mindenki; létrehozás: canCreateDocuments())
+            Route::prefix('documents')->name('documents.')->group(function () {
+                Route::get('/', [DocumentController::class, 'index'])->name('index');
+                Route::get('/{document}', [DocumentController::class, 'show'])->name('show');
+                Route::get('/{document}/preview', [DocumentController::class, 'preview'])->name('preview');
+                Route::get('/{document}/download', [DocumentController::class, 'download'])->name('download');
+                Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy');
+
+                Route::get('/create/incident-report', [IncidentReportController::class, 'create'])->name('incident-report.create');
+                Route::post('/incident-report', [IncidentReportController::class, 'store'])->name('incident-report.store');
+
+                Route::get('/create/vehicle-entry', [VehicleEntryController::class, 'create'])->name('vehicle-entry.create');
+                Route::post('/vehicle-entry', [VehicleEntryController::class, 'store'])->name('vehicle-entry.store');
+
+                Route::get('/create/equipment-handover', [EquipmentHandoverController::class, 'create'])->name('equipment-handover.create');
+                Route::post('/equipment-handover', [EquipmentHandoverController::class, 'store'])->name('equipment-handover.store');
+
+                Route::get('/create/damage-report', [DamageReportController::class, 'create'])->name('damage-report.create');
+                Route::post('/damage-report', [DamageReportController::class, 'store'])->name('damage-report.store');
+
+                Route::get('/create/evacuation-report', [EvacuationReportController::class, 'create'])->name('evacuation-report.create');
+                Route::post('/evacuation-report', [EvacuationReportController::class, 'store'])->name('evacuation-report.store');
+
+                Route::get('/create/evacuation-registry', [EvacuationRegistryController::class, 'create'])->name('evacuation-registry.create');
+                Route::post('/evacuation-registry', [EvacuationRegistryController::class, 'store'])->name('evacuation-registry.store');
+
+                Route::get('/create/key-card-handover', [KeyCardHandoverController::class, 'create'])->name('key-card-handover.create');
+                Route::post('/key-card-handover', [KeyCardHandoverController::class, 'store'])->name('key-card-handover.store');
+
+                Route::get('/create/lost-found-report', [LostFoundReportController::class, 'create'])->name('lost-found-report.create');
+                Route::post('/lost-found-report', [LostFoundReportController::class, 'store'])->name('lost-found-report.store');
+
+                Route::get('/create/bomb-threat', [BombThreatController::class, 'create'])->name('bomb-threat.create');
+                Route::post('/bomb-threat', [BombThreatController::class, 'store'])->name('bomb-threat.store');
+
+                Route::get('/create/fire-key-issuance', [FireKeyIssuanceController::class, 'create'])->name('fire-key-issuance.create');
+                Route::post('/fire-key-issuance', [FireKeyIssuanceController::class, 'store'])->name('fire-key-issuance.store');
+            });
         });
 
         // Web Push feliratkozás — tenant guard-dal (worker, admin és PM egyaránt)
