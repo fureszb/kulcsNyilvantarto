@@ -3,8 +3,12 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckController;
 use App\Http\Controllers\Api\EmergencyContactController;
+use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\PmMessageController;
+use App\Http\Controllers\Api\SecurityReportController;
 use App\Http\Controllers\Api\ShiftNoteController;
+use App\Http\Controllers\Api\TrainingController;
 use App\Http\Controllers\Api\VezenylesController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,5 +55,30 @@ Route::prefix('{tenant}')
 
             // Vészhelyzeti kapcsolatok
             Route::get('/emergency-contacts', [EmergencyContactController::class, 'index'])->name('api.emergency-contacts.index');
+
+            // Oktatások
+            Route::get('/trainings', [TrainingController::class, 'index'])->name('api.trainings.index');
+            Route::get('/trainings/{training}', [TrainingController::class, 'show'])->name('api.trainings.show');
+            Route::post('/trainings/{training}/results', [TrainingController::class, 'storeResult'])->name('api.trainings.results.store');
+
+            // Vizsgák
+            Route::get('/exams', [ExamController::class, 'index'])->name('api.exams.index');
+            Route::get('/exams/{exam}', [ExamController::class, 'show'])->name('api.exams.show');
+            Route::post('/exams/{exam}/answers', [ExamController::class, 'submitAnswers'])->name('api.exams.answers.store');
+
+            // PM üzenetek
+            Route::get('/pm-messages', [PmMessageController::class, 'index'])->name('api.pm-messages.index');
+            Route::get('/pm-messages/recipients', [PmMessageController::class, 'recipients'])->name('api.pm-messages.recipients');
+            Route::post('/pm-messages', [PmMessageController::class, 'store'])->name('api.pm-messages.store');
+            Route::post('/pm-messages/{message}/replies', [PmMessageController::class, 'storeReply'])->name('api.pm-messages.replies.store');
+            Route::put('/pm-messages/{message}', [PmMessageController::class, 'update'])->name('api.pm-messages.update');
+            Route::delete('/pm-messages/{message}', [PmMessageController::class, 'destroy'])->name('api.pm-messages.destroy');
+
+            // Napi biztonsági jelentések
+            Route::get('/security-reports', [SecurityReportController::class, 'index'])->name('api.security-reports.index');
+            Route::get('/security-reports/{security}', [SecurityReportController::class, 'show'])->name('api.security-reports.show');
+            Route::post('/security-reports', [SecurityReportController::class, 'store'])->name('api.security-reports.store');
+            Route::put('/security-reports/{security}', [SecurityReportController::class, 'update'])->name('api.security-reports.update');
+            Route::put('/security-reports/{security}/shares', [SecurityReportController::class, 'updateShares'])->name('api.security-reports.shares.update');
         });
     });
