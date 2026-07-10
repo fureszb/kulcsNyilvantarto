@@ -312,6 +312,13 @@ html.no-progress #nprogress { display: none !important; }
     .safe-top { padding-top: max(env(safe-area-inset-top), 0.75rem); }
 }
 
+/* A mobil menü (hamburger drawer) fejléce a fő safe-topnál is nagyobb
+   puffert kap — PWA-ban a bezárás gombnak notch/dinamikus sziget alatt
+   is szabadon kattinthatónak kell maradnia. Az alsó "Alkalmazás
+   letöltése" gomb a flex-col elrendezés miatt (shrink-0, a lista alatt)
+   ettől függetlenül lent marad. */
+.safe-top-drawer { padding-top: calc(env(safe-area-inset-top) + 1.5rem); }
+
 /* ═══════════════════════════════════════════════════════════
    12. AI CHAT — üzenetek, fázisjelző, animációk
 ═══════════════════════════════════════════════════════════ */
