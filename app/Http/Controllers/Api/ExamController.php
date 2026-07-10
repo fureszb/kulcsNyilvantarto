@@ -34,6 +34,8 @@ class ExamController extends Controller
                 'id'          => $e->id,
                 'title'       => $e->title,
                 'description' => $e->description,
+                'is_active'   => $e->is_active,
+                'sort_order'  => $e->sort_order,
                 'steps_count' => $e->steps_count,
             ])->values(),
             'my_results' => $myResults,
@@ -98,12 +100,22 @@ class ExamController extends Controller
         }
 
         return response()->json([
-            'id'                 => $exam->id,
-            'title'              => $exam->title,
-            'description'        => $exam->description,
-            'time_limit_minutes' => $exam->time_limit_minutes,
-            'steps'              => $steps,
-            'attempt_status'     => [
+            'exam' => [
+                'id'                 => $exam->id,
+                'title'              => $exam->title,
+                'description'        => $exam->description,
+                'is_active'          => $exam->is_active,
+                'sort_order'         => $exam->sort_order,
+                'max_attempts'       => $exam->max_attempts,
+                'cooldown_minutes'   => $exam->cooldown_minutes,
+                'shuffle_questions'  => $exam->shuffle_questions,
+                'shuffle_answers'    => $exam->shuffle_answers,
+                'time_limit_minutes' => $exam->time_limit_minutes,
+                'steps_count'        => $exam->steps->count(),
+            ],
+            'steps_data'        => $steps,
+            'participant_name'  => $user->name,
+            'attempt_status'    => [
                 'attempts_used'              => $attemptsUsed,
                 'max_attempts'               => $maxAttempts,
                 'cooldown_remaining_minutes' => $cooldownRemaining,

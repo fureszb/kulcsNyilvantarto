@@ -29,15 +29,21 @@ trait BuildsDocumentResponse
             'status'             => $document->status,
             'location_id'        => $document->location_id,
             'created_by_user_id' => $document->created_by_user_id,
+            // A mobil kliens Bearer-token-nel hitelesítve, magával az autentikált Ktor
+            // HttpClienttel tölti le ezt az URL-t (nem külső, hitelesítés nélküli
+            // böngészőnek/PDF-nézőnek adja oda) — lásd `PdfDownloader`/`onOpenPdf` a Kotlin
+            // oldalon. A `pdf()` action ezért változatlanul `api-tenant-auth` mögött marad.
             'pdf_url'            => $document->pdf_path ? route('api.documents.pdf', $document) : null,
             'signatures'         => $document->signatures->map(fn ($s) => [
                 'id'          => $s->id,
+                'document_id' => $s->document_id,
                 'role'        => $s->role,
                 'signer_name' => $s->signer_name,
                 'signed_at'   => optional($s->signed_at)->toIso8601String(),
             ])->values(),
             'attachments'        => $document->attachments->map(fn ($a) => [
                 'id'             => $a->id,
+                'document_id'    => $a->document_id,
                 'label'          => $a->label,
                 'original_name'  => $a->original_name,
                 'size_bytes'     => $a->size_bytes,

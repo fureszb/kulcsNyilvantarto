@@ -17,7 +17,7 @@ class PmMessageResource extends JsonResource
             'sent_by_user_id'  => $this->sent_by_user_id,
             'sent_by_name'     => $this->sent_by_name,
             'created_at'       => optional($this->created_at)->toIso8601String(),
-            'recipient_ids'    => $this->whenLoaded('recipients', fn () => $this->recipients->pluck('user_id')->values()),
+            'recipient_user_ids' => $this->whenLoaded('recipients', fn () => $this->recipients->pluck('user_id')->values()),
             'replies'          => PmMessageReplyResource::collection($this->whenLoaded('replies')),
         ];
     }

@@ -99,7 +99,10 @@ class PropertyManagerController extends Controller
             $results = $examResults->where('exam_id', $e->id)->sortByDesc('completed_at');
             $lastExam = $results->first();
             return [
-                'exam' => ['id' => $e->id, 'title' => $e->title, 'description' => $e->description, 'steps_count' => $e->steps_count],
+                'exam' => [
+                    'id' => $e->id, 'title' => $e->title, 'description' => $e->description,
+                    'is_active' => $e->is_active, 'sort_order' => $e->sort_order, 'steps_count' => $e->steps_count,
+                ],
                 'exam_done'  => $lastExam !== null,
                 'last_exam'  => $lastExam ? [
                     'id'             => $lastExam->id,

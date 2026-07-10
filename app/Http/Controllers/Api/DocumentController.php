@@ -32,9 +32,9 @@ class DocumentController extends Controller
 
         $documents = $query->paginate(25);
 
-        return response()->json([
-            'data' => collect($documents->items())->map(fn (Document $d) => $this->documentBase($d))->values(),
-        ]);
+        return response()->json(
+            collect($documents->items())->map(fn (Document $d) => $this->documentBase($d))->values()
+        );
     }
 
     public function show(Request $request, Document $document)

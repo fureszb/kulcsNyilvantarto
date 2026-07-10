@@ -30,7 +30,7 @@ class TrainingController extends Controller
         ])->values());
     }
 
-    public function show(Training $training)
+    public function show(Request $request, Training $training)
     {
         if (!$training->is_active) {
             abort(404);
@@ -39,11 +39,16 @@ class TrainingController extends Controller
         $steps = $training->steps()->with('answers')->get();
 
         return response()->json([
-            'id'                    => $training->id,
-            'title'                 => $training->title,
-            'description'           => $training->description,
-            'is_location_knowledge' => $training->is_location_knowledge,
-            'steps'                 => $steps->map(fn ($step) => [
+            'training' => [
+                'id'                    => $training->id,
+                'title'                 => $training->title,
+                'description'           => $training->description,
+                'is_active'             => $training->is_active,
+                'sort_order'            => $training->sort_order,
+                'is_location_knowledge' => $training->is_location_knowledge,
+                'steps_count'           => $steps->count(),
+            ],
+            'steps_data' => $steps->map(fn ($step) => [
                 'id'                 => $step->id,
                 'question'           => $step->question,
                 'question_type'      => $step->question_type ?? 'radio',
@@ -59,6 +64,7 @@ class TrainingController extends Controller
                     'is_correct' => $a->is_correct,
                 ])->values(),
             ])->values(),
+            'participant_name' => $request->user()->name,
         ]);
     }
 
