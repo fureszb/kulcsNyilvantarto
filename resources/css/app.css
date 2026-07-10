@@ -306,6 +306,12 @@ html.no-progress #nprogress { display: none !important; }
    safe-area) az env() nullára esik, tehát itt nem okoz felesleges rést. */
 .safe-top { padding-top: env(safe-area-inset-top); }
 
+/* Mobilon (nincs safe-area) a fejléc a viewport tetejéhez tapadt —
+   adjunk neki egy minimális felső paddinget, hogy ne csússzon fel. */
+@media (max-width: 639px) {
+    .safe-top { padding-top: max(env(safe-area-inset-top), 0.75rem); }
+}
+
 /* ═══════════════════════════════════════════════════════════
    12. AI CHAT — üzenetek, fázisjelző, animációk
 ═══════════════════════════════════════════════════════════ */
