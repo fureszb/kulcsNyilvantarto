@@ -84,7 +84,7 @@ export default function MobileNavDrawer({ open, onClose, brandLabel, brandSublab
                 aria-modal="true"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 h-16 border-b border-white/10 shrink-0">
+                <div className="safe-top flex items-center justify-between px-5 h-16 border-b border-white/10 shrink-0">
                     <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
                             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
