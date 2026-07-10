@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckController;
+use App\Http\Controllers\Api\DirectorController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\Documents\BombThreatController;
 use App\Http\Controllers\Api\Documents\DamageReportController;
@@ -17,6 +18,8 @@ use App\Http\Controllers\Api\EmergencyContactController;
 use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\PmMessageController;
+use App\Http\Controllers\Api\PropertyManagerController;
+use App\Http\Controllers\Api\SecurityLeadController;
 use App\Http\Controllers\Api\SecurityReportController;
 use App\Http\Controllers\Api\ShiftNoteController;
 use App\Http\Controllers\Api\TrainingController;
@@ -130,5 +133,34 @@ Route::prefix('{tenant}')
                 Route::get('/bomb-threats/{document}', [BombThreatController::class, 'show'])->name('bomb-threats.show');
                 Route::post('/bomb-threats', [BombThreatController::class, 'store'])->name('bomb-threats.store');
             });
+
+            // Területi igazgató
+            Route::prefix('director')->name('api.director.')->group(function () {
+                Route::get('/overview', [DirectorController::class, 'overview'])->name('overview');
+                Route::get('/monthly-history', [DirectorController::class, 'monthlyHistory'])->name('monthly-history');
+                Route::post('/leads/{leadId}/goal', [DirectorController::class, 'setGoal'])->name('leads.goal');
+            });
+
+            // Biztonsági vezető
+            Route::prefix('security-lead')->name('api.security-lead.')->group(function () {
+                Route::get('/dashboard', [SecurityLeadController::class, 'dashboard'])->name('dashboard');
+                Route::get('/workers', [SecurityLeadController::class, 'workers'])->name('workers');
+                Route::get('/inventory', [SecurityLeadController::class, 'inventory'])->name('inventory');
+                Route::get('/team', [SecurityLeadController::class, 'team'])->name('team');
+                Route::post('/team/workers', [SecurityLeadController::class, 'addTeamWorker'])->name('team.workers.store');
+                Route::delete('/team/workers/{user}', [SecurityLeadController::class, 'removeTeamWorker'])->name('team.workers.destroy');
+                Route::post('/team/pm', [SecurityLeadController::class, 'setTeamPm'])->name('team.pm.store');
+                Route::delete('/team/pm/{user}', [SecurityLeadController::class, 'removeTeamPm'])->name('team.pm.destroy');
+            });
+
+            // Property Manager
+            Route::prefix('pm')->name('api.pm.')->group(function () {
+                Route::get('/dashboard', [PropertyManagerController::class, 'dashboard'])->name('dashboard');
+                Route::get('/security-reports', [PropertyManagerController::class, 'securityReports'])->name('security-reports');
+                Route::get('/checks', [PropertyManagerController::class, 'checks'])->name('checks');
+            });
+
+            // Worker Detail — megosztott PM + Security Lead végpont
+            Route::get('/workers/{user}', [PropertyManagerController::class, 'worker'])->name('api.workers.show');
         });
     });
