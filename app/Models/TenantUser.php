@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 
 class TenantUser extends Authenticatable
 {
-    use HasPushSubscriptions, Notifiable;
+    use HasApiTokens, HasPushSubscriptions, Notifiable;
 
     protected $connection = 'tenant';
     protected $table = 'users';
