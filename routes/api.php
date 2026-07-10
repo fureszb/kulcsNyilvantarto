@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\PmMessageController;
 use App\Http\Controllers\Api\PropertyManagerController;
+use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\SecurityLeadController;
 use App\Http\Controllers\Api\SecurityReportController;
 use App\Http\Controllers\Api\ShiftNoteController;
@@ -175,5 +176,11 @@ Route::prefix('{tenant}')
                 ->middleware('throttle:30,1')->name('api.ai.tts');
             Route::post('/ai/documents', [AiDocumentController::class, 'store'])->name('api.ai.documents.store');
             Route::delete('/ai/documents/{document}', [AiDocumentController::class, 'destroy'])->name('api.ai.documents.destroy');
+
+            // Push feliratkozás — natív mobil (FCM/APNs) device-token
+            Route::post('/push/subscribe-native', [PushSubscriptionController::class, 'subscribeNative'])
+                ->middleware('throttle:20,1')->name('api.push.subscribe-native');
+            Route::post('/push/unsubscribe-native', [PushSubscriptionController::class, 'unsubscribeNative'])
+                ->middleware('throttle:20,1')->name('api.push.unsubscribe-native');
         });
     });
