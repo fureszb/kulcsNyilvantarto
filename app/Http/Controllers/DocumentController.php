@@ -65,7 +65,9 @@ class DocumentController extends Controller
         $this->authorizeView($document);
         abort_unless($document->pdf_path && Storage::disk('local')->exists($document->pdf_path), 404);
 
-        return Storage::disk('local')->download($document->pdf_path, "{$document->typeLabel()}-{$document->id}.pdf");
+        $safeLabel = preg_replace('/[\/\\\\]/', '-', $document->typeLabel());
+
+        return Storage::disk('local')->download($document->pdf_path, "{$safeLabel}-{$document->id}.pdf");
     }
 
     public function destroy(Document $document)
