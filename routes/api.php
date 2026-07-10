@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\AiChatController;
+use App\Http\Controllers\Api\AiDocumentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckController;
 use App\Http\Controllers\Api\DirectorController;
@@ -162,5 +164,16 @@ Route::prefix('{tenant}')
 
             // Worker Detail — megosztott PM + Security Lead végpont
             Route::get('/workers/{user}', [PropertyManagerController::class, 'worker'])->name('api.workers.show');
+
+            // AI asszisztens (RAG chat + dokumentumok)
+            Route::get('/ai/chat', [AiChatController::class, 'show'])->name('api.ai.chat');
+            Route::get('/ai/chat/sessions/{session}', [AiChatController::class, 'showSession'])->name('api.ai.sessions.show');
+            Route::delete('/ai/chat/sessions/{session}', [AiChatController::class, 'destroySession'])->name('api.ai.sessions.destroy');
+            Route::post('/ai/chat/stream', [AiChatController::class, 'stream'])
+                ->middleware('throttle:20,1')->name('api.ai.chat.stream');
+            Route::post('/ai/chat/tts', [AiChatController::class, 'tts'])
+                ->middleware('throttle:30,1')->name('api.ai.tts');
+            Route::post('/ai/documents', [AiDocumentController::class, 'store'])->name('api.ai.documents.store');
+            Route::delete('/ai/documents/{document}', [AiDocumentController::class, 'destroy'])->name('api.ai.documents.destroy');
         });
     });
