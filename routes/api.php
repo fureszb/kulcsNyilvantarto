@@ -3,7 +3,16 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckController;
 use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\Documents\BombThreatController;
+use App\Http\Controllers\Api\Documents\DamageReportController;
+use App\Http\Controllers\Api\Documents\EquipmentHandoverController;
+use App\Http\Controllers\Api\Documents\EvacuationRegistryController;
+use App\Http\Controllers\Api\Documents\EvacuationReportController;
+use App\Http\Controllers\Api\Documents\FireKeyIssuanceController;
+use App\Http\Controllers\Api\Documents\IncidentReportController;
 use App\Http\Controllers\Api\Documents\KeyCardHandoverController;
+use App\Http\Controllers\Api\Documents\LostFoundReportController;
+use App\Http\Controllers\Api\Documents\VehicleEntryController;
 use App\Http\Controllers\Api\EmergencyContactController;
 use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\HomeController;
@@ -93,6 +102,33 @@ Route::prefix('{tenant}')
 
                 Route::get('/key-card-handovers/{document}', [KeyCardHandoverController::class, 'show'])->name('key-card-handovers.show');
                 Route::post('/key-card-handovers', [KeyCardHandoverController::class, 'store'])->name('key-card-handovers.store');
+
+                Route::get('/vehicle-entries/{document}', [VehicleEntryController::class, 'show'])->name('vehicle-entries.show');
+                Route::post('/vehicle-entries', [VehicleEntryController::class, 'store'])->name('vehicle-entries.store');
+
+                Route::get('/equipment-handovers/{document}', [EquipmentHandoverController::class, 'show'])->name('equipment-handovers.show');
+                Route::post('/equipment-handovers', [EquipmentHandoverController::class, 'store'])->name('equipment-handovers.store');
+
+                Route::get('/lost-found-reports/{document}', [LostFoundReportController::class, 'show'])->name('lost-found-reports.show');
+                Route::post('/lost-found-reports', [LostFoundReportController::class, 'store'])->name('lost-found-reports.store');
+
+                Route::get('/evacuation-registries/{document}', [EvacuationRegistryController::class, 'show'])->name('evacuation-registries.show');
+                Route::post('/evacuation-registries', [EvacuationRegistryController::class, 'store'])->name('evacuation-registries.store');
+
+                Route::get('/fire-key-issuances/{document}', [FireKeyIssuanceController::class, 'show'])->name('fire-key-issuances.show');
+                Route::post('/fire-key-issuances', [FireKeyIssuanceController::class, 'store'])->name('fire-key-issuances.store');
+
+                Route::get('/incident-reports/{document}', [IncidentReportController::class, 'show'])->name('incident-reports.show');
+                Route::post('/incident-reports', [IncidentReportController::class, 'store'])->name('incident-reports.store');
+
+                Route::get('/damage-reports/{document}', [DamageReportController::class, 'show'])->name('damage-reports.show');
+                Route::post('/damage-reports', [DamageReportController::class, 'store'])->name('damage-reports.store');
+
+                Route::get('/evacuation-reports/{document}', [EvacuationReportController::class, 'show'])->name('evacuation-reports.show');
+                Route::post('/evacuation-reports', [EvacuationReportController::class, 'store'])->name('evacuation-reports.store');
+
+                Route::get('/bomb-threats/{document}', [BombThreatController::class, 'show'])->name('bomb-threats.show');
+                Route::post('/bomb-threats', [BombThreatController::class, 'store'])->name('bomb-threats.store');
             });
         });
     });

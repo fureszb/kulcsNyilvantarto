@@ -29,7 +29,7 @@ class DocumentDamageReport extends Model
         return $this->belongsTo(Document::class);
     }
 
-    public function guard(): BelongsTo
+    public function guardUser(): BelongsTo
     {
         return $this->belongsTo(TenantUser::class, 'guard_user_id');
     }
