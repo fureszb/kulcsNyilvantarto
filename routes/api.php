@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckController;
+use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\Documents\KeyCardHandoverController;
 use App\Http\Controllers\Api\EmergencyContactController;
 use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\HomeController;
@@ -80,5 +82,17 @@ Route::prefix('{tenant}')
             Route::post('/security-reports', [SecurityReportController::class, 'store'])->name('api.security-reports.store');
             Route::put('/security-reports/{security}', [SecurityReportController::class, 'update'])->name('api.security-reports.update');
             Route::put('/security-reports/{security}/shares', [SecurityReportController::class, 'updateShares'])->name('api.security-reports.shares.update');
+
+            // Dokumentumok / jegyzőkönyvek
+            Route::prefix('documents')->name('api.documents.')->group(function () {
+                Route::get('/', [DocumentController::class, 'index'])->name('index');
+                Route::get('/workers', [DocumentController::class, 'workers'])->name('workers');
+                Route::get('/{document}', [DocumentController::class, 'show'])->name('show');
+                Route::get('/{document}/pdf', [DocumentController::class, 'pdf'])->name('pdf');
+                Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy');
+
+                Route::get('/key-card-handovers/{document}', [KeyCardHandoverController::class, 'show'])->name('key-card-handovers.show');
+                Route::post('/key-card-handovers', [KeyCardHandoverController::class, 'store'])->name('key-card-handovers.store');
+            });
         });
     });
