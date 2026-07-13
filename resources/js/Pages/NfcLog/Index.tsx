@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { useOwnLayout } from '../../hooks/useOwnLayout';
+import SearchableSelect from '../../Components/SearchableSelect';
 import type { ActivityLog, PaginatedData, TenantUserBasic } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
@@ -37,8 +38,8 @@ export default function NfcLogIndex({ logs, dateFrom, dateTo, userId, locationId
     const Layout = useOwnLayout();
     const [filterDateFrom, setFilterDateFrom] = useState(dateFrom);
     const [filterDateTo, setFilterDateTo] = useState(dateTo);
-    const [filterUserId, setFilterUserId] = useState(userId ?? '');
-    const [filterLocationId, setFilterLocationId] = useState(locationId ?? '');
+    const [filterUserId, setFilterUserId] = useState<number | null>(userId ? Number(userId) : null);
+    const [filterLocationId, setFilterLocationId] = useState<number | null>(locationId ? Number(locationId) : null);
 
     const today = new Date().toISOString().slice(0, 10);
     const isDefault = filterDateFrom === today && filterDateTo === today && !filterUserId && !filterLocationId;
@@ -46,8 +47,8 @@ export default function NfcLogIndex({ logs, dateFrom, dateTo, userId, locationId
     function handleFilter(e: React.FormEvent) {
         e.preventDefault();
         const q: Record<string, string> = { date_from: filterDateFrom, date_to: filterDateTo };
-        if (filterUserId) q.user_id = filterUserId;
-        if (filterLocationId) q.location_id = filterLocationId;
+        if (filterUserId) q.user_id = String(filterUserId);
+        if (filterLocationId) q.location_id = String(filterLocationId);
         router.get(route('nfc-log.index'), q, { preserveState: true });
     }
 
@@ -83,32 +84,20 @@ export default function NfcLogIndex({ logs, dateFrom, dateTo, userId, locationId
                                 className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:bg-white focus:outline-none transition"
                             />
                         </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-500 mb-1.5">Felhasználó</label>
-                            <select
-                                value={filterUserId}
-                                onChange={(e) => setFilterUserId(e.target.value)}
-                                className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:bg-white focus:outline-none transition"
-                            >
-                                <option value="">Mindenki</option>
-                                {workers.map((w) => (
-                                    <option key={w.id} value={String(w.id)}>{w.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-500 mb-1.5">Telephely</label>
-                            <select
-                                value={filterLocationId}
-                                onChange={(e) => setFilterLocationId(e.target.value)}
-                                className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:bg-white focus:outline-none transition"
-                            >
-                                <option value="">Minden telephely</option>
-                                {viewableLocations.map((l) => (
-                                    <option key={l.id} value={String(l.id)}>{l.name}</option>
-                                ))}
-                            </select>
-                        </div>
+                        <SearchableSelect
+                            label="Felhasználó"
+                            options={workers}
+                            value={filterUserId}
+                            onChange={setFilterUserId}
+                            placeholder="Mindenki"
+                        />
+                        <SearchableSelect
+                            label="Telephely"
+                            options={viewableLocations}
+                            value={filterLocationId}
+                            onChange={setFilterLocationId}
+                            placeholder="Minden telephely"
+                        />
                         <button
                             type="submit"
                             className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer"

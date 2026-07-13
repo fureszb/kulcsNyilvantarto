@@ -82,18 +82,6 @@ export default function SecurityLeadLayout({ children, title }: Props) {
             icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
             matchRoute: 'documents.*',
         },
-        {
-            route: 'presence.index',
-            label: 'Ki van bent',
-            icon: 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6-4a3 3 0 11-6 0 3 3 0 016 0z',
-            matchRoute: 'presence.index',
-        },
-        {
-            route: 'nfc-log.index',
-            label: 'NFC napló',
-            icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-4 8h4m-4 4h4m-6-4h.01M9 16h.01',
-            matchRoute: 'nfc-log.index',
-        },
     ];
 
     const headerNavItems = navLinks.map(item => ({
