@@ -43,7 +43,7 @@ class NfcAccessController extends Controller
             ]);
 
             ActivityLog::record('nfc.exit', $user, "Kilépés — {$location->name}", [
-                'tag_uid' => $tag->uid, 'location_id' => $location->id,
+                'tag_uid' => $tag->uid, 'location_id' => $location->id, 'location_name' => $location->name,
             ]);
 
             $this->notifyBosses($user, $location, 'exited', $occurredAt);
@@ -55,7 +55,7 @@ class NfcAccessController extends Controller
 
         if (!$hasAccess) {
             ActivityLog::record('nfc.denied', $user, "Elutasított belépés — {$location->name}", [
-                'tag_uid' => $tag->uid, 'location_id' => $location->id,
+                'tag_uid' => $tag->uid, 'location_id' => $location->id, 'location_name' => $location->name,
             ]);
 
             $this->notifyBosses($user, $location, 'denied', $occurredAt);
