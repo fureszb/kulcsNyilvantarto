@@ -29,7 +29,7 @@ class NfcTagController extends Controller
     {
         $validated = $request->validate([
             'uid'         => ['required', 'string', 'max:255', Rule::unique(NfcTag::class)],
-            'location_id' => 'required|integer|exists:locations,id',
+            'location_id' => 'required|integer|exists:tenant.locations,id',
             'label'       => 'nullable|string|max:255',
             'is_active'   => 'boolean',
         ]);
@@ -56,7 +56,7 @@ class NfcTagController extends Controller
     {
         $validated = $request->validate([
             'uid'         => ['required', 'string', 'max:255', Rule::unique(NfcTag::class)->ignore($nfcTag->id)],
-            'location_id' => 'required|integer|exists:locations,id',
+            'location_id' => 'required|integer|exists:tenant.locations,id',
             'label'       => 'nullable|string|max:255',
             'is_active'   => 'boolean',
         ]);
