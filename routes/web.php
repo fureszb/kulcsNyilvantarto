@@ -5,6 +5,7 @@ use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\AiDocumentController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\PmMessageController;
+use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\ShiftNoteController;
 use App\Http\Controllers\Admin\EmergencyContactController;
 use App\Http\Controllers\Admin\ExamController as AdminExamController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Admin\ExamStepController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\ItemGroupController;
 use App\Http\Controllers\Admin\LocationController;
+use App\Http\Controllers\Admin\NfcTagController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TrainingController as AdminTrainingController;
@@ -274,6 +276,9 @@ Route::prefix('{tenant}')
             Route::delete('/team/pm/{user}',         [SecurityLeadController::class, 'removeTeamPm'])->name('team.pm.destroy');
         });
 
+        // Ki van bent — NFC beléptetés élő nézete (admin/PM/biztonsági vezető/igazgató)
+        Route::get('/presence', [PresenceController::class, 'index'])->name('presence.index')->middleware('tenant-user');
+
         // Vezénylés / beosztás — olvasás mindenkinek (PM kivételével, a controller tiltja),
         // szerkesztés admin/igazgató/biztonsági vezető (a controller ellenőrzi irodaházankénnt)
         Route::prefix('vezenyles')->name('vezenyles.')->middleware('tenant-user')->group(function () {
@@ -311,6 +316,9 @@ Route::prefix('{tenant}')
 
                 // Helyszínek
                 Route::resource('locations', LocationController::class);
+
+                // NFC matricák
+                Route::resource('nfc-tags', NfcTagController::class)->except(['show']);
                 Route::post('locations/{location}/items',          [ItemController::class, 'store'])->name('locations.items.store');
                 Route::put('locations/{location}/items/{item}',    [ItemController::class, 'update'])->name('locations.items.update');
                 Route::delete('locations/{location}/items/{item}', [ItemController::class, 'destroy'])->name('locations.items.destroy');

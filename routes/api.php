@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Documents\VehicleEntryController;
 use App\Http\Controllers\Api\EmergencyContactController;
 use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\NfcAccessController;
 use App\Http\Controllers\Api\PmMessageController;
 use App\Http\Controllers\Api\PropertyManagerController;
 use App\Http\Controllers\Api\PushSubscriptionController;
@@ -57,6 +58,9 @@ Route::prefix('{tenant}')
             Route::post('/locations/{location}/checks', [CheckController::class, 'store'])->name('api.checks.store');
             Route::get('/checks/{check}', [CheckController::class, 'show'])->name('api.checks.show');
             Route::put('/checks/{check}', [CheckController::class, 'update'])->name('api.checks.update');
+
+            // NFC beléptetés
+            Route::post('/nfc/scan', [NfcAccessController::class, 'scan'])->name('api.nfc.scan');
 
             // Vezénylés (napi-szintű, terepi funkciók)
             Route::get('/vezenyles', [VezenylesController::class, 'index'])->name('api.vezenyles.index');

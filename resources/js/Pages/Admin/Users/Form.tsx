@@ -42,6 +42,7 @@ interface Props {
     assignedLocationIds?: number[];
     assignedDirectorId?: number | null;
     assignedLeadIds?: number[];
+    assignedNfcLocationIds?: number[];
 }
 
 interface FormData {
@@ -57,6 +58,7 @@ interface FormData {
     location_ids: number[];
     director_id: number | '';
     lead_ids: number[];
+    nfc_location_ids: number[];
 }
 
 const ROLE_OPTIONS: { value: string; label: string }[] = [
@@ -72,6 +74,7 @@ export default function UserForm({
     assignableLocations = [], assignableLeads = [], assignableDirectors = [],
     assignedLocationId = null, assignedLocationIds = [],
     assignedDirectorId = null, assignedLeadIds = [],
+    assignedNfcLocationIds = [],
 }: Props) {
     const isEdit = !!user;
     const [examOverrides, setExamOverrides] = useState<Record<number, string>>(
@@ -117,6 +120,7 @@ export default function UserForm({
         location_ids: assignedLocationIds,
         director_id: assignedDirectorId ?? '',
         lead_ids: assignedLeadIds,
+        nfc_location_ids: assignedNfcLocationIds,
     });
 
     // Role-függő hozzárendelés: worker/PM → EGY irodaház, vezető → irodaházak +
@@ -126,7 +130,7 @@ export default function UserForm({
     const needsDirector = data.role === 'security_lead';
     const needsLeads = data.role === 'area_director';
 
-    function toggleId(field: 'location_ids' | 'lead_ids', id: number) {
+    function toggleId(field: 'location_ids' | 'lead_ids' | 'nfc_location_ids', id: number) {
         const cur = data[field] as number[];
         setData(field, cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]);
     }
@@ -287,6 +291,28 @@ export default function UserForm({
                                 )}
                             </div>
                         )}
+
+                        <div>
+                            <label className="form-label">NFC beléptetési jogosultság (telephelyek)</label>
+                            {assignableLocations.length === 0 ? (
+                                <p className="text-xs text-slate-400">Még nincs felvéve irodaház.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-52 overflow-y-auto rounded-lg border border-slate-200 p-2">
+                                    {assignableLocations.map(loc => (
+                                        <label key={loc.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-50 cursor-pointer text-sm text-slate-700">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.nfc_location_ids.includes(loc.id)}
+                                                onChange={() => toggleId('nfc_location_ids', loc.id)}
+                                                className="w-4 h-4 rounded text-blue-600"
+                                            />
+                                            <span className="truncate">{loc.name}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                            <p className="text-xs text-slate-400 mt-1">Ezekhez a telephelyekhez léphet be NFC matricával, függetlenül a fenti szerepkör-hozzárendeléstől.</p>
+                        </div>
 
                         <div>
                             <label className="form-label" htmlFor="password">

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\ItemGroup;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -52,5 +53,23 @@ class Location extends Model
     public function propertyManager(): HasOne
     {
         return $this->hasOne(TenantUser::class, 'location_id')->where('role', 'property_manager');
+    }
+
+    /** NFC matricák ennél a telephelynél. */
+    public function nfcTags(): HasMany
+    {
+        return $this->hasMany(NfcTag::class);
+    }
+
+    /** Akiknek explicit NFC beléptetési joguk van erre a telephelyre. */
+    public function nfcGrantedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(TenantUser::class, 'nfc_access', 'location_id', 'user_id');
+    }
+
+    /** Épp bent tartózkodó userek ezen a telephelyen. */
+    public function presentUsers(): HasMany
+    {
+        return $this->hasMany(TenantUser::class, 'last_entry_location_id')->where('is_present', true);
     }
 }

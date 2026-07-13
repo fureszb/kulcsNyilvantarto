@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -16,7 +17,7 @@ class TenantUser extends Authenticatable
     protected $connection = 'tenant';
     protected $table = 'users';
 
-    protected $fillable = ['name', 'email', 'password', 'role', 'is_active', 'employed_since', 'left_at', 'notes_read_at', 'messages_read_at', 'location_id', 'director_id'];
+    protected $fillable = ['name', 'email', 'password', 'role', 'is_active', 'employed_since', 'left_at', 'notes_read_at', 'messages_read_at', 'location_id', 'director_id', 'is_present', 'last_entry_at', 'last_entry_location_id'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -27,6 +28,8 @@ class TenantUser extends Authenticatable
         'left_at'          => 'date',
         'notes_read_at'    => 'datetime',
         'messages_read_at' => 'datetime',
+        'is_present'       => 'boolean',
+        'last_entry_at'    => 'datetime',
     ];
 
     public function isAdmin(): bool
@@ -95,5 +98,17 @@ class TenantUser extends Authenticatable
     public function director(): BelongsTo
     {
         return $this->belongsTo(self::class, 'director_id');
+    }
+
+    /** NFC beléptetéshez explicit engedélyezett telephelyek (lehet több). */
+    public function nfcLocations(): BelongsToMany
+    {
+        return $this->belongsToMany(Location::class, 'nfc_access', 'user_id', 'location_id');
+    }
+
+    /** Az az EGY telephely, ahol a user épp bent tartózkodik (is_present alapján). */
+    public function lastEntryLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'last_entry_location_id');
     }
 }
