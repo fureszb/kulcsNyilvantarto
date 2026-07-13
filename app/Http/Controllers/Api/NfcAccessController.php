@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Events\NfcAccessEvent;
 use App\Jobs\SendPushJob;
 use App\Models\ActivityLog;
+use App\Models\NfcNotification;
 use App\Models\NfcTag;
 use App\Models\TenantUser;
 use Illuminate\Http\Request;
@@ -29,7 +30,13 @@ class NfcAccessController extends Controller
 
         $location = $tag->location;
 
-        if ($user->is_present) {
+        // A "kilépés" csak akkor engedélyezett jogosultság-check nélkül, ha a user
+        // ÉPP EZEN a telephelyen van bejelentkezve — az is_present önmagában globális
+        // flag, telephely-azonosítás nélkül bárhol "kilépésnek" tűnne, és megkerülné a
+        // jogosultság-ellenőrzést egy másik, tiltott telephelyen.
+        $isPresentHere = $user->is_present && (int) $user->last_entry_location_id === (int) $location->id;
+
+        if ($isPresentHere) {
             // Kilépés — mindig engedélyezett, nincs jogosultság-check.
             $user->update([
                 'is_present' => false,
@@ -104,6 +111,19 @@ class NfcAccessController extends Controller
             type: $type,
             occurredAt: $occurredAt,
         ));
+
+        $now = now();
+        NfcNotification::insert($bossIds->map(fn ($bossId) => [
+            'user_id'       => $bossId,
+            'actor_user_id' => $user->id,
+            'actor_name'    => $user->name,
+            'location_id'   => $location->id,
+            'location_name' => $location->name,
+            'type'          => $type,
+            'occurred_at'   => $occurredAt,
+            'created_at'    => $now,
+            'updated_at'    => $now,
+        ])->all());
 
         $messages = [
             'entered' => "{$user->name} belépett — {$location->name}",

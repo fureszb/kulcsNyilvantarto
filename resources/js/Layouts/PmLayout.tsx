@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
 import AppHeader from '../Components/AppHeader';
+import NotificationBell from '../Components/NotificationBell';
 import { getEcho } from '../echo';
 import type { PageProps } from '../types';
 
@@ -248,6 +249,7 @@ export default function PmLayout({ children, title }: Props) {
                 mobileMenuOpen={mobileOpen}
                 onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
             >
+                <NotificationBell />
                 {/* User chip – desktop */}
                 <div className="hidden sm:flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-full px-3 py-1.5">
                     <div className="w-6 h-6 rounded-lg bg-amber-500/30 border border-amber-500/40 flex items-center justify-center shrink-0">

@@ -25,6 +25,7 @@ export interface Flash {
 export interface Nav {
     newNotes: number;
     newMessages: number;
+    newNfcNotifications: number;
 }
 
 export interface PageProps {

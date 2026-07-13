@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\AiDocumentController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\NfcNotificationController;
 use App\Http\Controllers\PmMessageController;
 use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\ShiftNoteController;
@@ -278,6 +279,12 @@ Route::prefix('{tenant}')
 
         // Ki van bent — NFC beléptetés élő nézete (admin/PM/biztonsági vezető/igazgató)
         Route::get('/presence', [PresenceController::class, 'index'])->name('presence.index')->middleware('tenant-user');
+
+        // NFC értesítési harang (biztonsági vezető/PM kapja meg a be-/kilépés eseményeket)
+        Route::middleware('tenant-user')->group(function () {
+            Route::get('/nfc-notifications', [NfcNotificationController::class, 'index'])->name('nfc-notifications.index');
+            Route::post('/nfc-notifications/read', [NfcNotificationController::class, 'markRead'])->name('nfc-notifications.read');
+        });
 
         // Vezénylés / beosztás — olvasás mindenkinek (PM kivételével, a controller tiltja),
         // szerkesztés admin/igazgató/biztonsági vezető (a controller ellenőrzi irodaházankénnt)
