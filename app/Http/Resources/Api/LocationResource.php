@@ -20,6 +20,7 @@ class LocationResource extends JsonResource
             'email'              => $this->email,
             'is_active'          => $this->is_active,
             'security_lead_id'   => $this->security_lead_id,
+            'polygon'            => $this->polygon,
         ];
     }
 }

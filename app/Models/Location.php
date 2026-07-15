@@ -13,9 +13,9 @@ class Location extends Model
 {
     protected $connection = 'tenant';
 
-    protected $fillable = ['name', 'description', 'icon', 'logo_path', 'responsible_person', 'email', 'is_active'];
+    protected $fillable = ['name', 'description', 'icon', 'logo_path', 'responsible_person', 'email', 'is_active', 'polygon'];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = ['is_active' => 'boolean', 'polygon' => 'array'];
 
     public function items(): HasMany
     {
@@ -72,4 +72,5 @@ class Location extends Model
     {
         return $this->hasMany(TenantUser::class, 'last_entry_location_id')->where('is_present', true);
     }
+
 }

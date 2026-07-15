@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Documents\LostFoundReportController;
 use App\Http\Controllers\Api\Documents\VehicleEntryController;
 use App\Http\Controllers\Api\EmergencyContactController;
 use App\Http\Controllers\Api\ExamController;
+use App\Http\Controllers\Api\GeofenceController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\NfcAccessController;
 use App\Http\Controllers\Api\PmMessageController;
@@ -61,6 +62,9 @@ Route::prefix('{tenant}')
 
             // NFC beléptetés
             Route::post('/nfc/scan', [NfcAccessController::class, 'scan'])->name('api.nfc.scan');
+
+            // Geofencing — élő GPS-ping és zóna-riasztás
+            Route::post('/geofence/ping', [GeofenceController::class, 'ping'])->name('api.geofence.ping');
 
             // Vezénylés (napi-szintű, terepi funkciók)
             Route::get('/vezenyles', [VezenylesController::class, 'index'])->name('api.vezenyles.index');

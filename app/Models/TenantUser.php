@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -110,5 +111,11 @@ class TenantUser extends Authenticatable
     public function lastEntryLocation(): BelongsTo
     {
         return $this->belongsTo(Location::class, 'last_entry_location_id');
+    }
+
+    /** Legutóbbi GPS-pozíció (geofencing). */
+    public function guardPosition(): HasOne
+    {
+        return $this->hasOne(GuardPosition::class, 'user_id');
     }
 }

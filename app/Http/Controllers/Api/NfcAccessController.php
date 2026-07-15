@@ -9,6 +9,7 @@ use App\Models\NfcNotification;
 use App\Models\NfcTag;
 use App\Models\TenantUser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class NfcAccessController extends Controller
 {
@@ -101,16 +102,23 @@ class NfcAccessController extends Controller
             return;
         }
 
-        broadcast(new NfcAccessEvent(
-            tenantSlug: $tenant->slug,
-            bossIds: $bossIds->all(),
-            userId: $user->id,
-            userName: $user->name,
-            locationId: $location->id,
-            locationName: $location->name,
-            type: $type,
-            occurredAt: $occurredAt,
-        ));
+        // A Reverb-en keresztüli élő broadcast opcionális kényelmi funkció — ha a Reverb
+        // szerver átmenetileg nem elérhető, ez ne buktassa el a teljes beléptetési kérést
+        // (a push job és az in-app notification-sor ettől függetlenül továbbra is fusson).
+        try {
+            broadcast(new NfcAccessEvent(
+                tenantSlug: $tenant->slug,
+                bossIds: $bossIds->all(),
+                userId: $user->id,
+                userName: $user->name,
+                locationId: $location->id,
+                locationName: $location->name,
+                type: $type,
+                occurredAt: $occurredAt,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning("NFC broadcast sikertelen (user {$user->id}, location {$location->id}): " . $e->getMessage());
+        }
 
         $now = now();
         NfcNotification::insert($bossIds->map(fn ($bossId) => [

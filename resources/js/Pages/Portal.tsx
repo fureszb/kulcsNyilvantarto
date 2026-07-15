@@ -10,7 +10,6 @@ import {
     useSortable, rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import PushToggle from '../Components/PushToggle';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
 import AppHeader from '../Components/AppHeader';
 import LiveClock from '../Components/LiveClock';
@@ -60,6 +59,7 @@ interface ModuleDef {
     badgeKey?: 'newNotes' | 'newMessages';
     onlyNonPm?: boolean;
     adminOnly?: boolean;
+    managerOnly?: boolean;
     featured?: boolean;
 }
 
@@ -149,6 +149,17 @@ const ALL_MODULES: ModuleDef[] = [
         features: ['Havi beosztás-tábla', 'Túlóra-pótlás tervezés', 'Változásnapló'],
         actionLabel: 'Vezénylés megnyitása',
         adminOnly: true,
+    },
+    {
+        id: 'presence',
+        routeName: 'presence.index',
+        title: 'Ki van bent',
+        description: 'Élő térkép: ki melyik telephelyen tartózkodik, geofencing zóna-riasztásokkal.',
+        iconPath: 'M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z',
+        accentColor: 'emerald',
+        features: ['Élő térkép és jelenlét', 'Geofencing zóna-riasztás', 'Telephelyenkénti bontás'],
+        actionLabel: 'Térkép megnyitása',
+        managerOnly: true,
     },
     {
         id: 'documents',
@@ -253,6 +264,24 @@ const ACCENT: Record<string, AccentConfig> = {
         badge: 'bg-teal-500',
         beamColor: '#14b8a6',
         spotColor: 'rgba(20,184,166,0.30)',
+    },
+    emerald: {
+        iconBg: 'bg-emerald-50 border-emerald-100 text-emerald-600',
+        iconHover: 'group-hover:bg-emerald-100 group-hover:border-emerald-200',
+        iconAnim: 'motion-safe:group-hover:scale-110',
+        titleHover: 'group-hover:text-emerald-700',
+        gradient: 'from-emerald-600 to-emerald-400',
+        shimmer: 'via-emerald-50/60',
+        shadow: 'hover:shadow-emerald-100/80',
+        border: 'hover:border-emerald-200',
+        footerText: 'text-emerald-600 group-hover:text-emerald-700',
+        arrowBg: 'bg-emerald-50 border-emerald-100',
+        arrowHover: 'group-hover:bg-emerald-600 group-hover:border-emerald-600',
+        arrowIcon: 'text-emerald-500 group-hover:text-white',
+        check: 'text-emerald-400',
+        badge: 'bg-emerald-500',
+        beamColor: '#10b981',
+        spotColor: 'rgba(16,185,129,0.30)',
     },
     orange: {
         iconBg: 'bg-orange-50 border-orange-100 text-orange-600',
@@ -967,9 +996,11 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
     }, [welcomeName]);
 
     const canVezenyles = !!user && user.role !== 'property_manager';
+    const canManage = !!user && ['admin', 'property_manager', 'security_lead', 'area_director'].includes(user.role);
     const visibleModules = ALL_MODULES.filter(m => {
         if (m.onlyNonPm && !isNotPm) return false;
         if (m.adminOnly && !canVezenyles) return false;
+        if (m.managerOnly && !canManage) return false;
         if (m.id === 'security' && !securityModuleVisible && isNotPm) return false;
         return true;
     });
@@ -1079,7 +1110,6 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                 onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
             >
                 <LiveClock />
-                <PushToggle />
                 {user && (
                     <>
                         <Link href={route('profile.edit')} className="hidden sm:flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-2.5 py-1 hover:bg-white/20 transition-colors">

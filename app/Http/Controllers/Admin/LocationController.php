@@ -109,6 +109,20 @@ class LocationController extends Controller
         return redirect()->route('admin.locations.index')->with('success', 'Helyszín frissítve!');
     }
 
+    public function updatePolygon(Request $request, Location $location)
+    {
+        $validated = $request->validate([
+            'polygon'      => 'nullable|array|min:3',
+            'polygon.*'    => 'array|size:2',
+            'polygon.*.0'  => 'numeric|between:-90,90',
+            'polygon.*.1'  => 'numeric|between:-180,180',
+        ]);
+
+        $location->update(['polygon' => $validated['polygon'] ?? null]);
+
+        return back()->with('success', 'Geofencing zóna frissítve!');
+    }
+
     public function destroy(Location $location)
     {
         if ($location->checks()->exists()) {

@@ -327,6 +327,7 @@ Route::prefix('{tenant}')
 
                 // Helyszínek
                 Route::resource('locations', LocationController::class);
+                Route::put('locations/{location}/polygon', [LocationController::class, 'updatePolygon'])->name('locations.polygon.update');
 
                 // NFC matricák
                 Route::resource('nfc-tags', NfcTagController::class)->except(['show']);

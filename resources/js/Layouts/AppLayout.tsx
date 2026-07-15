@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
-import PushToggle from '../Components/PushToggle';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
 import AppHeader from '../Components/AppHeader';
 import LiveClock from '../Components/LiveClock';
@@ -81,7 +80,6 @@ export default function AppLayout({ children, title }: Props) {
                 onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
             >
                 <LiveClock />
-                <PushToggle />
 
                 {user && (
                     <>
