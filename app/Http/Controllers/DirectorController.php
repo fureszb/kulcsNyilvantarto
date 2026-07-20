@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DirectorLeadGoal;
+use App\Models\Location;
 use App\Models\TenantUser;
 use App\Services\PerformanceStatsService;
 use Carbon\Carbon;
@@ -103,5 +104,19 @@ class DirectorController extends Controller
             'welcomeName' => $user->name,
             'history'     => $stats->monthlyHistory($user),
         ]);
+    }
+
+    /** Csak megtekintés — a szerkesztés a biztonsági vezetők felülete
+     *  (SecurityLeadController::inventory()) marad, az igazgató nem módosíthat. */
+    public function inventory(): Response
+    {
+        $locations = Location::orderBy('name')->get(['id', 'name']);
+
+        $locations->each(function ($loc) {
+            $loc->setRelation('items', $loc->allItems()->with('group')->get());
+            $loc->setRelation('groups', $loc->groups()->with('items')->get());
+        });
+
+        return Inertia::render('Director/Inventory', ['locations' => $locations]);
     }
 }

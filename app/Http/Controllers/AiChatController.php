@@ -18,10 +18,10 @@ class AiChatController extends Controller
     public function show(): Response
     {
         $user = Auth::guard('tenant')->user();
-        $isAdmin = $user->isAdmin();
+        $isAdmin = $user->hasAdminPowers();
 
         return Inertia::render('Ai/Chat', [
-            // A tudásbázis cégszintű — a fájllistát csak az admin látja
+            // A tudásbázis cégszintű — a fájllistát admin és területi igazgató látja
             'documents' => $isAdmin
                 ? AiDocument::latest()
                     ->get(['id', 'original_name', 'status', 'chunk_count', 'size_bytes', 'error_message', 'created_at'])
@@ -45,8 +45,8 @@ class AiChatController extends Controller
             ->orderBy('id')
             ->get(['role', 'content', 'sources']);
 
-        // Forrásokat csak admin láthat
-        if (!$user->isAdmin()) {
+        // Forrásokat admin és területi igazgató láthat
+        if (!$user->hasAdminPowers()) {
             $messages->each(fn ($m) => $m->sources = null);
         }
 
@@ -104,7 +104,7 @@ class AiChatController extends Controller
         $filenames = AiDocument::where('status', 'ready')
             ->pluck('original_name')
             ->all();
-        $withSources = $user->isAdmin();
+        $withSources = $user->hasAdminPowers();
 
         // A kliens lecsatlakozása (mobil, proxy-timeout) NE szakítsa meg a
         // FastAPI-válasz beolvasását — különben csak részleges válasz mentődne,

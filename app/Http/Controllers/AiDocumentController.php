@@ -16,8 +16,8 @@ class AiDocumentController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
-        // A tudásbázis cégszintű — kizárólag a tenant admin kezelheti
-        abort_unless(Auth::guard('tenant')->user()->isAdmin(), 403);
+        // A tudásbázis cégszintű — a tenant admin és a területi igazgató kezelheti
+        abort_unless(Auth::guard('tenant')->user()->hasAdminPowers(), 403);
 
         // 'mimes:docx' a MIME-guesser miatt zip/octet-stream-ként dobná el a
         // docx-et, tartalom-sniffelés Windowson megbízhatatlan. A kiterjesztést
@@ -57,8 +57,8 @@ class AiDocumentController extends Controller
     public function destroy(AiDocument $document): RedirectResponse
     {
         $user = Auth::guard('tenant')->user();
-        // Cégszintű tudásbázis: bármely tenant admin törölhet bármely dokumentumot
-        abort_unless($user->isAdmin(), 403);
+        // Cégszintű tudásbázis: bármely tenant admin vagy területi igazgató törölhet bármely dokumentumot
+        abort_unless($user->hasAdminPowers(), 403);
 
         $tenant = app('tenant');
 

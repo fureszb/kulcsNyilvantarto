@@ -142,6 +142,7 @@ Route::prefix('{tenant}')
             Route::get('/security/{security}/edit',        [SecurityReportController::class, 'edit'])->name('security.edit');
             Route::put('/security/{security}',             [SecurityReportController::class, 'update'])->name('security.update');
             Route::post('/security/{security}/shares',     [SecurityReportController::class, 'updateShares'])->name('security.shares.update');
+            Route::post('/security/{security}/review',     [SecurityReportController::class, 'review'])->name('security.review');
 
             // Váltóüzenetek (user + admin, PM nem látja)
             Route::get('/notes',           [ShiftNoteController::class, 'index'])->name('notes.index');
@@ -152,6 +153,8 @@ Route::prefix('{tenant}')
             // PM üzenetek megtekintése (user + admin)
             Route::get('/messages', [PmMessageController::class, 'index'])->name('messages.index');
             Route::post('/messages/{message}/reply', [PmMessageController::class, 'storeReply'])->name('messages.reply');
+            Route::put('/messages/{message}/replies/{reply}', [PmMessageController::class, 'updateReply'])->name('messages.replies.update');
+            Route::delete('/messages/{message}/replies/{reply}', [PmMessageController::class, 'destroyReply'])->name('messages.replies.destroy');
 
             // AI asszisztens (RAG chat + dokumentumok)
             Route::get('/ai',                        [AiChatController::class, 'show'])->name('ai.chat');
@@ -176,6 +179,7 @@ Route::prefix('{tenant}')
                 Route::get('/{document}', [DocumentController::class, 'show'])->name('show');
                 Route::get('/{document}/preview', [DocumentController::class, 'preview'])->name('preview');
                 Route::get('/{document}/download', [DocumentController::class, 'download'])->name('download');
+                Route::post('/{document}/review', [DocumentController::class, 'review'])->name('review');
                 Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy');
 
                 Route::get('/create/incident-report', [IncidentReportController::class, 'create'])->name('incident-report.create');
@@ -243,6 +247,8 @@ Route::prefix('{tenant}')
             Route::get('/messages',                        [PropertyManagerController::class, 'messages'])->name('messages');
             Route::post('/messages',                       [PropertyManagerController::class, 'storeMessage'])->name('messages.store');
             Route::post('/messages/{message}/reply',       [PropertyManagerController::class, 'replyToMessage'])->name('messages.reply');
+            Route::put('/messages/{message}/replies/{reply}', [PropertyManagerController::class, 'updateReply'])->name('messages.replies.update');
+            Route::delete('/messages/{message}/replies/{reply}', [PropertyManagerController::class, 'destroyReply'])->name('messages.replies.destroy');
             Route::get('/messages/{message}/edit',         [PropertyManagerController::class, 'editMessage'])->name('messages.edit');
             Route::put('/messages/{message}',              [PropertyManagerController::class, 'updateMessage'])->name('messages.update');
             Route::delete('/messages/{message}',           [PropertyManagerController::class, 'destroyMessage'])->name('messages.destroy');
@@ -253,6 +259,7 @@ Route::prefix('{tenant}')
             Route::get('/',                              [DirectorController::class, 'dashboard'])->name('dashboard');
             Route::post('/leads/{leadId}/goals',         [DirectorController::class, 'setGoal'])->name('set-goal');
             Route::get('/monthly-report',                [DirectorController::class, 'monthlyReport'])->name('monthly-report');
+            Route::get('/inventory',                     [DirectorController::class, 'inventory'])->name('inventory');
         });
 
         // Biztonsági vezető portál
@@ -350,6 +357,7 @@ Route::prefix('{tenant}')
                 Route::resource('trainings', AdminTrainingController::class)->except(['show']);
                 Route::get('trainings/{training}/steps',                 [TrainingStepController::class, 'index'])->name('trainings.steps.index');
                 Route::post('trainings/{training}/steps',                [TrainingStepController::class, 'store'])->name('trainings.steps.store');
+                Route::post('trainings/{training}/steps/reorder',        [TrainingStepController::class, 'reorder'])->name('trainings.steps.reorder');
                 Route::get('trainings/{training}/steps/{step}/edit',     [TrainingStepController::class, 'edit'])->name('trainings.steps.edit');
                 Route::put('trainings/{training}/steps/{step}',          [TrainingStepController::class, 'update'])->name('trainings.steps.update');
                 Route::delete('trainings/{training}/steps/{step}',       [TrainingStepController::class, 'destroy'])->name('trainings.steps.destroy');
