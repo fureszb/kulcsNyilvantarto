@@ -37,6 +37,15 @@ function buildModules(): ModuleCardDef[] {
             actionLabel: 'Üzenetek megnyitása',
         },
         {
+            href: route('documents.index'),
+            title: 'Dokumentumok',
+            description: 'Jegyzőkönyvek és nyilvántartások digitálisan kitöltve, aláírással és PDF-generálással.',
+            iconPath: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+            accent: 'orange',
+            features: ['10 jegyzőkönyv-típus', 'Digitális aláírás', 'Letölthető PDF'],
+            actionLabel: 'Dokumentumok megnyitása',
+        },
+        {
             href: route('security.index'),
             title: 'Napi Jelentések',
             description: 'A biztonsági szolgálat digitálisan kitöltött napi jelentéseinek áttekintése.',
