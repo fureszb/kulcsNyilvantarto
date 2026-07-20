@@ -101,24 +101,6 @@ export default function DirectorLayout({ children, title }: Props) {
             icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
             matchRoute: 'security.*',
         },
-        {
-            route: 'director.inventory',
-            label: 'Kulcsleltár',
-            icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
-            matchRoute: 'director.inventory',
-        },
-        {
-            route: 'nfc-log.index',
-            label: 'NFC napló',
-            icon: 'M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4',
-            matchRoute: 'nfc-log.index',
-        },
-        {
-            route: 'presence.index',
-            label: 'Ki van bent',
-            icon: 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-4a4 4 0 100-8 4 4 0 000 8zm6 4a4 4 0 10-8 0',
-            matchRoute: 'presence.index',
-        },
     ];
 
     const headerNavItems = navLinks.map(item => ({
