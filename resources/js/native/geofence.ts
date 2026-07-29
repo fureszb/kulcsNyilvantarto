@@ -1,5 +1,5 @@
+import axios from 'axios';
 import { Geolocation, type CallbackID } from '@capacitor/geolocation';
-import { pingGeofence } from '../api/geofence';
 
 const MIN_PING_INTERVAL_MS = 30_000;
 
@@ -9,10 +9,9 @@ let lastPingAt = 0;
 /** Előtér-GPS-ping hurok: a `watchPosition` esemény-vezérelt (nem
  *  setInterval-lel pollozott getCurrentPosition), de a szerverre csak
  *  MIN_PING_INTERVAL_MS-enként küldünk pinget, hogy ne árasszuk el a
- *  `/geofence/ping` végpontot minden GPS-frissítésnél. Csak előtérben fut —
- *  háttér-követéshez (`@capacitor-community/background-geolocation`) külön
- *  natív konfiguráció (Android foreground service, iOS background mode)
- *  kellene, ez a 2. fázis terve (lásd migrációs terv). */
+ *  végpontot minden GPS-frissítésnél. Csak előtérben fut — háttér-
+ *  követéshez külön natív konfiguráció (Android foreground service, iOS
+ *  background mode) kellene, ez egy későbbi fázis terve. */
 export async function startGeofenceTracking(): Promise<boolean> {
     if (watchId !== null) return true;
 
@@ -28,7 +27,7 @@ export async function startGeofenceTracking(): Promise<boolean> {
         if (now - lastPingAt < MIN_PING_INTERVAL_MS) return;
         lastPingAt = now;
 
-        pingGeofence({
+        axios.post(route('native.geofence.ping'), {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
             accuracy: position.coords.accuracy,
@@ -46,8 +45,4 @@ export async function stopGeofenceTracking(): Promise<void> {
     if (watchId === null) return;
     await Geolocation.clearWatch({ id: watchId });
     watchId = null;
-}
-
-export function isGeofenceTrackingActive(): boolean {
-    return watchId !== null;
 }

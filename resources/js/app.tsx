@@ -6,6 +6,9 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import ErrorBoundary from './Components/ErrorBoundary';
 import PWAInstallGuard from './Components/PWAInstallGuard';
+import { bootstrapNative } from './native/bootstrap';
+
+bootstrapNative();
 
 // ── localStorage séma-verzió őr ────────────────────────────
 // Ha a kliens-oldali state-séma breaking módon változik, EMELD ezt a számot.

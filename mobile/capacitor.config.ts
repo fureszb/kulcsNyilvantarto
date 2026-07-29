@@ -6,8 +6,17 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // legyen ugyanazon a teszteszközön.
 const config: CapacitorConfig = {
     appId: 'hu.kknyilvantarto.mobile',
-    appName: 'kkv2',
+    appName: 'kkv3',
     webDir: 'www',
+    // A natív app a meglévő Inertia/React PWA-t tölti be élesben, nem egy
+    // külön natív kliens-buildet — így minden PWA-oldal 1:1 megegyezik a
+    // böngészős verzióval, nem kell semmit portolni. A webDir/www-t a
+    // Capacitor CLI-nek muszáj megadni, de a szerver.url felülírja: a
+    // WebView egyenesen ezt az URL-t tölti be helyi fájlok helyett.
+    server: {
+        url: 'https://cortexopsystems.com',
+        cleartext: false,
+    },
     backgroundColor: '#0f172a',
     ios: {
         contentInset: 'automatic',
