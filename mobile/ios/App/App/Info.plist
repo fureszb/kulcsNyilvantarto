@@ -47,5 +47,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Az alkalmazásnak szüksége van a helymeghatározásra az ellenőrzőponti bejelentkezés (geofence) igazolásához.</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>Az alkalmazás a beépített NFC olvasót használja a beléptető matricák azonosítására.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
