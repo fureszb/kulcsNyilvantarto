@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import { Capacitor } from '@capacitor/core';
 import FlashMessage from '../Components/FlashMessage';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
 import AppHeader from '../Components/AppHeader';
 import LiveClock from '../Components/LiveClock';
 import NotificationBell from '../Components/NotificationBell';
+import NativeNfcScanButton from '../Components/NativeNfcScanButton';
 import { getEcho } from '../echo';
+import { startGeofenceTracking } from '../native/geofence';
+import { enableNativePush, onPushNotificationTapped } from '../native/push';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -47,6 +51,16 @@ export default function AppLayout({ children, title }: Props) {
 
     useEffect(() => { setExtraMessages(0); }, [nav?.newMessages]);
 
+    // Natív app-munkamenet indítása: GPS-ping és push-regisztráció csak
+    // Capacitor WebView-ban fut (böngészőben Capacitor.isNativePlatform()
+    // false), és csak bejelentkezett felhasználónál van értelme.
+    useEffect(() => {
+        if (!Capacitor.isNativePlatform() || !user?.id) return;
+        startGeofenceTracking();
+        enableNativePush();
+        onPushNotificationTapped((url) => router.visit(url));
+    }, [user?.id]);
+
     const currentYear = new Date().getFullYear();
     const tenantName = tenant?.name ?? 'KK Nyilvántartó';
 
@@ -82,6 +96,7 @@ export default function AppLayout({ children, title }: Props) {
             >
                 <LiveClock />
 
+                {user && <NativeNfcScanButton />}
                 {user && <NotificationBell />}
 
                 {user && (

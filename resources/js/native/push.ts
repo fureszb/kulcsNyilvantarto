@@ -1,15 +1,16 @@
+import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
-import { subscribeNativePush, unsubscribeNativePush } from '../api/push';
 
 function currentPlatform(): 'android' | 'ios' {
     return Capacitor.getPlatform() === 'ios' ? 'ios' : 'android';
 }
 
 /** Engedélyt kér, regisztrál az FCM/APNs-nél, majd a kapott device tokent
- *  elküldi a már meglévő `/push/subscribe-native` végpontnak. A `register()`
- *  hívás aszinkron — a token a `registration` esemény listenerben érkezik,
- *  ezért Promise-ba csomagoljuk egyetlen "első token" várakozással. */
+ *  elküldi a `native.push.subscribe-native` végpontnak (session-guarddal,
+ *  lásd routes/web.php). A `register()` hívás aszinkron — a token a
+ *  `registration` esemény listenerben érkezik, ezért Promise-ba
+ *  csomagoljuk egyetlen "első token" várakozással. */
 export async function enableNativePush(): Promise<boolean> {
     if (!Capacitor.isNativePlatform()) return false;
 
@@ -21,7 +22,10 @@ export async function enableNativePush(): Promise<boolean> {
             await registrationHandle.then((h) => h.remove());
             await errorHandle.then((h) => h.remove());
             try {
-                await subscribeNativePush(token.value, currentPlatform());
+                await axios.post(route('native.push.subscribe-native'), {
+                    device_token: token.value,
+                    platform: currentPlatform(),
+                });
                 resolve(true);
             } catch {
                 resolve(false);
@@ -39,17 +43,17 @@ export async function enableNativePush(): Promise<boolean> {
 
 export async function disableNativePush(): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
-    await unsubscribeNativePush().catch(() => {});
+    await axios.post(route('native.push.unsubscribe-native')).catch(() => {});
 }
 
-/** Értesítés-tapra navigáció — a backend `url` mezője (lásd
- *  NfcAccessController::notifyEveryone `route('presence.index')`) egy WEBES
- *  útvonal, ami a mobil app hash-routerében nem értelmezhető 1:1; egyelőre
- *  csak a callbacket kötjük be, a tényleges deep-link célképernyő-leképezés
- *  (webes route név → mobil útvonal) egy külön, backend-koordinációt igénylő
- *  lépés (a natív push payloadnak inkább egy típus-mezőt kellene küldenie
- *  webes URL helyett). */
-export function onPushNotificationTapped(callback: () => void): void {
+/** Értesítés-tapra navigáció — a natív push payload `url` mezője (lásd
+ *  SendNativePushJob) egy VALÓDI webes Inertia-route ebben a WebView-ban
+ *  (nem egy külön mobil hash-route-térkép, mint a levetett külön kliensnél),
+ *  ezért egyszerű teljes navigációval (router.visit) megnyitható. */
+export function onPushNotificationTapped(callback: (url: string) => void): void {
     if (!Capacitor.isNativePlatform()) return;
-    PushNotifications.addListener('pushNotificationActionPerformed', () => callback());
+    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        const url = action.notification.data?.url;
+        if (url) callback(url);
+    });
 }

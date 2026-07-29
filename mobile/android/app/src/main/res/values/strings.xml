@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">kkv2</string>
-    <string name="title_activity_main">kkv2</string>
+    <string name="app_name">kkv3</string>
+    <string name="title_activity_main">kkv3</string>
     <string name="package_name">hu.kknyilvantarto.mobile</string>
     <string name="custom_url_scheme">hu.kknyilvantarto.mobile</string>
 </resources>

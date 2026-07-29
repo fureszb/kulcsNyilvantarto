@@ -229,6 +229,22 @@ Route::prefix('{tenant}')
             return \Illuminate\Support\Facades\Broadcast::auth($request);
         })->name('broadcasting.auth');
 
+        // Natív híd (Capacitor WebView) — a Kotlin mobil klienssel MEGEGYEZŐ
+        // Api\* controller-metódusok, de tenant session-guarddal (nem bearer
+        // tokennel) hitelesítve: az `auth:tenant` middleware sikeres guard-
+        // check esetén Auth::shouldUse('tenant')-et hív, ezért a controllerek
+        // változtatás nélküli $request->user()-je ugyanúgy a bejelentkezett
+        // TenantUsert adja vissza, mint a bearer-tokenes mobil API-nál.
+        Route::middleware('auth:tenant')->prefix('native')->name('native.')->group(function () {
+            Route::post('/nfc/scan', [\App\Http\Controllers\Api\NfcAccessController::class, 'scan'])->name('nfc.scan');
+            Route::get('/nfc/history', [\App\Http\Controllers\Api\NfcAccessController::class, 'history'])->name('nfc.history');
+            Route::post('/geofence/ping', [\App\Http\Controllers\Api\GeofenceController::class, 'ping'])->name('geofence.ping');
+            Route::post('/push/subscribe-native', [\App\Http\Controllers\Api\PushSubscriptionController::class, 'subscribeNative'])
+                ->middleware('throttle:20,1')->name('push.subscribe-native');
+            Route::post('/push/unsubscribe-native', [\App\Http\Controllers\Api\PushSubscriptionController::class, 'unsubscribeNative'])
+                ->middleware('throttle:20,1')->name('push.unsubscribe-native');
+        });
+
         // Előzmények + napló – csak admin (tenant admin szerepkör)
         Route::middleware('admin')->group(function () {
             Route::get('/history',        [HistoryController::class, 'index'])->name('history.index');
