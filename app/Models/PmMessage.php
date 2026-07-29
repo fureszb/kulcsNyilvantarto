@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PmMessage extends Model
@@ -15,6 +16,11 @@ class PmMessage extends Model
     protected $casts = [
         'send_to_all' => 'boolean',
     ];
+
+    public function sender(): BelongsTo
+    {
+        return $this->belongsTo(TenantUser::class, 'sent_by_user_id');
+    }
 
     public function recipients(): HasMany
     {

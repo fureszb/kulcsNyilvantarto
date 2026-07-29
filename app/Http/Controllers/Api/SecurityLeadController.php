@@ -2,15 +2,25 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\BuildsWeeklyTrend;
+use App\Http\Controllers\Api\Concerns\FormatsInitials;
 use App\Http\Resources\Api\ItemGroupResource;
 use App\Http\Resources\Api\ItemResource;
 use App\Http\Resources\Api\LocationResource;
+use App\Models\ActivityLog;
+use App\Models\Check;
+use App\Models\CheckItem;
 use App\Models\DirectorLeadGoal;
+use App\Models\Document;
 use App\Models\Exam;
 use App\Models\ExamResult;
+use App\Models\Item;
+use App\Models\ItemGroup;
+use App\Models\Location;
 use App\Models\TenantUser;
 use App\Models\Training;
 use App\Models\TrainingResult;
+use App\Models\VezenylesSchedule;
 use App\Services\PerformanceStatsService;
 use App\Services\WorkerCompletionStatsService;
 use Carbon\Carbon;
@@ -18,6 +28,15 @@ use Illuminate\Http\Request;
 
 class SecurityLeadController extends Controller
 {
+    use BuildsWeeklyTrend;
+    use FormatsInitials;
+
+    /** Ugyanaz a lista, mint `DirectorController::ISSUE_DOCUMENT_TYPES` — azok a
+     *  dokumentum-típusok, amik rendellenességet rögzítenek, nem rutin átadás/kiadást. */
+    private const ISSUE_DOCUMENT_TYPES = [
+        'feljegyzeses_jegyzokonyv', 'karfelveteli_jegyzokonyv', 'talalt_targy_jegyzokonyv', 'robbantasi_fenyegetes',
+    ];
+
     public function __construct(private WorkerCompletionStatsService $statsService)
     {
     }
@@ -51,6 +70,70 @@ class SecurityLeadController extends Controller
             ] : null;
             return $loc;
         }, $leadData['locations']);
+
+        $locationIds = $user->managedLocations()->pluck('locations.id');
+
+        $teamWorkers = TenantUser::where('role', 'user')->where('is_active', true)
+            ->whereHas('workLocations', fn ($q) => $q->whereIn('locations.id', $locationIds))
+            ->orderBy('name')->get();
+
+        // "Bent van"/"Nincs bent" korábban az NFC self-report (`is_present`) alapján dőlt el,
+        // ami megbízhatatlan (elfelejtett be/kilépés-koppintás) — most a napi Vezenylés-beosztás
+        // a forrás: aki mára konkrét óraszámmal be van írva szolgálatba, az számít "bent"-nek.
+        // Ugyanaz az adatforrás (`scheduledEntriesForDate`), mint a webes "Ki van bent" oldalé
+        // (`PresenceController`) — az óraszám is megjelenik, nem csak az igen/nem.
+        $scheduledEntries = VezenylesSchedule::scheduledEntriesForDate($now);
+
+        $leadData['team_presence'] = $teamWorkers->map(function (TenantUser $w) use ($scheduledEntries) {
+            $entry = $scheduledEntries->get($w->id);
+            return [
+                'initials'     => $this->initialsOf($w->name),
+                'name'         => $w->name,
+                'status_label' => $entry ? "Szolgálatban ma — {$entry->value} óra" : 'Nincs beosztva mára',
+                'is_present'   => $entry !== null,
+            ];
+        })->values();
+
+        $todayChecks = Check::whereIn('location_id', $locationIds)
+            ->whereDate('created_at', today())
+            ->with('checkItems')
+            ->get();
+        $totalItems = $todayChecks->sum('total_count');
+        $leadData['checklist_completion_pct'] = $totalItems > 0
+            ? (int) round($todayChecks->sum('checked_count') / $totalItems * 100)
+            : 0;
+
+        // Nincs "elvárt checklist-ütemezés" fogalom a rendszerben (a `checks` tábla csak a
+        // ténylegesen beküldött ellenőrzéseket tárolja, konkrét elvárt időpont nélkül) — ez a
+        // legközelebbi valós jelzés: mely felügyelt irodaházaknál nem történt MÉG egyetlen
+        // ellenőrzés sem a mai napon.
+        $leadData['not_checked_today_locations'] = Location::whereIn('id', $locationIds)
+            ->whereDoesntHave('checks', fn ($q) => $q->whereDate('created_at', today()))
+            ->orderBy('name')
+            ->pluck('name')
+            ->values();
+
+        $presenceCounts = $this->countsByDateMap(
+            ActivityLog::where('event_type', 'nfc.entry')->whereIn('metadata->location_id', $locationIds),
+            'occurred_at',
+        );
+        $leadData['presence_trend'] = $this->buildWeeklyTrend('Heti jelenlét trend', $presenceCounts, higherIsBetter: true);
+
+        $teamUserIds = $teamWorkers->pluck('id');
+        $pendingReportsQuery = Document::whereIn('created_by_user_id', $teamUserIds)
+            ->whereIn('document_type', self::ISSUE_DOCUMENT_TYPES)
+            ->whereNull('reviewed_at');
+
+        $leadData['pending_approvals_count'] = (clone $pendingReportsQuery)->count();
+        $leadData['pending_reports'] = (clone $pendingReportsQuery)->with(['location:id,name', 'createdBy:id,name'])
+            ->latest()->take(5)->get()
+            ->map(fn (Document $d) => [
+                'id'            => $d->id,
+                'title'         => $d->typeLabel(),
+                'context_label' => ($d->location->name ?? 'Ismeretlen helyszín') . ' — ' . $d->created_at->format('Y.m.d. H:i'),
+                'detail_label'  => ($d->createdBy->name ?? 'Ismeretlen') . ' rögzítette, jóváhagyásra vár.',
+                'severity'      => $d->document_type === 'robbantasi_fenyegetes' ? 'high' : 'low',
+            ])->values();
 
         return response()->json($leadData);
     }
@@ -100,6 +183,102 @@ class SecurityLeadController extends Controller
         })->values();
 
         return response()->json($data);
+    }
+
+    /** Biztonsági vezető csak a saját felügyelt irodaházait szerkesztheti (ugyanaz a szabály, mint a webes Admin\Item(Group)Controller-en). */
+    private function authorizeLocation(Request $request, Location $location): void
+    {
+        $user = $request->user();
+        abort_unless($user->isSecurityLead(), 403);
+        abort_unless($user->managedLocations()->where('locations.id', $location->id)->exists(), 403);
+    }
+
+    public function storeGroup(Request $request, Location $location)
+    {
+        $this->authorizeLocation($request, $location);
+
+        $validated = $request->validate([
+            'name'       => 'required|string|max:255',
+            'sort_order' => 'integer|min:0|max:9999',
+        ]);
+
+        $group = $location->groups()->create([
+            'name'       => $validated['name'],
+            'sort_order' => $validated['sort_order'] ?? 0,
+        ]);
+
+        return response()->json(new ItemGroupResource($group->load('items')), 201);
+    }
+
+    public function updateGroup(Request $request, Location $location, ItemGroup $group)
+    {
+        $this->authorizeLocation($request, $location);
+        abort_unless($group->location_id === $location->id, 404);
+
+        $validated = $request->validate([
+            'name'       => 'required|string|max:255',
+            'sort_order' => 'integer|min:0|max:9999',
+        ]);
+
+        $group->update($validated);
+
+        return response()->json(new ItemGroupResource($group->load('items')));
+    }
+
+    public function destroyGroup(Request $request, Location $location, ItemGroup $group)
+    {
+        $this->authorizeLocation($request, $location);
+        abort_unless($group->location_id === $location->id, 404);
+
+        $group->allItems()->update(['group_id' => null]);
+        $group->delete();
+
+        return response()->noContent();
+    }
+
+    public function storeItem(Request $request, Location $location)
+    {
+        $this->authorizeLocation($request, $location);
+
+        $validated = $request->validate([
+            'name'       => 'required|string|max:255',
+            'type'       => 'required|in:key,card',
+            'sort_order' => 'integer|min:0|max:9999',
+            'group_id'   => 'nullable|integer|exists:tenant.item_groups,id',
+        ]);
+
+        $item = $location->allItems()->create($validated + ['sort_order' => $validated['sort_order'] ?? 0]);
+
+        return response()->json(new ItemResource($item), 201);
+    }
+
+    public function updateItem(Request $request, Location $location, Item $item)
+    {
+        $this->authorizeLocation($request, $location);
+        abort_unless($item->location_id === $location->id, 404);
+
+        $validated = $request->validate([
+            'name'       => 'required|string|max:255',
+            'type'       => 'required|in:key,card',
+            'sort_order' => 'integer|min:0|max:9999',
+            'group_id'   => 'nullable|integer|exists:tenant.item_groups,id',
+            'is_active'  => 'boolean',
+        ]);
+
+        $item->update($validated);
+
+        return response()->json(new ItemResource($item));
+    }
+
+    public function destroyItem(Request $request, Location $location, Item $item)
+    {
+        $this->authorizeLocation($request, $location);
+        abort_unless($item->location_id === $location->id, 404);
+
+        CheckItem::where('item_id', $item->id)->delete();
+        $item->delete();
+
+        return response()->noContent();
     }
 
     public function team(Request $request)

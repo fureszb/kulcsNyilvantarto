@@ -66,11 +66,18 @@ class SecurityReportController extends Controller
     {
         $user = $request->user();
 
-        $query = $user->isAdmin()
-            ? SecurityDailyReport::query()
-            : SecurityDailyReport::whereHas('shares', fn ($q) => $q->where('user_id', $user->id));
+        if ($user->isAdmin() || $user->isPropertyManager() || $user->isAreaDirector()) {
+            $query = SecurityDailyReport::query();
+        } elseif ($user->isSecurityLead()) {
+            $query = SecurityDailyReport::whereHas(
+                'locations',
+                fn ($q) => $q->whereIn('locations.id', $user->managedLocations()->pluck('locations.id'))
+            );
+        } else {
+            $query = SecurityDailyReport::whereHas('shares', fn ($q) => $q->where('user_id', $user->id));
+        }
 
-        $reports = $query->with(['locations:id,name', 'shares'])
+        $reports = $query->with(['locations:id,name', 'shares', 'reviewedBy'])
             ->orderByDesc('report_date')->orderByDesc('id')
             ->paginate(30);
 
@@ -80,24 +87,53 @@ class SecurityReportController extends Controller
     public function show(Request $request, SecurityDailyReport $security)
     {
         $user = $request->user();
+        $this->authorizeViewReport($user, $security);
+
+        $security->load(['locations:id,name', 'shares', 'reviewedBy']);
+
+        return new SecurityDailyReportResource($security);
+    }
+
+    /** Vezetői jóváhagyás/átnézés jelölése — lásd `security_daily_reports.reviewed_at`
+     *  migráció kommentjét és `DocumentController::review()`-t (ugyanaz a minta). */
+    public function review(Request $request, SecurityDailyReport $security)
+    {
+        $user = $request->user();
+        abort_unless($user->canManage(), 403);
+        $this->authorizeViewReport($user, $security);
+
+        $security->update(['reviewed_at' => now(), 'reviewed_by_user_id' => $user->id]);
+        $security->load(['locations:id,name', 'shares', 'reviewedBy']);
+
+        return new SecurityDailyReportResource($security);
+    }
+
+    private function authorizeViewReport(TenantUser $user, SecurityDailyReport $security): void
+    {
+        if ($user->isSecurityLead()) {
+            $managedLocationIds = $user->managedLocations()->pluck('locations.id');
+            abort_unless(
+                $user->id === $security->created_by_user_id
+                    || $security->locations()->whereIn('locations.id', $managedLocationIds)->exists(),
+                403
+            );
+            return;
+        }
 
         abort_if(
             !$user->isAdmin()
                 && !$user->isPropertyManager()
+                && !$user->isAreaDirector()
                 && $user->id !== $security->created_by_user_id
                 && !$security->shares()->where('user_id', $user->id)->exists(),
             403
         );
-
-        $security->load(['locations:id,name', 'shares']);
-
-        return new SecurityDailyReportResource($security);
     }
 
     public function store(Request $request)
     {
         $user = $request->user();
-        abort_if($user->isPropertyManager(), 403);
+        abort_unless($user->canCreateSecurityReport(), 403);
         abort_unless($this->moduleVisibleFor($user), 403, 'A Napi Jelentés modul jelenleg nem elérhető.');
 
         $data = $request->validate($this->sectionValidation());

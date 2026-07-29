@@ -95,6 +95,9 @@ class ExamController extends Controller
                 'id'            => $step->id,
                 'question'      => $step->question,
                 'question_type' => $step->question_type,
+                'media_url'     => $step->resolveMediaUrl(),
+                'media_type'    => $step->mediaType(),
+                'media_width'   => $step->media_width ?? 100,
                 'answers'       => array_values($answers),
             ];
         })->toArray();

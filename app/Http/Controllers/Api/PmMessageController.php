@@ -50,6 +50,11 @@ class PmMessageController extends Controller
         return $user->isAdmin() || $message->sent_by_user_id === $user->id;
     }
 
+    private function canModifyReply(TenantUser $user, PmMessageReply $reply): bool
+    {
+        return $user->isAdmin() || $reply->sender_id === $user->id;
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -233,6 +238,50 @@ class PmMessageController extends Controller
             'content'       => $reply->content,
             'created_at'    => $reply->created_at->toIso8601String(),
         ], 201);
+    }
+
+    public function updateReply(Request $request, PmMessage $message, PmMessageReply $reply)
+    {
+        $user = $request->user();
+        abort_unless($reply->pm_message_id === $message->id, 404);
+        abort_unless($this->canModifyReply($user, $reply), 403);
+
+        $data = $request->validate(['content' => 'required|string|max:2000']);
+
+        $oldContent = $reply->content;
+        $reply->update(['content' => $data['content']]);
+
+        ActivityLog::record('pm_message_reply.updated', $user, 'Válasz módosítva', [
+            'message_id'  => $message->id,
+            'reply_id'    => $reply->id,
+            'old_content' => mb_substr($oldContent, 0, 500),
+            'new_content' => mb_substr($data['content'], 0, 500),
+        ]);
+
+        return response()->json([
+            'id'            => $reply->id,
+            'pm_message_id' => $reply->pm_message_id,
+            'sender_id'     => $reply->sender_id,
+            'sender_name'   => $reply->sender_name,
+            'content'       => $reply->content,
+            'created_at'    => $reply->created_at->toIso8601String(),
+        ]);
+    }
+
+    public function destroyReply(Request $request, PmMessage $message, PmMessageReply $reply)
+    {
+        $user = $request->user();
+        abort_unless($reply->pm_message_id === $message->id, 404);
+        abort_unless($this->canModifyReply($user, $reply), 403);
+
+        ActivityLog::record('pm_message_reply.deleted', $user, 'Válasz törölve', [
+            'message_id' => $message->id,
+            'reply_id'   => $reply->id,
+            'content'    => mb_substr($reply->content, 0, 500),
+        ]);
+        $reply->delete();
+
+        return response()->noContent();
     }
 
     public function update(Request $request, PmMessage $message)

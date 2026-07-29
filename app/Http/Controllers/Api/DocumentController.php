@@ -17,9 +17,11 @@ class DocumentController extends Controller
     {
         $user = $request->user();
 
-        $query = Document::with(['signatures', 'attachments'])->latest();
+        $query = Document::with(['signatures', 'attachments', 'reviewedBy'])->latest();
 
-        if (!$user->canManage()) {
+        if ($user->isSecurityLead()) {
+            $query->whereIn('created_by_user_id', $this->securityLeadTeamUserIds($user));
+        } elseif (!$user->canManage()) {
             $query->where('created_by_user_id', $user->id);
         }
 
@@ -40,7 +42,23 @@ class DocumentController extends Controller
     public function show(Request $request, Document $document)
     {
         $this->authorizeView($request, $document);
-        $document->load(['signatures', 'attachments']);
+        $document->load(['signatures', 'attachments', 'reviewedBy']);
+
+        return response()->json($this->documentBase($document));
+    }
+
+    /** Vezetői jóváhagyás/átnézés jelölése — lásd `documents.reviewed_at` migráció kommentjét.
+     *  Ugyanaz a láthatósági kör jogosult rá, mint a megtekintésre (a `authorizeView()`-val
+     *  megegyező szabály), a dolgozó (a dokumentum szerzője) kivételével — a jóváhagyás
+     *  fogalmilag egy FELETTES döntése. */
+    public function review(Request $request, Document $document)
+    {
+        $user = $request->user();
+        abort_unless($user->canManage(), 403);
+        $this->authorizeView($request, $document);
+
+        $document->update(['reviewed_at' => now(), 'reviewed_by_user_id' => $user->id]);
+        $document->load(['signatures', 'attachments', 'reviewedBy']);
 
         return response()->json($this->documentBase($document));
     }
@@ -77,9 +95,30 @@ class DocumentController extends Controller
     {
         $user = $request->user();
 
+        if ($user->isSecurityLead()) {
+            abort_unless(
+                $user->id === $document->created_by_user_id
+                    || $this->securityLeadTeamUserIds($user)->contains($document->created_by_user_id),
+                403
+            );
+            return;
+        }
+
         abort_if(
             !$user->canManage() && $user->id !== $document->created_by_user_id,
             403
         );
+    }
+
+    /** A biztonsági vezető felügyelt irodaházaiban dolgozó ("csapatába tartozó") dolgozók
+     *  azonosítói — a dokumentum-lista és -megtekintés is erre a körre szűkül biztonsági
+     *  vezetőnél (Területi igazgató/PM ezzel szemben mindent lát, mint az admin). */
+    private function securityLeadTeamUserIds(TenantUser $user): \Illuminate\Support\Collection
+    {
+        $locationIds = $user->managedLocations()->pluck('locations.id');
+
+        return TenantUser::where('role', 'user')
+            ->whereHas('workLocations', fn ($q) => $q->whereIn('locations.id', $locationIds))
+            ->pluck('id');
     }
 }

@@ -81,7 +81,20 @@ class VezenylesController extends Controller
             $locationIds = $user->isSecurityLead()
                 ? $user->managedLocations()->pluck('locations.id')
                 : $user->workLocations()->pluck('locations.id');
-            $areasQuery->whereIn('location_id', $locationIds);
+
+            // A user saját, fiókjához kötött vezénylés-sorának területe MINDIG látható kell
+            // legyen, akkor is, ha az admin a területet más `location_id`-hez rögzítette, mint
+            // amihez a user maga be van osztva (valós, előfordulható admin-adateltérés) —
+            // különben a user saját beosztása "eltűnik" a listából, pedig a `user_id`-kötés
+            // egyértelműen az övé.
+            $ownAreaId = VezenylesEmployee::where('user_id', $user->id)->value('area_id');
+
+            $areasQuery->where(function ($q) use ($locationIds, $ownAreaId) {
+                $q->whereIn('location_id', $locationIds);
+                if ($ownAreaId) {
+                    $q->orWhere('id', $ownAreaId);
+                }
+            });
         }
 
         $areas = $areasQuery->get(['id', 'name', 'location_id']);
@@ -132,7 +145,8 @@ class VezenylesController extends Controller
         $emp = VezenylesEmployee::findOrFail($data['employee_id']);
         $currentUser = $request->user();
 
-        if (!($emp->user_id && $emp->user_id === $currentUser->id)) {
+        $isOwnRow = $emp->user_id && $emp->user_id === $currentUser->id;
+        if (!$isOwnRow) {
             $this->authorizeAreaAccess($emp->area_id);
         }
 
@@ -141,6 +155,17 @@ class VezenylesController extends Controller
             return response()->json([
                 'message' => 'Érvénytelen érték. Csak szám, X, ? vagy + adható meg.',
                 'errors'  => ['value' => ['Érvénytelen érték. Csak szám, X, ? vagy + adható meg.']],
+            ], 422);
+        }
+
+        // Sima dolgozó (nem admin/területi igazgató/biztonsági vezető) a saját sorát csak
+        // ráérés-jelzésként szerkesztheti ("+" túlóra vállalása / "X" nem tud dolgozni,
+        // vagy törlés) — tényleges óraszámot csak vezetői jogkörrel lehet beírni.
+        $canAssignHours = $currentUser->hasAdminPowers() || $currentUser->isSecurityLead();
+        if ($isOwnRow && !$canAssignHours && !in_array($value, [null, 'X', '+'], true)) {
+            return response()->json([
+                'message' => 'Csak "+" (túlóra) vagy "X" (nem elérhető) adható meg.',
+                'errors'  => ['value' => ['Csak "+" (túlóra) vagy "X" (nem elérhető) adható meg.']],
             ], 422);
         }
 

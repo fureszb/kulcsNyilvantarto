@@ -6,13 +6,20 @@ use App\Models\Check;
 use App\Models\EmergencyContact;
 use App\Models\Location;
 use App\Models\Setting;
+use App\Models\TenantUser;
 use App\Models\Training;
 use App\Models\TrainingResult;
+use App\Models\VezenylesSchedule;
+use App\Services\NfcChecklistService;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class HomeController extends Controller
 {
+    public function __construct(private NfcChecklistService $checklistService)
+    {
+    }
+
     public function portal()
     {
         $welcomeName = session()->pull('user_welcome');
@@ -97,7 +104,38 @@ class HomeController extends Controller
             'venueMode'             => $venueMode,
             'securityModuleVisible' => Setting::get('security_module_visible', '1') === '1',
             'emergencyContacts'     => $emergencyContacts,
+            'presence'              => $this->presence($user),
         ]);
+    }
+
+    /** Ugyanaz, mint az `Api\HomeController::presence()` — a mobil "Jelenlegi állapotod"
+     *  kártyájával azonos adat, hogy a webes Portál is mutassa: szolgálatban van-e ma a user
+     *  (Vezenylés-beosztás), és hány NFC-checkpointot ellenőrzött ma az NFC-beléptetéssel
+     *  engedélyezett telephelyein (`nfcLocations()`, NEM a "hol dolgozik" `location_id` — lásd
+     *  `NfcChecklistService`). */
+    private function presence(TenantUser $user): array
+    {
+        $scheduleValue = VezenylesSchedule::todayValueForUser($user->id);
+        $onDuty = $scheduleValue !== null && !in_array($scheduleValue, ['X', '?', '+'], true);
+
+        $base = [
+            'on_duty'        => $onDuty,
+            'schedule_label' => $onDuty ? "{$scheduleValue} óra" : null,
+        ];
+
+        $locationNames = $this->checklistService->locationNamesForUser($user);
+        if ($locationNames->isEmpty()) {
+            return $base + ['has_location' => false, 'venue_name' => null, 'checked_count' => 0, 'total_count' => 0];
+        }
+
+        $points = $this->checklistService->pointsForUser($user);
+
+        return $base + [
+            'has_location'  => true,
+            'venue_name'    => $locationNames->implode(', '),
+            'checked_count' => count(array_filter($points, fn (array $p) => $p['scanned'])),
+            'total_count'   => count($points),
+        ];
     }
 
     public function keys()

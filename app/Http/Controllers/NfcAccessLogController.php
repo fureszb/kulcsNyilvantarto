@@ -15,7 +15,7 @@ class NfcAccessLogController extends Controller
     {
         /** @var TenantUser $user */
         $user = Auth::guard('tenant')->user();
-        abort_unless($user->canManage(), 403);
+        $canManage = $user->canManage();
 
         if ($user->hasAdminPowers()) {
             $viewableLocations = Location::orderBy('name')->get(['id', 'name']);
@@ -28,7 +28,9 @@ class NfcAccessLogController extends Controller
 
         $dateFrom = $request->input('date_from', now()->toDateString());
         $dateTo   = $request->input('date_to', now()->toDateString());
-        $userId   = $request->input('user_id');
+        // Dolgozó (nem vezető) csak a saját eseményeit láthatja — a user_id szűrőt
+        // nem a kérésből vesszük, hanem rákényszerítjük a saját id-jára.
+        $userId   = $canManage ? $request->input('user_id') : $user->id;
         $locationId = $request->input('location_id');
 
         $query = ActivityLog::where('event_type', 'like', 'nfc.%')
@@ -45,7 +47,9 @@ class NfcAccessLogController extends Controller
 
         $logs = $query->paginate(50)->withQueryString();
 
-        $workers = TenantUser::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $workers = $canManage
+            ? TenantUser::where('is_active', true)->orderBy('name')->get(['id', 'name'])
+            : collect();
 
         return Inertia::render('NfcLog/Index', [
             'logs'              => $logs,
@@ -55,6 +59,7 @@ class NfcAccessLogController extends Controller
             'locationId'        => $locationId,
             'workers'           => $workers,
             'viewableLocations' => $viewableLocations,
+            'canManage'         => $canManage,
         ]);
     }
 }

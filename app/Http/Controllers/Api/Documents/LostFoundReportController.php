@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Documents;
 
 use App\Http\Controllers\Api\Controller;
 use App\Http\Controllers\Api\Documents\Concerns\BuildsDocumentResponse;
+use App\Http\Controllers\Api\Documents\Concerns\NotifiesIssueDocument;
 use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\DocumentLostFoundReport;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 class LostFoundReportController extends Controller
 {
     use BuildsDocumentResponse;
+    use NotifiesIssueDocument;
 
     private function detailPayload(DocumentLostFoundReport $detail): array
     {
@@ -123,6 +125,7 @@ class LostFoundReportController extends Controller
             'document_id'   => $document->id,
             'document_type' => $document->document_type,
         ]);
+        $this->notifyIssueDocumentCreated($document, $user);
 
         $document->load(['signatures', 'attachments']);
 

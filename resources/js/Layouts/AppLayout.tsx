@@ -4,6 +4,7 @@ import FlashMessage from '../Components/FlashMessage';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
 import AppHeader from '../Components/AppHeader';
 import LiveClock from '../Components/LiveClock';
+import NotificationBell from '../Components/NotificationBell';
 import { getEcho } from '../echo';
 import type { PageProps } from '../types';
 
@@ -80,6 +81,8 @@ export default function AppLayout({ children, title }: Props) {
                 onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
             >
                 <LiveClock />
+
+                {user && <NotificationBell />}
 
                 {user && (
                     <>

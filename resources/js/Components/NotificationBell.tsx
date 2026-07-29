@@ -5,13 +5,15 @@ import type { PageProps } from '../types';
 
 declare function route(name: string, params?: unknown): string;
 
-type NfcEventType = 'entered' | 'exited' | 'denied';
+type NfcEventType = 'checkpoint' | 'entered' | 'exited' | 'denied';
+type GeofenceEventType = 'zone_exit' | 'zone_enter';
+type NotificationEventType = NfcEventType | GeofenceEventType;
 
 interface NfcNotificationItem {
     id: number | string;
     actor_name: string;
     location_name: string;
-    type: NfcEventType;
+    type: NotificationEventType;
     occurred_at: string;
     read_at: string | null;
 }
@@ -19,7 +21,7 @@ interface NfcNotificationItem {
 interface LiveEvent {
     userName: string;
     locationName: string;
-    type: NfcEventType;
+    type: NotificationEventType;
     occurredAt: string;
 }
 
@@ -31,16 +33,22 @@ function formatTime(dateStr: string): string {
     return new Date(dateStr).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
 }
 
-const TYPE_LABEL: Record<NfcEventType, string> = {
+const TYPE_LABEL: Record<NotificationEventType, string> = {
+    checkpoint: 'ellenőrizve',
     entered: 'belépett',
     exited: 'kilépett',
     denied: 'jogosulatlan próbálkozás',
+    zone_exit: 'elhagyta a szolgálati zónát',
+    zone_enter: 'visszatért a szolgálati zónába',
 };
 
-const TYPE_COLOR: Record<NfcEventType, string> = {
+const TYPE_COLOR: Record<NotificationEventType, string> = {
+    checkpoint: 'text-blue-600 bg-blue-50',
     entered: 'text-green-600 bg-green-50',
     exited: 'text-blue-600 bg-blue-50',
     denied: 'text-red-600 bg-red-50',
+    zone_exit: 'text-orange-600 bg-orange-50',
+    zone_enter: 'text-green-600 bg-green-50',
 };
 
 export default function NotificationBell() {
@@ -57,7 +65,7 @@ export default function NotificationBell() {
     useEffect(() => {
         if (!tenant?.slug || !user?.id) return;
         const channel = getEcho(tenant.slug).private(`tenant.${tenant.slug}.${user.id}`);
-        channel.listen('.nfc-access', (evt: LiveEvent) => {
+        const handleLiveEvent = (evt: LiveEvent) => {
             setUnreadCount(n => n + 1);
             setNotifications(prev => [
                 { id: `live-${Date.now()}`, actor_name: evt.userName, location_name: evt.locationName, type: evt.type, occurred_at: evt.occurredAt, read_at: null },
@@ -67,8 +75,17 @@ export default function NotificationBell() {
             setToast(evt);
             if (toastTimer.current) clearTimeout(toastTimer.current);
             toastTimer.current = setTimeout(() => setToast(null), 6000);
-        });
-        return () => { channel.stopListening('.nfc-access'); };
+        };
+        // A geofence-riasztás (.geofence) ugyanazon a személyes csatornán érkezik, mint az NFC-esemény
+        // (lásd GeofenceZoneEvent::broadcastOn() a Laravel oldalon) — korábban csak az NFC-t hallgatta
+        // ez a komponens, a geofence-riasztás a harangnál soha nem jelent meg, csak a Presence oldal
+        // adatai frissültek csendben (lásd Pages/Presence/Index.tsx).
+        channel.listen('.nfc-access', handleLiveEvent);
+        channel.listen('.geofence', handleLiveEvent);
+        return () => {
+            channel.stopListening('.nfc-access');
+            channel.stopListening('.geofence');
+        };
     }, [tenant?.slug, user?.id]);
 
     async function toggleOpen() {
@@ -115,10 +132,10 @@ export default function NotificationBell() {
 
             {open && (
                 <>
-                    <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-                    <div className="absolute right-0 top-11 z-50 w-80 max-w-[90vw] py-1.5 rounded-xl bg-white border border-slate-200 shadow-xl overflow-hidden">
+                    <div className="fixed inset-0 z-[1100]" onClick={() => setOpen(false)} />
+                    <div className="absolute right-0 top-11 z-[1101] w-80 max-w-[90vw] py-1.5 rounded-xl bg-white border border-slate-200 shadow-xl overflow-hidden">
                         <div className="px-3.5 py-2.5 border-b border-slate-100">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">NFC beléptetés</span>
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Élő értesítések</span>
                         </div>
                         <div className="max-h-80 overflow-y-auto">
                             {notifications.length === 0 ? (
@@ -142,7 +159,7 @@ export default function NotificationBell() {
             )}
 
             {toast && (
-                <div className="fixed top-4 right-4 z-[998] pointer-events-none">
+                <div className="fixed top-4 right-4 z-[1200] pointer-events-none">
                     <div className="pointer-events-auto flex items-center gap-3 px-4 py-3.5 bg-white border border-slate-200 shadow-xl rounded-2xl min-w-[280px] max-w-sm animate-slide-in-r">
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${TYPE_COLOR[toast.type]}`}>
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -13,10 +13,12 @@ class Document extends Model
 
     protected $fillable = [
         'document_type', 'location_id', 'created_by_user_id', 'status', 'pdf_path', 'finalized_at',
+        'reviewed_at', 'reviewed_by_user_id',
     ];
 
     protected $casts = [
         'finalized_at' => 'datetime',
+        'reviewed_at'  => 'datetime',
     ];
 
     public function location(): BelongsTo
@@ -27,6 +29,11 @@ class Document extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(TenantUser::class, 'created_by_user_id');
+    }
+
+    public function reviewedBy(): BelongsTo
+    {
+        return $this->belongsTo(TenantUser::class, 'reviewed_by_user_id');
     }
 
     public function signatures(): HasMany

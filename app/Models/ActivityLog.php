@@ -56,7 +56,13 @@ class ActivityLog extends Model
             'pm_message.sent'    => 'PM üzenet',
             'pm_message.updated' => 'PM üzenet módosítva',
             'pm_message.deleted' => 'PM üzenet törölve',
+            'pm_message_reply.updated' => 'Válasz módosítva',
+            'pm_message_reply.deleted' => 'Válasz törölve',
             'document.created'   => 'Dokumentum',
+            'nfc.checkpoint'      => 'NFC-ellenőrzés',
+            'nfc.entry', 'geofence.zone_enter' => 'Beléptél',
+            'nfc.exit', 'geofence.zone_exit'   => 'Kiléptél',
+            'nfc.denied'          => 'Elutasított ellenőrzés',
             default              => $this->event_type,
         };
     }
@@ -77,7 +83,13 @@ class ActivityLog extends Model
             'pm_message.sent'    => 'amber',
             'pm_message.updated' => 'amber',
             'pm_message.deleted' => 'amber',
+            'pm_message_reply.updated' => 'amber',
+            'pm_message_reply.deleted' => 'amber',
             'document.created'   => 'cyan',
+            'nfc.checkpoint'      => 'emerald',
+            'nfc.entry', 'geofence.zone_enter' => 'emerald',
+            'nfc.exit', 'geofence.zone_exit'   => 'slate',
+            'nfc.denied'          => 'rose',
             default              => 'slate',
         };
     }

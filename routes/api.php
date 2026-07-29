@@ -57,14 +57,18 @@ Route::prefix('{tenant}')
             Route::get('/locations', [CheckController::class, 'locations'])->name('api.locations.index');
             Route::get('/locations/{location}/checklist', [CheckController::class, 'checklist'])->name('api.locations.checklist');
             Route::post('/locations/{location}/checks', [CheckController::class, 'store'])->name('api.checks.store');
+            Route::get('/checks', [CheckController::class, 'myChecks'])->name('api.checks.index');
             Route::get('/checks/{check}', [CheckController::class, 'show'])->name('api.checks.show');
             Route::put('/checks/{check}', [CheckController::class, 'update'])->name('api.checks.update');
 
             // NFC beléptetés
             Route::post('/nfc/scan', [NfcAccessController::class, 'scan'])->name('api.nfc.scan');
+            Route::get('/nfc/history', [NfcAccessController::class, 'history'])->name('api.nfc.history');
+            Route::get('/nfc/today-checklist', [NfcAccessController::class, 'todayChecklist'])->name('api.nfc.today-checklist');
 
             // Geofencing — élő GPS-ping és zóna-riasztás
             Route::post('/geofence/ping', [GeofenceController::class, 'ping'])->name('api.geofence.ping');
+            Route::get('/geofence/events/{userId}', [GeofenceController::class, 'events'])->name('api.geofence.events');
 
             // Vezénylés (napi-szintű, terepi funkciók)
             Route::get('/vezenyles', [VezenylesController::class, 'index'])->name('api.vezenyles.index');
@@ -96,6 +100,8 @@ Route::prefix('{tenant}')
             Route::get('/pm-messages/recipients', [PmMessageController::class, 'recipients'])->name('api.pm-messages.recipients');
             Route::post('/pm-messages', [PmMessageController::class, 'store'])->name('api.pm-messages.store');
             Route::post('/pm-messages/{message}/replies', [PmMessageController::class, 'storeReply'])->name('api.pm-messages.replies.store');
+            Route::put('/pm-messages/{message}/replies/{reply}', [PmMessageController::class, 'updateReply'])->name('api.pm-messages.replies.update');
+            Route::delete('/pm-messages/{message}/replies/{reply}', [PmMessageController::class, 'destroyReply'])->name('api.pm-messages.replies.destroy');
             Route::put('/pm-messages/{message}', [PmMessageController::class, 'update'])->name('api.pm-messages.update');
             Route::delete('/pm-messages/{message}', [PmMessageController::class, 'destroy'])->name('api.pm-messages.destroy');
 
@@ -105,6 +111,7 @@ Route::prefix('{tenant}')
             Route::post('/security-reports', [SecurityReportController::class, 'store'])->name('api.security-reports.store');
             Route::put('/security-reports/{security}', [SecurityReportController::class, 'update'])->name('api.security-reports.update');
             Route::put('/security-reports/{security}/shares', [SecurityReportController::class, 'updateShares'])->name('api.security-reports.shares.update');
+            Route::post('/security-reports/{security}/review', [SecurityReportController::class, 'review'])->name('api.security-reports.review');
 
             // Dokumentumok / jegyzőkönyvek
             Route::prefix('documents')->name('api.documents.')->group(function () {
@@ -112,6 +119,7 @@ Route::prefix('{tenant}')
                 Route::get('/workers', [DocumentController::class, 'workers'])->name('workers');
                 Route::get('/{document}', [DocumentController::class, 'show'])->name('show');
                 Route::get('/{document}/pdf', [DocumentController::class, 'pdf'])->name('pdf');
+                Route::post('/{document}/review', [DocumentController::class, 'review'])->name('review');
                 Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy');
 
                 Route::get('/key-card-handovers/{document}', [KeyCardHandoverController::class, 'show'])->name('key-card-handovers.show');
@@ -157,6 +165,12 @@ Route::prefix('{tenant}')
                 Route::get('/dashboard', [SecurityLeadController::class, 'dashboard'])->name('dashboard');
                 Route::get('/workers', [SecurityLeadController::class, 'workers'])->name('workers');
                 Route::get('/inventory', [SecurityLeadController::class, 'inventory'])->name('inventory');
+                Route::post('/inventory/{location}/groups', [SecurityLeadController::class, 'storeGroup'])->name('inventory.groups.store');
+                Route::put('/inventory/{location}/groups/{group}', [SecurityLeadController::class, 'updateGroup'])->name('inventory.groups.update');
+                Route::delete('/inventory/{location}/groups/{group}', [SecurityLeadController::class, 'destroyGroup'])->name('inventory.groups.destroy');
+                Route::post('/inventory/{location}/items', [SecurityLeadController::class, 'storeItem'])->name('inventory.items.store');
+                Route::put('/inventory/{location}/items/{item}', [SecurityLeadController::class, 'updateItem'])->name('inventory.items.update');
+                Route::delete('/inventory/{location}/items/{item}', [SecurityLeadController::class, 'destroyItem'])->name('inventory.items.destroy');
                 Route::get('/team', [SecurityLeadController::class, 'team'])->name('team');
                 Route::post('/team/workers', [SecurityLeadController::class, 'addTeamWorker'])->name('team.workers.store');
                 Route::delete('/team/workers/{user}', [SecurityLeadController::class, 'removeTeamWorker'])->name('team.workers.destroy');

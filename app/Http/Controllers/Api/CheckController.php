@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Resources\Api\CheckResource;
+use App\Http\Resources\Api\CheckSummaryResource;
 use App\Http\Resources\Api\ItemGroupResource;
 use App\Http\Resources\Api\ItemResource;
 use App\Http\Resources\Api\LocationResource;
@@ -107,6 +108,42 @@ class CheckController extends Controller
             ]);
 
         return (new CheckResource($check))->response()->setStatusCode(201);
+    }
+
+    /**
+     * A bejelentkezett felhasználó saját ellenőrzés-előzménye ("Ellenőrzéseim" mobil képernyő) —
+     * dátum szerint csökkenő sorrendben, lapozva. A `checked_count`/`total_count` a
+     * `withCount()`-tal, adatbázis-szinten összegezve érkezik, NEM a teljes `check_items`
+     * reláció betöltésével — ugyanaz az attribútum-név, mint a `Check` modell
+     * `getCheckedCountAttribute()`/`getTotalCountAttribute()` accessorai, így a
+     * `CheckSummaryResource` mindkét forgatókönyvben (lapozott lista vs. egyedi lekérdezés)
+     * ugyanúgy működne, ha valaha szükség lenne rá.
+     */
+    public function myChecks(Request $request)
+    {
+        $user = $request->user();
+
+        $query = Check::with('location:id,name')
+            ->withCount([
+                'checkItems as total_count',
+                'checkItems as checked_count' => fn ($q) => $q->where('is_checked', true),
+            ])
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at');
+
+        if ($request->filled('location_id')) {
+            $query->where('location_id', $request->input('location_id'));
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->input('date_from'));
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->input('date_to'));
+        }
+
+        $checks = $query->paginate(20);
+
+        return CheckSummaryResource::collection($checks->items());
     }
 
     public function show(Request $request, Check $check)

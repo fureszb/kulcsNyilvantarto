@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -16,6 +17,7 @@ class SecurityDailyReport extends Model
         'equipment', 'inspectors', 'patrols', 'incidents', 'events',
         'fire_alarms', 'elevators', 'maintenance',
         'prepared_by', 'created_by_user_id',
+        'reviewed_at', 'reviewed_by_user_id',
     ];
 
     protected $casts = [
@@ -31,6 +33,7 @@ class SecurityDailyReport extends Model
         'fire_alarms'            => 'array',
         'elevators'              => 'array',
         'maintenance'            => 'array',
+        'reviewed_at'            => 'datetime',
     ];
 
     public function shares(): HasMany
@@ -41,5 +44,10 @@ class SecurityDailyReport extends Model
     public function locations(): BelongsToMany
     {
         return $this->belongsToMany(Location::class, 'security_daily_report_location', 'report_id', 'location_id');
+    }
+
+    public function reviewedBy(): BelongsTo
+    {
+        return $this->belongsTo(TenantUser::class, 'reviewed_by_user_id');
     }
 }

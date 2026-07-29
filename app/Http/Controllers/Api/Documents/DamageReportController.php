@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Documents;
 
 use App\Http\Controllers\Api\Controller;
 use App\Http\Controllers\Api\Documents\Concerns\BuildsDocumentResponse;
+use App\Http\Controllers\Api\Documents\Concerns\NotifiesIssueDocument;
 use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\DocumentDamageReport;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 class DamageReportController extends Controller
 {
     use BuildsDocumentResponse;
+    use NotifiesIssueDocument;
 
     private const SIGNATURE_ROLES = ['karokozo', 'biztonsagi_szolgalat', 'kepviselo'];
 
@@ -146,6 +148,7 @@ class DamageReportController extends Controller
             'document_id'   => $document->id,
             'document_type' => $document->document_type,
         ]);
+        $this->notifyIssueDocumentCreated($document, $user);
 
         $document->load(['signatures', 'attachments']);
 

@@ -108,7 +108,14 @@ class ShiftNoteController extends Controller
 
         $tenant = app('tenant');
         if ($tenant?->slug) {
-            broadcast(new NewShiftNote($tenant->slug, $user->name, $user->id));
+            // A Reverb-en keresztüli élő broadcast opcionális kényelmi funkció — ha a Reverb
+            // szerver átmenetileg nem elérhető, ez ne buktassa el a teljes küldést (lásd
+            // GeofenceController/NfcAccessController ugyanezt a mintát).
+            try {
+                broadcast(new NewShiftNote($tenant->slug, $user->name, $user->id));
+            } catch (\Throwable $e) {
+                Log::warning("Shift-note broadcast sikertelen (user {$user->id}): " . $e->getMessage());
+            }
 
             \App\Jobs\SendPushJob::dispatch(
                 tenantSlug: $tenant->slug,

@@ -70,7 +70,20 @@ class VezenylesController extends Controller
             } else {
                 $locationIds = $user->workLocations()->pluck('locations.id');
             }
-            $areasQuery->whereIn('location_id', $locationIds);
+
+            // A user saját, fiókjához kötött vezénylés-sorának területe MINDIG látható kell
+            // legyen, akkor is, ha az admin a területet más `location_id`-hez rögzítette, mint
+            // amihez a user maga be van osztva (valós, előfordulható admin-adateltérés) —
+            // különben a user saját beosztása "eltűnik" a listából, pedig a `user_id`-kötés
+            // egyértelműen az övé.
+            $ownAreaId = VezenylesEmployee::where('user_id', $user->id)->value('area_id');
+
+            $areasQuery->where(function ($q) use ($locationIds, $ownAreaId) {
+                $q->whereIn('location_id', $locationIds);
+                if ($ownAreaId) {
+                    $q->orWhere('id', $ownAreaId);
+                }
+            });
         } else {
             $assignableLocations = Location::orderBy('name')->get(['id', 'name']);
         }
@@ -259,13 +272,22 @@ class VezenylesController extends Controller
         // A saját sorát (tervezés — mikor tud jönni) bárki szerkesztheti, akire rá
         // van kötve az employee-sor; más soraihoz csak admin/igazgató/biztonsági
         // vezető nyúlhat (authorizeAreaAccess).
-        if (!($emp->user_id && $emp->user_id === $currentUser->id)) {
+        $isOwnRow = $emp->user_id && $emp->user_id === $currentUser->id;
+        if (!$isOwnRow) {
             $this->authorizeAreaAccess($emp->area_id);
         }
 
         $value = $this->normalizeValue($data['value'] ?? null);
         if ($value === false) {
             return $this->redirectBack($year, $month)->with('error', 'Érvénytelen érték. Csak szám, X, ? vagy + adható meg.');
+        }
+
+        // Sima dolgozó a saját sorát csak ráérés-jelzésként szerkesztheti ("+" túlóra
+        // vállalása / "X" nem tud dolgozni, vagy törlés) — tényleges óraszámot csak
+        // vezetői jogkörrel lehet beírni (lásd Api\VezenylesController::upsertSchedule).
+        $canAssignHours = $currentUser->hasAdminPowers() || $currentUser->isSecurityLead();
+        if ($isOwnRow && !$canAssignHours && !in_array($value, [null, 'X', '+'], true)) {
+            return $this->redirectBack($year, $month)->with('error', 'Csak "+" (túlóra) vagy "X" (nem elérhető) adható meg.');
         }
 
         if ($value === null) {

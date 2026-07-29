@@ -10,9 +10,9 @@ interface PresentUser {
     id: number;
     name: string;
     role: string;
-    last_entry_at: string;
-    last_entry_location_id: number;
-    last_entry_location?: { id: number; name: string };
+    location_id: number | null;
+    location?: { id: number; name: string } | null;
+    schedule_value: string | null;
 }
 
 interface LocationInfo {
@@ -75,9 +75,15 @@ export default function PresenceIndex({ presentUsers, locations, guardPositions 
             channel.listen('.geofence', () => {
                 router.reload({ only: ['presentUsers', 'locations', 'guardPositions'] });
             });
+            // Minden ping-nél tüzel (nem csak megerősített zóna-váltásnál), hogy a térképen
+            // az őr-marker valóban élőben kövesse a mozgást, ne csak zóna-átlépéskor váltson.
+            channel.listen('.position-update', () => {
+                router.reload({ only: ['guardPositions'] });
+            });
             return () => {
                 channel.stopListening('.nfc-access');
                 channel.stopListening('.geofence');
+                channel.stopListening('.position-update');
             };
         } catch { /* no-op, oldal frissítéssel is aktuális marad */ }
     }, [tenant?.slug]);
@@ -146,7 +152,7 @@ export default function PresenceIndex({ presentUsers, locations, guardPositions 
     }
 
     function presentCountFor(locationId: number): number {
-        return presentUsers.filter((u) => u.last_entry_location_id === locationId).length;
+        return presentUsers.filter((u) => u.location_id === locationId).length;
     }
 
     return (
@@ -177,7 +183,7 @@ export default function PresenceIndex({ presentUsers, locations, guardPositions 
                                             )}
                                         </div>
                                         <div className="text-xs text-slate-500 mt-0.5">
-                                            {presentCountFor(location.id)} bent / {location.workers_count} dolgozó
+                                            {presentCountFor(location.id)} beosztva ma / {location.workers_count} dolgozó
                                         </div>
                                     </button>
                                 ))
@@ -199,14 +205,14 @@ export default function PresenceIndex({ presentUsers, locations, guardPositions 
                                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Név</th>
                                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Szerepkör</th>
                                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Telephely</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Belépés</th>
+                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Mai beosztás</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {presentUsers.length === 0 ? (
                                 <tr>
                                     <td colSpan={4} className="px-5 py-12 text-center text-slate-400">
-                                        Jelenleg senki nincs bent.
+                                        Ma senki nincs beosztva szolgálatba.
                                     </td>
                                 </tr>
                             ) : (
@@ -214,10 +220,10 @@ export default function PresenceIndex({ presentUsers, locations, guardPositions 
                                     <tr key={u.id} className="hover:bg-slate-50 transition-colors">
                                         <td className="px-5 py-3.5 font-semibold text-slate-800">{u.name}</td>
                                         <td className="px-5 py-3.5 text-slate-600">{ROLE_LABELS[u.role] ?? u.role}</td>
-                                        <td className="px-5 py-3.5 text-slate-600">{u.last_entry_location?.name ?? '–'}</td>
+                                        <td className="px-5 py-3.5 text-slate-600">{u.location?.name ?? '–'}</td>
                                         <td className="px-5 py-3.5">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700">
-                                                {formatTime(u.last_entry_at)}
+                                                {u.schedule_value} óra
                                             </span>
                                         </td>
                                     </tr>

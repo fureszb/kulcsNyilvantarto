@@ -13,9 +13,9 @@ class Location extends Model
 {
     protected $connection = 'tenant';
 
-    protected $fillable = ['name', 'description', 'icon', 'logo_path', 'responsible_person', 'email', 'is_active', 'polygon'];
+    protected $fillable = ['name', 'description', 'icon', 'logo_path', 'responsible_person', 'email', 'is_active', 'polygon', 'capacity'];
 
-    protected $casts = ['is_active' => 'boolean', 'polygon' => 'array'];
+    protected $casts = ['is_active' => 'boolean', 'polygon' => 'array', 'capacity' => 'integer'];
 
     public function items(): HasMany
     {

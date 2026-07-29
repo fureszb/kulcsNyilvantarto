@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useOwnLayout } from '../../hooks/useOwnLayout';
 import SearchableSelect from '../../Components/SearchableSelect';
 import type { ActivityLog, PaginatedData, TenantUserBasic } from '../../types';
@@ -16,6 +16,7 @@ interface Props {
     locationId?: string | null;
     workers: TenantUserBasic[];
     viewableLocations: LocationBasic[];
+    canManage: boolean;
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -34,20 +35,20 @@ function formatDateTime(dateStr: string): string {
     return new Date(dateStr).toLocaleString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
-export default function NfcLogIndex({ logs, dateFrom, dateTo, userId, locationId, workers, viewableLocations }: Props) {
+export default function NfcLogIndex({ logs, dateFrom, dateTo, userId, locationId, workers, viewableLocations, canManage }: Props) {
     const Layout = useOwnLayout();
     const [filterDateFrom, setFilterDateFrom] = useState(dateFrom);
     const [filterDateTo, setFilterDateTo] = useState(dateTo);
-    const [filterUserId, setFilterUserId] = useState<number | null>(userId ? Number(userId) : null);
+    const [filterUserId, setFilterUserId] = useState<number | null>(canManage && userId ? Number(userId) : null);
     const [filterLocationId, setFilterLocationId] = useState<number | null>(locationId ? Number(locationId) : null);
 
     const today = new Date().toISOString().slice(0, 10);
-    const isDefault = filterDateFrom === today && filterDateTo === today && !filterUserId && !filterLocationId;
+    const isDefault = filterDateFrom === today && filterDateTo === today && !filterLocationId && (!canManage || !filterUserId);
 
     function handleFilter(e: React.FormEvent) {
         e.preventDefault();
         const q: Record<string, string> = { date_from: filterDateFrom, date_to: filterDateTo };
-        if (filterUserId) q.user_id = String(filterUserId);
+        if (canManage && filterUserId) q.user_id = String(filterUserId);
         if (filterLocationId) q.location_id = String(filterLocationId);
         router.get(route('nfc-log.index'), q, { preserveState: true });
     }
@@ -58,13 +59,41 @@ export default function NfcLogIndex({ logs, dateFrom, dateTo, userId, locationId
 
     return (
         <Layout title="NFC beléptetési napló">
-            <div>
-                <div className="mb-6">
-                    <h1 className="text-2xl font-extrabold text-slate-800">NFC beléptetési napló</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">Be-/kilépések és elutasított próbálkozások telephelyenként</p>
+            <div className="max-w-7xl mx-auto space-y-5">
+
+                {/* Hero */}
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl">
+                    <div className="absolute -top-12 -right-12 w-48 h-48 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-orange-800/10 rounded-full blur-3xl pointer-events-none" />
+                    <div
+                        className="absolute inset-0 opacity-[0.025] pointer-events-none"
+                        style={{
+                            backgroundImage:
+                                'linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)',
+                            backgroundSize: '32px 32px',
+                        }}
+                    />
+                    <div className="relative px-8 py-7 flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                            <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-1">Fizikai biztonság</p>
+                            <h1 className="text-2xl font-extrabold text-white tracking-tight">NFC beléptetési napló</h1>
+                            <p className="text-slate-400 text-sm mt-1">
+                                {canManage ? 'Be-/kilépések és elutasított próbálkozások telephelyenként' : 'A saját be-/kilépéseid és elutasított próbálkozásaid'}
+                            </p>
+                        </div>
+                        <Link
+                            href={route('home')}
+                            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 hover:text-white text-sm font-medium transition-colors shrink-0"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Vissza
+                        </Link>
+                    </div>
                 </div>
 
-                <form onSubmit={handleFilter} className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-6">
+                <form onSubmit={handleFilter} className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
                     <div className="flex flex-wrap items-end gap-4">
                         <div>
                             <label className="block text-xs font-semibold text-slate-500 mb-1.5">Ettől</label>
@@ -84,13 +113,15 @@ export default function NfcLogIndex({ logs, dateFrom, dateTo, userId, locationId
                                 className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:bg-white focus:outline-none transition"
                             />
                         </div>
-                        <SearchableSelect
-                            label="Felhasználó"
-                            options={workers}
-                            value={filterUserId}
-                            onChange={setFilterUserId}
-                            placeholder="Mindenki"
-                        />
+                        {canManage && (
+                            <SearchableSelect
+                                label="Felhasználó"
+                                options={workers}
+                                value={filterUserId}
+                                onChange={setFilterUserId}
+                                placeholder="Mindenki"
+                            />
+                        )}
                         <SearchableSelect
                             label="Telephely"
                             options={viewableLocations}
@@ -117,14 +148,22 @@ export default function NfcLogIndex({ logs, dateFrom, dateTo, userId, locationId
                 </form>
 
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+                            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-4 8h4m-4 4h4m-6-4h.01M9 16h.01" />
+                            </svg>
+                        </div>
                         <h2 className="font-bold text-slate-800">Események</h2>
-                        <span className="text-sm text-slate-400 font-medium">{logs.total} esemény</span>
+                        <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">{logs.total} esemény</span>
                     </div>
 
                     {logs.data.length === 0 ? (
-                        <div className="px-6 py-16 text-center">
-                            <p className="text-slate-400 text-sm">Nincs a szűrésnek megfelelő esemény.</p>
+                        <div className="px-6 py-12 text-center text-slate-400">
+                            <svg className="w-10 h-10 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-4 8h4m-4 4h4m-6-4h.01M9 16h.01" />
+                            </svg>
+                            <p className="text-sm font-medium">Nincs a szűrésnek megfelelő esemény.</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">

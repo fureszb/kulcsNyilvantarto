@@ -42,7 +42,7 @@ export default function AppHeader({
     }, []);
 
     return (
-        <header className={`safe-top sticky top-0 z-30 shadow-lg shadow-indigo-900/10 transition-[backdrop-filter] duration-300 ${scrolled ? 'backdrop-blur-md' : ''}`}>
+        <header className={`safe-top sticky top-0 z-[1050] shadow-lg shadow-indigo-900/10 transition-[backdrop-filter] duration-300 ${scrolled ? 'backdrop-blur-md' : ''}`}>
             <div
                 className="absolute inset-0 gradient-drift transition-opacity duration-300 ease-out"
                 style={{

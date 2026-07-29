@@ -31,6 +31,8 @@ class SecurityDailyReportResource extends JsonResource
             'location_ids'            => $this->whenLoaded('locations', fn () => $this->locations->pluck('id')->values()),
             'share_user_ids'          => $this->whenLoaded('shares', fn () => $this->shares->pluck('user_id')->values()),
             'created_at'              => optional($this->created_at)->toIso8601String(),
+            'reviewed_at'             => optional($this->reviewed_at)->toIso8601String(),
+            'reviewed_by_name'        => $this->whenLoaded('reviewedBy', fn () => $this->reviewedBy?->name),
         ];
     }
 }

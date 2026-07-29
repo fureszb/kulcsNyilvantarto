@@ -2,13 +2,27 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\BuildsWeeklyTrend;
 use App\Models\DirectorLeadGoal;
+use App\Models\Document;
+use App\Models\Location;
+use App\Models\TenantUser;
+use App\Models\VezenylesSchedule;
 use App\Services\PerformanceStatsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DirectorController extends Controller
 {
+    use BuildsWeeklyTrend;
+
+    /** A "nyitott jelentés"/"incidens" fogalom: azok a dokumentum-típusok, amik valódi
+     *  rendellenességet rögzítenek (nem rutin átadás/kiadás), és még nincs `reviewed_at`
+     *  (vezetői jóváhagyás/átnézés) rajtuk — lásd `documents.reviewed_at` migráció. */
+    private const ISSUE_DOCUMENT_TYPES = [
+        'feljegyzeses_jegyzokonyv', 'karfelveteli_jegyzokonyv', 'talalt_targy_jegyzokonyv', 'robbantasi_fenyegetes',
+    ];
+
     private function mergeGoals(array $leadsData, $director, Carbon $now): array
     {
         $goals = DirectorLeadGoal::where('director_id', $director->id)
@@ -49,9 +63,56 @@ class DirectorController extends Controller
 
         $leads = $this->mergeGoals($stats->directorOverview($user), $user, $now);
 
+        $locations = Location::whereIn('security_lead_id', $user->supervisedLeads()->pluck('id'))
+            ->with('securityLead:id,name')
+            ->get();
+        $locationIds = $locations->pluck('id');
+
+        $scheduledUserIds = VezenylesSchedule::scheduledUserIdsForDate($now);
+        $presenceInsideCount = TenantUser::whereIn('id', $scheduledUserIds)
+            ->whereIn('location_id', $locationIds)
+            ->count();
+        $presenceCapacity = (int) $locations->sum('capacity');
+
+        $openReportsQuery = Document::whereIn('location_id', $locationIds)
+            ->whereIn('document_type', self::ISSUE_DOCUMENT_TYPES)
+            ->whereNull('reviewed_at');
+
+        $openReportsCount = (clone $openReportsQuery)->count();
+
+        $openReports = (clone $openReportsQuery)->with('location:id,name')
+            ->latest()->take(5)->get()
+            ->map(fn (Document $d) => [
+                'id'            => $d->id,
+                'title'         => $d->typeLabel(),
+                'context_label' => ($d->location->name ?? 'Ismeretlen helyszín') . ' — ' . $d->created_at->format('Y.m.d. H:i'),
+                'detail_label'  => 'Rögzítve, még nincs jóváhagyva.',
+                'severity'      => $d->document_type === 'robbantasi_fenyegetes' ? 'high' : 'low',
+            ])->values();
+
+        $incidentCounts = $this->countsByDateMap(
+            Document::whereIn('location_id', $locationIds)->whereIn('document_type', self::ISSUE_DOCUMENT_TYPES),
+            'created_at',
+        );
+        $incidentTrend = $this->buildWeeklyTrend('Heti incidens trend', $incidentCounts);
+
+        $locationSummaries = $locations->map(fn (Location $loc) => [
+            'location_id'        => $loc->id,
+            'name'                => $loc->name,
+            'presence_label'      => $loc->presentUsers()->count() . '/' . ($loc->capacity ?? '?') . ' bent',
+            'security_lead_name'  => $loc->securityLead?->name ?? '—',
+            'is_active'           => $loc->is_active,
+        ])->values();
+
         return response()->json([
-            'leads'         => $leads,
-            'currentPeriod' => ['year' => $now->year, 'month' => $now->month],
+            'leads'               => $leads,
+            'currentPeriod'       => ['year' => $now->year, 'month' => $now->month],
+            'presence_inside_count' => $presenceInsideCount,
+            'presence_capacity'     => $presenceCapacity,
+            'open_reports_count'    => $openReportsCount,
+            'open_reports'          => $openReports,
+            'incident_trend'        => $incidentTrend,
+            'location_summaries'    => $locationSummaries,
         ]);
     }
 

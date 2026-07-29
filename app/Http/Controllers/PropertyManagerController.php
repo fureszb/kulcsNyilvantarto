@@ -333,6 +333,38 @@ class PropertyManagerController extends Controller
         return back()->with('success', 'Válasz elküldve.');
     }
 
+    public function updateReply(Request $request, PmMessage $message, PmMessageReply $reply)
+    {
+        $user = Auth::guard('tenant')->user();
+        abort_unless($reply->pm_message_id === $message->id, 404);
+        abort_unless($user->isAdmin() || $reply->sender_id === $user->id, 403);
+
+        $request->validate(['content' => 'required|string|max:2000']);
+        $reply->update(['content' => $request->content]);
+
+        ActivityLog::record('pm_message_reply.updated', $user, 'Válasz módosítva', [
+            'message_id' => $message->id,
+            'reply_id'   => $reply->id,
+        ]);
+
+        return back()->with('success', 'Válasz módosítva.');
+    }
+
+    public function destroyReply(Request $request, PmMessage $message, PmMessageReply $reply)
+    {
+        $user = Auth::guard('tenant')->user();
+        abort_unless($reply->pm_message_id === $message->id, 404);
+        abort_unless($user->isAdmin() || $reply->sender_id === $user->id, 403);
+
+        ActivityLog::record('pm_message_reply.deleted', $user, 'Válasz törölve', [
+            'message_id' => $message->id,
+            'reply_id'   => $reply->id,
+        ]);
+        $reply->delete();
+
+        return back()->with('success', 'Válasz törölve.');
+    }
+
     public function editMessage(PmMessage $message)
     {
         $authUser = Auth::guard('tenant')->user();

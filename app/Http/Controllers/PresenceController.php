@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Location;
 use App\Models\TenantUser;
+use App\Models\VezenylesSchedule;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class PresenceController extends Controller
 {
+    /** "Ki van bent" — 2026-07-18 óta NEM az NFC self-report (`is_present`) alapján, mert a
+     *  rendszer nem beléptető/kiléptető kapu (checkpoint-csekkoló rendszer, lásd
+     *  `NfcAccessController`) — a napi Vezenylés-beosztás a forrás: aki mára konkrét
+     *  óraszámmal be van írva szolgálatba, az számít "bent"-nek. */
     public function index()
     {
         /** @var TenantUser $user */
@@ -23,11 +28,22 @@ class PresenceController extends Controller
             $locationIds = collect([$user->location_id])->filter();
         }
 
-        $presentUsers = TenantUser::with('lastEntryLocation:id,name')
-            ->where('is_present', true)
-            ->whereIn('last_entry_location_id', $locationIds)
-            ->orderBy('last_entry_at', 'desc')
-            ->get(['id', 'name', 'role', 'last_entry_at', 'last_entry_location_id']);
+        $scheduledEntries = VezenylesSchedule::scheduledEntriesForDate(now());
+
+        $presentUsers = TenantUser::with('workLocations:id,name')
+            ->whereIn('id', $scheduledEntries->keys())
+            ->whereIn('location_id', $locationIds)
+            ->orderBy('name')
+            ->get(['id', 'name', 'role', 'location_id'])
+            ->map(fn (TenantUser $u) => [
+                'id'             => $u->id,
+                'name'           => $u->name,
+                'role'           => $u->role,
+                'location_id'    => $u->location_id,
+                'location'       => $u->workLocations ? ['id' => $u->workLocations->id, 'name' => $u->workLocations->name] : null,
+                'schedule_value' => $scheduledEntries->get($u->id)?->value,
+            ])
+            ->values();
 
         $locations = Location::whereIn('id', $locationIds)
             ->where('is_active', true)

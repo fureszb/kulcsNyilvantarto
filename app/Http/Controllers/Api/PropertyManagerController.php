@@ -2,21 +2,34 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\FormatsInitials;
 use App\Http\Resources\Api\CheckResource;
 use App\Http\Resources\Api\SecurityDailyReportResource;
 use App\Models\ActivityLog;
 use App\Models\Check;
+use App\Models\Document;
 use App\Models\Exam;
 use App\Models\ExamResult;
+use App\Models\PmMessage;
 use App\Models\SecurityDailyReport;
 use App\Models\TenantUser;
 use App\Models\Training;
 use App\Models\TrainingResult;
+use App\Models\VezenylesSchedule;
 use App\Services\WorkerCompletionStatsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PropertyManagerController extends Controller
 {
+    use FormatsInitials;
+
+    /** Ugyanaz a lista, mint `DirectorController`/`SecurityLeadController`
+     *  `ISSUE_DOCUMENT_TYPES`-je — rendellenességet rögzítő dokumentum-típusok. */
+    private const ISSUE_DOCUMENT_TYPES = [
+        'feljegyzeses_jegyzokonyv', 'karfelveteli_jegyzokonyv', 'talalt_targy_jegyzokonyv', 'robbantasi_fenyegetes',
+    ];
+
     public function __construct(private WorkerCompletionStatsService $statsService)
     {
     }
@@ -44,12 +57,59 @@ class PropertyManagerController extends Controller
         $workerStats = $workers->map(function ($w) use ($trainings, $allTrainResults, $allExamResults) {
             $stats = $this->statsService->buildStats($w, $trainings, $allTrainResults, $allExamResults);
             return [
-                'worker'       => ['id' => $w->id, 'name' => $w->name],
+                'worker'       => [
+                    'id' => $w->id, 'name' => $w->name, 'email' => $w->email,
+                    'employed_since' => optional($w->employed_since)->toDateString(),
+                ],
                 'training_pct' => $stats['training_pct'],
                 'location_pct' => $stats['location_pct'],
                 'prof_pct'     => $stats['prof_pct'],
             ];
         })->values();
+
+        $guardsOnDutyLabel = null;
+        $openIssuesCount = 0;
+        $todayChecklistCount = 0;
+        $checklistStatuses = collect();
+
+        if ($assignedLocation) {
+            // "Szolgálatban" korábban az NFC self-report (`is_present`) alapján dőlt el, ami
+            // megbízhatatlan (elfelejtett be/kilépés-koppintás) — most a napi Vezenylés-beosztás
+            // a forrás: aki mára konkrét óraszámmal be van írva szolgálatba, az számít bentnek.
+            $scheduledUserIds = VezenylesSchedule::scheduledUserIdsForDate(now());
+            $onDuty = $workers->whereIn('id', $scheduledUserIds)->count();
+            $guardsOnDutyLabel = "{$onDuty}/{$workers->count()}";
+
+            $openIssuesCount = Document::where('location_id', $assignedLocation->id)
+                ->whereIn('document_type', self::ISSUE_DOCUMENT_TYPES)
+                ->whereNull('reviewed_at')
+                ->count();
+
+            $todayChecks = Check::where('location_id', $assignedLocation->id)
+                ->whereDate('created_at', today())
+                ->with('checkItems')
+                ->orderByDesc('created_at')
+                ->get();
+            $todayChecklistCount = $todayChecks->count();
+            $checklistStatuses = $todayChecks->map(fn (Check $c) => [
+                'title'        => $c->checked_by,
+                'status_label' => "Kész: {$c->created_at->format('H:i')} — {$c->checked_count}/{$c->total_count} elem",
+                'status'       => 'done',
+            ])->values();
+        }
+
+        $securityTeamMessages = PmMessage::whereHas('sender', fn ($q) => $q->where('role', 'security_lead'))
+            ->where(fn ($q) => $q->where('send_to_all', true)
+                ->orWhereHas('recipients', fn ($r) => $r->where('user_id', $user->id)))
+            ->orderByDesc('created_at')
+            ->take(3)
+            ->get()
+            ->map(fn (PmMessage $m) => [
+                'initials'     => $this->initialsOf($m->sent_by_name),
+                'sender_label' => $m->sent_by_name,
+                'time_label'   => $m->created_at->format('H:i'),
+                'snippet'      => Str::limit($m->content, 120),
+            ])->values();
 
         return response()->json([
             'workerStats'      => $workerStats,
@@ -58,6 +118,11 @@ class PropertyManagerController extends Controller
                 'name'                => $assignedLocation->name,
                 'security_lead_name'  => $assignedLocation->securityLead?->name,
             ] : null,
+            'guards_on_duty_label'   => $guardsOnDutyLabel,
+            'open_issues_count'      => $openIssuesCount,
+            'today_checklist_count'  => $todayChecklistCount,
+            'checklist_statuses'     => $checklistStatuses,
+            'security_team_messages' => $securityTeamMessages,
         ]);
     }
 
@@ -130,7 +195,10 @@ class PropertyManagerController extends Controller
             ])->values();
 
         return response()->json([
-            'user' => ['id' => $user->id, 'name' => $user->name],
+            'user' => [
+                'id' => $user->id, 'name' => $user->name, 'email' => $user->email,
+                'employed_since' => optional($user->employed_since)->toDateString(),
+            ],
             'training_rows' => $trainingRows,
             'exam_rows'     => $examRows,
             'stats'         => [

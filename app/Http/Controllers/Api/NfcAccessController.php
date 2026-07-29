@@ -3,16 +3,28 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\NfcAccessEvent;
+use App\Jobs\SendNativePushJob;
 use App\Jobs\SendPushJob;
 use App\Models\ActivityLog;
+use App\Models\Location;
 use App\Models\NfcNotification;
 use App\Models\NfcTag;
 use App\Models\TenantUser;
+use App\Services\NfcChecklistService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class NfcAccessController extends Controller
 {
+    /**
+     * A rendszer NEM beléptető/kiléptető kapu — a biztonsági őr a helyszínre felhelyezett
+     * NFC-matricákat (checkpointokat, pl. "Hátsó ajtó", "Lift") scanneli be a bejárási/csekkolási
+     * körön, hogy igazolja: az adott pontnál járt. Ezért minden sikeres scan egy önálló, a
+     * korábbi scanektől független "checkpoint igazolva" esemény — nincs be/kilépés-állapot,
+     * nincs `is_present`/`last_entry_location_id` írás (2026-07-18-i korrekció: az eredeti
+     * telephely-szintű be/kilépés-toggle hibásan "kilépésnek" értelmezte, ha ugyanazon a
+     * telephelyen egy MÁSIK checkpointot scanneltek be közvetlenül az előző után).
+     */
     public function scan(Request $request)
     {
         $data = $request->validate([
@@ -30,70 +42,91 @@ class NfcAccessController extends Controller
         }
 
         $location = $tag->location;
-
-        // A "kilépés" csak akkor engedélyezett jogosultság-check nélkül, ha a user
-        // ÉPP EZEN a telephelyen van bejelentkezve — az is_present önmagában globális
-        // flag, telephely-azonosítás nélkül bárhol "kilépésnek" tűnne, és megkerülné a
-        // jogosultság-ellenőrzést egy másik, tiltott telephelyen.
-        $isPresentHere = $user->is_present && (int) $user->last_entry_location_id === (int) $location->id;
-
-        if ($isPresentHere) {
-            // Kilépés — mindig engedélyezett, nincs jogosultság-check.
-            $user->update([
-                'is_present' => false,
-            ]);
-
-            ActivityLog::record('nfc.exit', $user, "Kilépés — {$location->name}", [
-                'tag_uid' => $tag->uid, 'location_id' => $location->id, 'location_name' => $location->name,
-            ]);
-
-            $this->notifyBosses($user, $location, 'exited', $occurredAt);
-
-            return response()->json(['status' => 'exited', 'location' => ['id' => $location->id, 'name' => $location->name]]);
-        }
-
         $hasAccess = $user->nfcLocations()->where('locations.id', $location->id)->exists();
 
         if (!$hasAccess) {
-            ActivityLog::record('nfc.denied', $user, "Elutasított belépés — {$location->name}", [
-                'tag_uid' => $tag->uid, 'location_id' => $location->id, 'location_name' => $location->name,
+            ActivityLog::record('nfc.denied', $user, "Elutasított ellenőrzés — {$location->name}", [
+                'tag_uid' => $tag->uid, 'tag_label' => $tag->label, 'location_id' => $location->id, 'location_name' => $location->name,
             ]);
 
-            $this->notifyBosses($user, $location, 'denied', $occurredAt);
+            $this->notifyEveryone($user, $location, 'denied', $occurredAt);
 
-            return response()->json(['status' => 'denied', 'message' => 'Nincs jogosultsága ehhez a telephelyhez.'], 403);
+            return response()->json([
+                'status'   => 'denied',
+                'message'  => 'Nincs jogosultsága ehhez a telephelyhez.',
+                'tag'      => ['id' => $tag->id, 'label' => $tag->label],
+            ], 403);
         }
 
-        $user->update([
-            'is_present'              => true,
-            'last_entry_at'           => now(),
-            'last_entry_location_id'  => $location->id,
+        ActivityLog::record('nfc.checkpoint', $user, "Ellenőrizve — {$tag->label} ({$location->name})", [
+            'tag_uid' => $tag->uid, 'tag_label' => $tag->label, 'location_id' => $location->id, 'location_name' => $location->name,
         ]);
 
-        ActivityLog::record('nfc.entry', $user, "Belépés — {$location->name}", [
-            'tag_uid' => $tag->uid, 'location_id' => $location->id,
+        $this->notifyEveryone($user, $location, 'checkpoint', $occurredAt);
+
+        return response()->json([
+            'status'   => 'checked',
+            'location' => ['id' => $location->id, 'name' => $location->name],
+            'tag'      => ['id' => $tag->id, 'label' => $tag->label],
         ]);
-
-        $this->notifyBosses($user, $location, 'entered', $occurredAt);
-
-        return response()->json(['status' => 'entered', 'location' => ['id' => $location->id, 'name' => $location->name]]);
     }
 
-    /** Telephely felelősei — biztonsági vezető + property manager. */
-    private function notifyBosses(TenantUser $user, $location, string $type, string $occurredAt): void
+    /**
+     * A bejelentkezett user saját NFC-előzményei (checkpoint-ellenőrzés/elutasítás), legfrissebb
+     * elöl — a mobil "NFC előzmények" profil-menüpont valós adatforrása (korábban MOCK volt).
+     * `nfc.entry`/`nfc.exit` a 2026-07-18 előtti (be/kilépés-modellből származó) régi sorok
+     * visszamenőleges kompatibilitása miatt van benne — új sor csak `nfc.checkpoint`/`nfc.denied`
+     * lesz.
+     */
+    public function history(Request $request)
     {
-        $bossIds = TenantUser::where('is_active', true)
-            ->where(function ($q) use ($location) {
-                $q->where('id', $location->security_lead_id)
-                  ->orWhere(function ($q2) use ($location) {
-                      $q2->where('location_id', $location->id)->where('role', 'property_manager');
-                  });
-            })
-            ->pluck('id')
-            ->unique()
-            ->values();
+        $user = $request->user();
 
-        if ($bossIds->isEmpty()) {
+        $logs = ActivityLog::where('user_id', $user->id)
+            ->whereIn('event_type', ['nfc.checkpoint', 'nfc.entry', 'nfc.exit', 'nfc.denied'])
+            ->orderByDesc('occurred_at')
+            ->limit(100)
+            ->get(['id', 'event_type', 'metadata', 'occurred_at']);
+
+        $entries = $logs->map(fn (ActivityLog $log) => [
+            'id'            => $log->id,
+            'event_type'    => $log->event_type,
+            'location_name' => $log->metadata['location_name'] ?? null,
+            'tag_label'     => $log->metadata['tag_label'] ?? null,
+            'occurred_at'   => $log->occurred_at->toIso8601String(),
+        ])->values();
+
+        return response()->json(['entries' => $entries]);
+    }
+
+    /**
+     * "Mai bejárás" — a user NFC-beléptetéssel engedélyezett telephelyeinek (`nfcLocations()`,
+     * NEM a "hol dolgozik" `location_id` mező — a kettő eltérhet, lásd `NfcChecklistService`)
+     * aktív NFC-matricái + hogy a mai napon beolvasták-e már (bárki, nem csak a user saját
+     * scanjei) — a mobil "Mai bejárás" profil-menüpont valós adatforrása (korábban MOCK volt,
+     * kitalált emeleti csoportokkal; az `NfcTag`-nek nincs emelet/csoport mezője, ezért itt egy
+     * egyszerű, admin-címke szerint rendezett lapos lista van, floor-grouping nélkül).
+     */
+    public function todayChecklist(Request $request, NfcChecklistService $checklistService)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'location_names' => $checklistService->locationNamesForUser($user),
+            'points'         => $checklistService->pointsForUser($user),
+        ]);
+    }
+
+    /** Minden NFC-log rekordról (sikeres checkpoint ÉS elutasított kísérlet is) a scannelő
+     *  kivételével minden aktív dolgozó azonnali értesítést kap — élő broadcast (bell + toast),
+     *  perzisztált NfcNotification-sor, és push (web + natív). */
+    private function notifyEveryone(TenantUser $user, Location $location, string $type, string $occurredAt): void
+    {
+        $recipientIds = TenantUser::where('is_active', true)
+            ->where('id', '!=', $user->id)
+            ->pluck('id');
+
+        if ($recipientIds->isEmpty()) {
             return;
         }
 
@@ -102,13 +135,18 @@ class NfcAccessController extends Controller
             return;
         }
 
+        $title = 'NFC ellenőrzés';
+        $body  = $type === 'denied'
+            ? "{$user->name} jogosulatlan ellenőrzési kísérlet — {$location->name}"
+            : "{$user->name} ellenőrzést végzett — {$location->name}";
+
         // A Reverb-en keresztüli élő broadcast opcionális kényelmi funkció — ha a Reverb
-        // szerver átmenetileg nem elérhető, ez ne buktassa el a teljes beléptetési kérést
+        // szerver átmenetileg nem elérhető, ez ne buktassa el a teljes ellenőrzési kérést
         // (a push job és az in-app notification-sor ettől függetlenül továbbra is fusson).
         try {
             broadcast(new NfcAccessEvent(
                 tenantSlug: $tenant->slug,
-                bossIds: $bossIds->all(),
+                recipientIds: $recipientIds->all(),
                 userId: $user->id,
                 userName: $user->name,
                 locationId: $location->id,
@@ -121,8 +159,8 @@ class NfcAccessController extends Controller
         }
 
         $now = now();
-        NfcNotification::insert($bossIds->map(fn ($bossId) => [
-            'user_id'       => $bossId,
+        NfcNotification::insert($recipientIds->map(fn ($recipientId) => [
+            'user_id'       => $recipientId,
             'actor_user_id' => $user->id,
             'actor_name'    => $user->name,
             'location_id'   => $location->id,
@@ -133,17 +171,19 @@ class NfcAccessController extends Controller
             'updated_at'    => $now,
         ])->all());
 
-        $messages = [
-            'entered' => "{$user->name} belépett — {$location->name}",
-            'exited'  => "{$user->name} kilépett — {$location->name}",
-            'denied'  => "{$user->name} jogosulatlan belépési kísérlet — {$location->name}",
-        ];
-
         SendPushJob::dispatch(
             tenantSlug: $tenant->slug,
-            userIds: $bossIds->all(),
-            title: 'NFC beléptetés',
-            body: $messages[$type] ?? $messages['entered'],
+            userIds: $recipientIds->all(),
+            title: $title,
+            body: $body,
+            url: route('presence.index'),
+            tag: 'nfc',
+        );
+        SendNativePushJob::dispatch(
+            tenantSlug: $tenant->slug,
+            userIds: $recipientIds->all(),
+            title: $title,
+            body: $body,
             url: route('presence.index'),
             tag: 'nfc',
         );

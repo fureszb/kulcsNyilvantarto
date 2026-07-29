@@ -27,7 +27,7 @@ interface FormData {
 
 export default function NfcTagForm({ tag, locations }: Props) {
     const isEdit = !!tag;
-    const title = isEdit ? 'NFC matrica szerkesztése' : 'Új NFC matrica';
+    const title = isEdit ? 'Checkpoint szerkesztése' : 'Új checkpoint';
 
     const { data, setData, post, put, processing, errors } = useForm<FormData>({
         uid: tag?.uid ?? '',
@@ -53,7 +53,7 @@ export default function NfcTagForm({ tag, locations }: Props) {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/>
                         </svg>
-                        NFC matricák
+                        NFC csekkolási pontok
                     </a>
                     <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/>
@@ -95,15 +95,16 @@ export default function NfcTagForm({ tag, locations }: Props) {
                         </div>
 
                         <div>
-                            <label className="form-label" htmlFor="label">Címke (opcionális, pl. hol van felragasztva)</label>
+                            <label className="form-label" htmlFor="label">Címke (pl. hol van felragasztva)</label>
                             <input
                                 id="label"
                                 type="text"
                                 value={data.label}
                                 onChange={(e) => setData('label', e.target.value)}
                                 className="form-input"
-                                placeholder="pl. Bejárati ajtó"
+                                placeholder="pl. Hátsó ajtó, Lift, Recepció"
                             />
+                            <p className="text-xs text-slate-400 mt-1">Ez jelenik meg az őr mobil appjában, amikor beolvassa ezt a checkpointot.</p>
                             {errors.label && <p className="text-red-500 text-xs mt-1">{errors.label}</p>}
                         </div>
 

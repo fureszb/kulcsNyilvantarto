@@ -155,6 +155,8 @@ class ExamController extends Controller
             $examStep = $exam->steps()->create([
                 'question'      => $step->question,
                 'question_type' => $step->question_type ?? 'radio',
+                'media_path'    => $step->media_path,
+                'media_width'   => $step->media_width ?? 100,
                 'sort_order'    => $exam->steps()->max('sort_order') + 1,
             ]);
 

@@ -51,6 +51,8 @@ trait BuildsDocumentResponse
             ])->values(),
             'created_at'         => optional($document->created_at)->toIso8601String(),
             'finalized_at'       => optional($document->finalized_at)->toIso8601String(),
+            'reviewed_at'        => optional($document->reviewed_at)->toIso8601String(),
+            'reviewed_by_name'   => $document->reviewedBy?->name,
         ];
     }
 }

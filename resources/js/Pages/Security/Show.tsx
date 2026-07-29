@@ -10,6 +10,7 @@ interface Props {
     sharedUsers: TenantUser[];
     allUsers: TenantUser[];
     isCreator: boolean;
+    canReview: boolean;
 }
 
 type Row = Record<string, string | undefined>;
@@ -32,16 +33,25 @@ function SectionCard({ title, icon, count, countSuffix = 'db', border = 'border-
     );
 }
 
-export default function SecurityShow({ report, sharedUsers, allUsers, isCreator }: Props) {
+export default function SecurityShow({ report, sharedUsers, allUsers, isCreator, canReview }: Props) {
     const Layout = useOwnLayout();
     const { auth } = usePage<PageProps>().props;
     const isPm = auth.user?.is_property_manager ?? false;
 
     const [shareOpen, setShareOpen] = useState(false);
     const [selectedIds, setSelectedIds] = useState<number[]>(sharedUsers.map(u => u.id));
+    const [isReviewing, setIsReviewing] = useState(false);
 
     function toggleUser(id: number) {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    }
+
+    function handleReview() {
+        setIsReviewing(true);
+        router.post(route('security.review', report.id), {}, {
+            preserveScroll: true,
+            onFinish: () => setIsReviewing(false),
+        });
     }
 
     function saveShare(e: React.FormEvent) {
@@ -110,6 +120,33 @@ export default function SecurityShow({ report, sharedUsers, allUsers, isCreator 
                     </div>
                 </div>
             </div>
+
+            {/* Vezetői jóváhagyás */}
+            {canReview && (
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm px-5 py-4 mb-6 flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${report.reviewed_at ? 'bg-emerald-50' : 'bg-slate-100'}`}>
+                            <svg className={`w-4.5 h-4.5 ${report.reviewed_at ? 'text-emerald-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold text-slate-700">Vezetői jóváhagyás</p>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                                {report.reviewed_at ? `Jóváhagyta: ${report.reviewed_by?.name ?? 'ismeretlen'}` : 'Még nincs jóváhagyva'}
+                            </p>
+                        </div>
+                    </div>
+                    {!report.reviewed_at && (
+                        <button
+                            type="button"
+                            onClick={handleReview}
+                            disabled={isReviewing}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+                        >
+                            {isReviewing ? 'Jóváhagyás...' : 'Jóváhagyás'}
+                        </button>
+                    )}
+                </div>
+            )}
 
             <div className="space-y-5">
 

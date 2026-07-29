@@ -1,5 +1,14 @@
 import { Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import {
+    DndContext, closestCenter, KeyboardSensor, PointerSensor,
+    useSensor, useSensors, type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove, SortableContext, sortableKeyboardCoordinates,
+    useSortable, verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import AdminLayout from '../../../Layouts/AdminLayout';
 
 declare function route(name: string, params?: unknown): string;
@@ -113,6 +122,7 @@ function WidthField({ value, onChange }: { value: number; onChange: (v: number) 
 function StepAccordion({ step, index, trainingId }: { step: TrainingStep; index: number; trainingId: number }) {
     const [open, setOpen] = useState(false);
     const [typeLabel, typeClass] = TYPE_BADGE[step.question_type ?? 'radio'] ?? TYPE_BADGE['radio'];
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: step.id });
 
     function handleDelete(e: React.MouseEvent) {
         e.stopPropagation();
@@ -121,12 +131,35 @@ function StepAccordion({ step, index, trainingId }: { step: TrainingStep; index:
     }
 
     return (
-        <div className="card overflow-hidden">
+        <div
+            ref={setNodeRef}
+            style={{
+                transform: CSS.Transform.toString(transform),
+                transition,
+                zIndex: isDragging ? 20 : 'auto',
+                opacity: isDragging ? 0.6 : 1,
+            }}
+            className={`card overflow-hidden${isDragging ? ' shadow-xl ring-2 ring-indigo-200' : ''}`}
+        >
             <div
                 className="px-5 py-4 flex items-center justify-between gap-3 cursor-pointer select-none"
                 onClick={() => setOpen(!open)}
             >
                 <div className="flex items-center gap-3 min-w-0">
+                    <button
+                        type="button"
+                        {...attributes}
+                        {...listeners}
+                        onClick={(e) => e.stopPropagation()}
+                        title="Húzd a sorrend módosításához"
+                        className="shrink-0 w-7 h-7 rounded-lg text-slate-300 hover:text-slate-500 hover:bg-slate-100 flex items-center justify-center cursor-grab active:cursor-grabbing transition-colors"
+                    >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <circle cx="7" cy="5" r="1.3" /><circle cx="13" cy="5" r="1.3" />
+                            <circle cx="7" cy="10" r="1.3" /><circle cx="13" cy="10" r="1.3" />
+                            <circle cx="7" cy="15" r="1.3" /><circle cx="13" cy="15" r="1.3" />
+                        </svg>
+                    </button>
                     <span className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">
                         {index + 1}
                     </span>
@@ -472,6 +505,34 @@ function NewStepForm({ trainingId }: { trainingId: number }) {
 }
 
 export default function TrainingSteps({ training, steps }: Props) {
+    const [order, setOrder] = useState<number[]>(() => steps.map(s => s.id));
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        setOrder(steps.map(s => s.id));
+    }, [steps]);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    );
+
+    function handleDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const next = arrayMove(order, order.indexOf(Number(active.id)), order.indexOf(Number(over.id)));
+        setOrder(next);
+        setSaving(true);
+        router.post(route('admin.trainings.steps.reorder', training.id), { order: next }, {
+            preserveScroll: true,
+            onFinish: () => setSaving(false),
+        });
+    }
+
+    const stepsById = new Map(steps.map(s => [s.id, s]));
+    const orderedSteps = order.map(id => stepsById.get(id)).filter((s): s is TrainingStep => !!s);
+
     return (
         <AdminLayout
             title={`${training.title} – Lépések`}
@@ -490,9 +551,26 @@ export default function TrainingSteps({ training, steps }: Props) {
                         Még nincs lépés. Add hozzá az első lépést alább.
                     </div>
                 ) : (
-                    steps.map((step, index) => (
-                        <StepAccordion key={step.id} step={step} index={index} trainingId={training.id} />
-                    ))
+                    <>
+                        <p className="text-xs text-slate-400 flex items-center gap-1.5">
+                            <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <circle cx="7" cy="5" r="1.3" /><circle cx="13" cy="5" r="1.3" />
+                                <circle cx="7" cy="10" r="1.3" /><circle cx="13" cy="10" r="1.3" />
+                                <circle cx="7" cy="15" r="1.3" /><circle cx="13" cy="15" r="1.3" />
+                            </svg>
+                            A fogantyúnál fogva húzva átrendezheted a lépések sorrendjét.
+                            {saving && <span className="text-indigo-500 font-medium">Mentés...</span>}
+                        </p>
+                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                            <SortableContext items={order} strategy={verticalListSortingStrategy}>
+                                <div className="space-y-6">
+                                    {orderedSteps.map((step, index) => (
+                                        <StepAccordion key={step.id} step={step} index={index} trainingId={training.id} />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                        </DndContext>
+                    </>
                 )}
 
                 <NewStepForm trainingId={training.id} />

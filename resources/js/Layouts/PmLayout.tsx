@@ -3,6 +3,7 @@ import { router, usePage } from '@inertiajs/react';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
 import AppHeader from '../Components/AppHeader';
 import NotificationBell from '../Components/NotificationBell';
+import PushPermissionBanner from '../Components/PushPermissionBanner';
 import { getEcho } from '../echo';
 import type { PageProps } from '../types';
 
@@ -266,6 +267,8 @@ export default function PmLayout({ children, title }: Props) {
                     </button>
                 </form>
             </AppHeader>
+
+            <PushPermissionBanner />
 
             <MobileNavDrawer
                 open={mobileOpen}

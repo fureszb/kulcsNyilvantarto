@@ -37,6 +37,15 @@ interface EmergencyContact {
     note?: string | null;
 }
 
+interface PresenceInfo {
+    on_duty: boolean;
+    schedule_label: string | null;
+    has_location: boolean;
+    venue_name: string | null;
+    checked_count: number;
+    total_count: number;
+}
+
 interface Props {
     welcomeName?: string | null;
     checksToday: number;
@@ -45,6 +54,7 @@ interface Props {
     venueMode?: 'buildings' | 'tenants';
     securityModuleVisible: boolean;
     emergencyContacts: EmergencyContact[];
+    presence?: PresenceInfo;
 }
 
 interface ModuleDef {
@@ -170,6 +180,16 @@ const ALL_MODULES: ModuleDef[] = [
         accentColor: 'sky',
         features: ['10 jegyzőkönyv-típus', 'Digitális aláírás', 'Letölthető PDF'],
         actionLabel: 'Dokumentumok megnyitása',
+    },
+    {
+        id: 'nfc-log',
+        routeName: 'nfc-log.index',
+        title: 'NFC napló',
+        description: 'Be-/kilépések és elutasított próbálkozások szűrhető naplója.',
+        iconPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-4 8h4m-4 4h4m-6-4h.01M9 16h.01',
+        accentColor: 'amber',
+        features: ['NFC-alapú azonosítás', 'Dátum-tartomány szűrés', 'Telephelyenkénti bontás'],
+        actionLabel: 'Napló megnyitása',
     },
 ];
 
@@ -942,7 +962,7 @@ function CountUp({ target, duration = 800 }: { target: number; duration?: number
     return <>{val}</>;
 }
 
-export default function Portal({ welcomeName, checksToday, trainingsCompleted, locations, venueMode = 'buildings', securityModuleVisible, emergencyContacts }: Props) {
+export default function Portal({ welcomeName, checksToday, trainingsCompleted, locations, venueMode = 'buildings', securityModuleVisible, emergencyContacts, presence }: Props) {
     const page = usePage<PageProps>();
     const { auth, tenant, nav } = page.props;
     const user       = auth.user;
@@ -1201,6 +1221,19 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                         </div>
                         {/* Glassmorphism stat chips */}
                         <div className="flex flex-wrap gap-3">
+                            {presence && (
+                                <div className={`flex items-center gap-3 backdrop-blur-sm rounded-xl px-4 py-3 border ${presence.on_duty ? 'bg-emerald-500/15 border-emerald-400/35' : 'bg-white/[0.13] border-white/25'}`}>
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${presence.on_duty ? 'bg-emerald-500/20 border-emerald-400/30' : 'bg-white/10 border-white/20'}`}>
+                                        <svg className={`w-4 h-4 ${presence.on_duty ? 'text-emerald-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-slate-400 leading-none mb-1">Mai állapotod</p>
+                                        <p className={`text-sm font-extrabold leading-none ${presence.on_duty ? 'text-emerald-400' : 'text-white'}`}>
+                                            {presence.on_duty ? `Szolgálatban — ${presence.schedule_label}` : 'Nincs beosztva mára'}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                             <div className="flex items-center gap-3 bg-white/[0.13] border border-white/25 backdrop-blur-sm rounded-xl px-4 py-3">
                                 <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center shrink-0">
                                     <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
