@@ -1,4 +1,5 @@
 import { useMemo, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { router, usePage } from '@inertiajs/react';
 import { useOwnLayout } from '../../hooks/useOwnLayout';
 import type { PageProps } from '../../types';
@@ -67,6 +68,7 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
     const [selectedAreaId, setSelectedAreaId] = useState<number | null>(areas[0]?.id ?? null);
     const [currentAreaTab, setCurrentAreaTab] = useState(0);
     const [selection, setSelection] = useState<{ areaId: number; employeeId: number; day: number } | null>(null);
+    const [editModal, setEditModal] = useState<{ empId: number; empName: string; day: number; value: string } | null>(null);
     const [newEmpName, setNewEmpName] = useState('');
     const [newEmpUserId, setNewEmpUserId] = useState('');
     const [newAreaName, setNewAreaName] = useState('');
@@ -134,9 +136,13 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
     // ── Mutációk ─────────────────────────────────────────────────────────────
     function editCell(empId: number, day: number) {
         const current = scheduleVal(empId, day);
-        const raw = window.prompt('Érték (óraszám, pl. 24 / 12 / 10, vagy X / ? / +). Üresen hagyva törli:', current ?? '');
-        if (raw === null) return;
-        router.post(route('vezenyles.schedule.upsert'), { year, month, employee_id: empId, day, value: raw }, visitOpts);
+        const empName = empById.get(empId)?.name ?? '';
+        setEditModal({ empId, empName, day, value: current ?? '' });
+    }
+    function submitEditModal() {
+        if (!editModal) return;
+        router.post(route('vezenyles.schedule.upsert'), { year, month, employee_id: editModal.empId, day: editModal.day, value: editModal.value }, visitOpts);
+        setEditModal(null);
     }
     function addArea() {
         const name = newAreaName.trim();
@@ -628,6 +634,67 @@ export default function VezenylesIndex({ year, month, areas, employees, schedule
                         </div>
                     </div>
                 )}
+
+                {/* ── Cella-szerkesztő modal ── */}
+                {editModal && createPortal(
+                    <div className="vez-modal-backdrop" onClick={() => setEditModal(null)}>
+                        <div className="vez-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+                            <div className="vez-modal-head">
+                                <div className="vez-modal-head-info">
+                                    <div className="vez-modal-avatar">{(editModal.empName || '?').charAt(0).toUpperCase()}</div>
+                                    <div className="vez-modal-head-text">
+                                        <div className="vez-modal-eyebrow">Beosztás szerkesztése</div>
+                                        <div className="vez-modal-title">{editModal.empName}</div>
+                                        <div className="vez-modal-sub">{HU_MONTHS[month - 1]} {editModal.day}.</div>
+                                    </div>
+                                </div>
+                                <button type="button" className="vez-modal-close" onClick={() => setEditModal(null)} aria-label="Bezárás">✕</button>
+                            </div>
+                            <div className="vez-modal-body">
+                                <div className="vez-modal-quick">
+                                    {['24', '12', '10', '8', '6', '4'].map(v => (
+                                        <button key={v} type="button" className={`vez-qbtn ${editModal.value === v ? 'active' : ''}`}
+                                            onClick={() => setEditModal(m => m && { ...m, value: v })}>{v}</button>
+                                    ))}
+                                    <button type="button" className={`vez-qbtn sym x ${editModal.value === 'X' ? 'active' : ''}`}
+                                        onClick={() => setEditModal(m => m && { ...m, value: 'X' })} title="Nem jó neki">X</button>
+                                    <button type="button" className={`vez-qbtn sym q ${editModal.value === '?' ? 'active' : ''}`}
+                                        onClick={() => setEditModal(m => m && { ...m, value: '?' })} title="Bizonytalan">?</button>
+                                    <button type="button" className={`vez-qbtn sym plus ${editModal.value === '+' ? 'active' : ''}`}
+                                        onClick={() => setEditModal(m => m && { ...m, value: '+' })} title="Túlóra igény">+</button>
+                                </div>
+                                <label className="vez-modal-label" htmlFor="vez-modal-input">Egyedi érték</label>
+                                <input
+                                    id="vez-modal-input"
+                                    autoFocus
+                                    type="text"
+                                    className="vez-modal-input"
+                                    value={editModal.value}
+                                    onChange={e => setEditModal(m => m && { ...m, value: e.target.value })}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter') submitEditModal();
+                                        if (e.key === 'Escape') setEditModal(null);
+                                    }}
+                                    placeholder="óraszám, pl. 24 / 12 / 10"
+                                />
+                                <p className="vez-modal-hint">Üresen hagyva törli a bejegyzést.</p>
+                            </div>
+                            <div className="vez-modal-foot">
+                                <button type="button" className="vez-modal-btn danger" onClick={() => setEditModal(m => m && { ...m, value: '' })}>
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 4h6a1 1 0 011 1v2H8V5a1 1 0 011-1z"/></svg>
+                                    Törlés
+                                </button>
+                                <div style={{ flex: 1 }} />
+                                <button type="button" className="vez-modal-btn ghost" onClick={() => setEditModal(null)}>Mégse</button>
+                                <button type="button" className="vez-modal-btn primary" onClick={submitEditModal}>
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    Mentés
+                                </button>
+                            </div>
+                        </div>
+                    </div>,
+                    document.body
+                )}
             </div>
         </Layout>
     );
@@ -724,4 +791,40 @@ const CSS = `
 .vez-app .emprow .tag{ margin-left:6px; font-size:10px; color:#2563eb; background:#eff6ff; border:1px solid #dbeafe; padding:1px 6px; border-radius:6px; }
 .vez-app .emprow button{ background:none; border:none; color:#94a3b8; cursor:pointer; font-size:13px; }
 .vez-app .emprow button:hover{ color:var(--day); }
+.vez-modal-backdrop{ position:fixed; inset:0; background:rgba(15,23,42,.55); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; z-index:100; padding:16px; animation:vez-fade .15s ease-out; }
+.vez-modal{ background:#fff; border-radius:18px; width:100%; max-width:340px; box-shadow:0 24px 60px -12px rgba(15,23,42,.35); overflow:hidden; animation:vez-pop .16s cubic-bezier(.2,.9,.3,1.2); }
+.vez-modal-head{ position:relative; overflow:hidden; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:20px 18px; background:linear-gradient(135deg,#020617 0%,#0f172a 55%,#1e3a8a 140%); }
+.vez-modal-head::after{ content:''; position:absolute; inset:0; pointer-events:none; opacity:.05; background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px); background-size:18px 18px; }
+.vez-modal-head-info{ position:relative; z-index:1; display:flex; align-items:center; gap:12px; min-width:0; }
+.vez-modal-avatar{ flex-shrink:0; width:42px; height:42px; border-radius:13px; background:linear-gradient(135deg,#3b82f6,#1d4ed8); color:#fff; font-weight:800; font-size:17px; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 14px -4px rgba(37,99,235,.6), inset 0 1px 0 rgba(255,255,255,.15); }
+.vez-modal-head-text{ min-width:0; }
+.vez-modal-eyebrow{ color:#60a5fa; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; margin-bottom:3px; }
+.vez-modal-title{ color:#fff; font-weight:800; font-size:18px; letter-spacing:-.2px; line-height:1.22; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.vez-modal-sub{ color:#93a3b8; font-size:12px; margin-top:3px; }
+.vez-modal-close{ position:relative; z-index:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#cbd5e1; width:26px; height:26px; border-radius:8px; cursor:pointer; font-size:12px; line-height:1; flex-shrink:0; transition:all .15s; }
+.vez-modal-close:hover{ background:rgba(255,255,255,.16); color:#fff; }
+.vez-modal-body{ padding:18px; }
+.vez-modal-quick{ display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:16px; }
+.vez-qbtn{ border:1px solid var(--line); background:#f8fafc; color:#334155; font-weight:700; font-size:13.5px; padding:9px 0; border-radius:10px; cursor:pointer; transition:all .12s; }
+.vez-qbtn:hover{ border-color:#93c5fd; background:#eff6ff; color:#2563eb; }
+.vez-qbtn.active{ background:#2563eb; border-color:#2563eb; color:#fff; }
+.vez-qbtn.sym.x{ color:var(--day); }
+.vez-qbtn.sym.q{ color:#d97706; }
+.vez-qbtn.sym.plus{ color:var(--night); }
+.vez-qbtn.sym.active{ color:#fff; }
+.vez-modal-label{ display:block; font-size:11px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
+.vez-modal-input{ width:100%; background:#f8fafc; border:1px solid var(--line); color:#0f172a; padding:10px 12px; border-radius:10px; font-size:14px; font-weight:600; outline:none; }
+.vez-modal-input:focus{ border-color:#93c5fd; box-shadow:0 0 0 3px rgba(59,130,246,.14); background:#fff; }
+.vez-modal-hint{ font-size:11.5px; color:var(--ink-dim); margin:8px 0 0; line-height:1.5; }
+.vez-modal-foot{ display:flex; align-items:center; gap:8px; padding:14px 18px; border-top:1px solid var(--line); background:#f8fafc; }
+.vez-modal-btn{ display:inline-flex; align-items:center; gap:6px; padding:9px 15px; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; border:1px solid transparent; transition:all .15s; white-space:nowrap; }
+.vez-modal-btn.ghost{ background:#fff; border-color:var(--line); color:#64748b; }
+.vez-modal-btn.ghost:hover{ background:#f1f5f9; border-color:#cbd5e1; color:#334155; }
+.vez-modal-btn.danger{ background:#fef2f2; border-color:#fecaca; color:#dc2626; }
+.vez-modal-btn.danger:hover{ background:#fee2e2; border-color:#fca5a5; color:#b91c1c; }
+.vez-modal-btn.primary{ background:linear-gradient(135deg,#2563eb,#1d4ed8); border-color:#1d4ed8; color:#fff; box-shadow:0 4px 12px -3px rgba(37,99,235,.5); }
+.vez-modal-btn.primary:hover{ background:linear-gradient(135deg,#1d4ed8,#1e40af); box-shadow:0 6px 16px -3px rgba(37,99,235,.6); transform:translateY(-1px); }
+.vez-modal-btn.primary:active{ transform:translateY(0); }
+@keyframes vez-fade{ from{ opacity:0; } to{ opacity:1; } }
+@keyframes vez-pop{ from{ opacity:0; transform:scale(.94) translateY(6px); } to{ opacity:1; transform:scale(1) translateY(0); } }
 `;

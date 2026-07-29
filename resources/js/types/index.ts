@@ -25,6 +25,7 @@ export interface Flash {
 export interface Nav {
     newNotes: number;
     newMessages: number;
+    newNfcNotifications: number;
 }
 
 export interface PageProps {
@@ -199,6 +200,8 @@ export interface SecurityDailyReport {
     updated_at: string;
     shares?: SecurityReportShare[];
     locations?: { id: number; name: string }[];
+    reviewed_at?: string | null;
+    reviewed_by?: TenantUserBasic | null;
 }
 
 export interface SecurityReportShare {
@@ -331,4 +334,6 @@ export interface DocumentSummary {
     created_at: string;
     location?: { id: number; name: string } | null;
     created_by?: TenantUserBasic | null;
+    reviewed_at?: string | null;
+    reviewed_by?: TenantUserBasic | null;
 }

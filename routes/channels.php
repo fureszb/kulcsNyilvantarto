@@ -13,3 +13,9 @@ Broadcast::channel('tenant.{slug}', function ($user, string $slug) {
     if ($user->isPropertyManager()) return false;
     return app('tenant')?->slug === $slug;
 });
+
+Broadcast::channel('tenant.{slug}.presence', function ($user, string $slug) {
+    if (!$user) return false;
+    if (!$user->canManage()) return false;
+    return app('tenant')?->slug === $slug;
+});

@@ -35,7 +35,7 @@ class DocumentLostFoundReport extends Model
         return $this->belongsTo(TenantUser::class, 'witness_user_id');
     }
 
-    public function guard(): BelongsTo
+    public function guardUser(): BelongsTo
     {
         return $this->belongsTo(TenantUser::class, 'guard_user_id');
     }

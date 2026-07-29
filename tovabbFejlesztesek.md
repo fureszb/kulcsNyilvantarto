@@ -21,3 +21,13 @@ Ide kerülnek azok a tudatosan elhalasztott/kihagyott ötletek, amikről nem aka
 **Miért nem gond most:** a `npm run build` (Vite/esbuild) nem végez típusellenőrzést, csak transzpilál, ezért minden érintett oldal hibátlanul lefordul és fut — ez pusztán zajt jelent, ha valaki `tsc`-t futtat valódi típusellenőrzésre.
 
 **Megoldás, ha egyszer sorra kerül:** egy központi `resources/js/types/ziggy.d.ts` fájl létrehozása, ami globálisan deklarálja a `route()`-ot (`declare global { function route(name: string, params?: unknown): string; }`), majd a 34 fájlból a redundáns, fájlonkénti `declare function route` sorok eltávolítása. Kis, önmagában biztonságos technikai adósság-takarítás, nem sürgős.
+
+## Geofence-ping háttér-automatikus be/kilépés-észlelés bekötése a mobil kliensbe
+
+**Státusz:** Szándékosan kihagyva (2026-07-15, `KKnyilvantartoKOTLIN` repo, `newUxUi` branch, Map/NFC backend-audit feladat).
+
+**Miért maradt ki:** a backend `POST /{tenant}/geofence/ping` végpontja (`GeofenceController::ping`) már megvan és működik — folyamatos háttér-GPS-ping alapján automatikusan észleli a geofence-zóna elhagyását/visszatérését (`mjaschen/phpgeo` polygon-containment, jitter/drift-debounce, push-riasztás a state-átmenetnél). A mobil kliens (Kotlin Multiplatform) ezt egyáltalán nem hívja — az eddig megépített "Helyzetem" gomb csak egyszeri, felhasználó-kezdeményezett GPS-lekérés (lásd `MapScreen.kt`/`LocationFetcher.kt`). A háttér-automatikus követés bekötése jelentősen nagyobb és kockázatosabb feladat, mint amit eddig csináltunk: folyamatos háttér-GPS-szolgáltatás (Android foreground service, értesítési csatornával), külön `ACCESS_BACKGROUND_LOCATION` runtime engedély (Android 10+), battery-optimization kizárás — és adatvédelmi szempontból is jelentősebb döntés (folyamatos háttérben futó helymeghatározás), amit nem akartunk hallgatólagosan, jóváhagyás nélkül megépíteni.
+
+**Mikor érdemes újra elővenni:** ha a termék tulajdonosa kifejezetten szeretné, hogy a be/kilépés ne csak NFC-matricával, hanem automatikus geofence-alapú GPS-követéssel is működjön (pl. olyan helyszíneken, ahol nincs kihelyezve NFC-matrica). Ekkor a `kresz-palette-unification` stash (`stash@{1}`, `KKnyilvantartoKOTLIN` repo) `geofence/GeofenceTrackingService.kt` és `geofence/BootCompletedReceiver.kt` fájljai újrahasznosítható kiindulópontot adnak.
+
+**Kapcsolódó:** `docs/roadmap/map-and-nfc-todo.md` (`KKnyilvantartoKOTLIN` repo) — a Térkép szekció 5. pontja ugyanezt részletezi kliens-oldali szemszögből.

@@ -3,6 +3,9 @@ import PmLayout from '../../Layouts/PmLayout';
 import { WorkerCard, type WorkerStat } from '../../Components/WorkerStatCard';
 import { DashboardHero } from '../../Components/ui/DashboardHero';
 import { Card } from '../../Components/ui/Card';
+import ModuleCardGrid, { type ModuleCardDef } from '../../Components/ModuleCardGrid';
+
+declare function route(name: string, params?: unknown): string;
 
 interface AssignedLocation {
     id: number;
@@ -16,7 +19,31 @@ interface Props {
     assignedLocation?: AssignedLocation | null;
 }
 
+function buildModules(): ModuleCardDef[] {
+    return [
+        {
+            href: route('presence.index'),
+            title: 'Ki van bent',
+            description: 'Élő lista arról, hogy jelenleg kik tartózkodnak a kezelt irodaházban.',
+            iconPath: 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6-4a3 3 0 11-6 0 3 3 0 016 0z',
+            accent: 'blue',
+            features: ['Valós idejű frissítés', 'NFC-alapú azonosítás', 'Telephelyenkénti bontás'],
+            actionLabel: 'Megtekintés',
+        },
+        {
+            href: route('nfc-log.index'),
+            title: 'NFC napló',
+            description: 'Be-/kilépések és elutasított próbálkozások szűrhető naplója.',
+            iconPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-4 8h4m-4 4h4m-6-4h.01M9 16h.01',
+            accent: 'amber',
+            features: ['Szűrés felhasználó szerint', 'Szűrés telephely szerint', 'Dátum-tartomány'],
+            actionLabel: 'Napló megnyitása',
+        },
+    ];
+}
+
 export default function PmDashboard({ workerStats, welcomeName, assignedLocation }: Props) {
+    const modules = buildModules();
     const [showWelcome, setShowWelcome] = useState(!!welcomeName);
     const [welcomeVisible, setWelcomeVisible] = useState(false);
     const [welcomeFading, setWelcomeFading] = useState(false);
@@ -88,6 +115,10 @@ export default function PmDashboard({ workerStats, welcomeName, assignedLocation
                     ))}
                 </div>
             )}
+
+            {/* Modulok */}
+            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 mt-8">Modulok</h2>
+            <ModuleCardGrid modules={modules} gridKey="pm-modules" />
         </PmLayout>
     );
 }

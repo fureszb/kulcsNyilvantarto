@@ -24,7 +24,7 @@ const DEFAULT_ICON = 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4
 /** Közös, egységes sticky fejléc-héj minden worker/admin-szerepkörű layouthoz
  *  (az /admin panel AdminLayout-ja kivételével, ld. tovabbFejlesztesek.md).
  *  A gradiens, a nav-pillek és a mobil-gomb egy helyen karbantartva — a
- *  korábbi hiba (pl. PushToggle csak az egyik layoutban) abból eredt, hogy
+ *  korábbi hiba (pl. valamely elem csak az egyik layoutban) abból eredt, hogy
  *  mindegyik layout a saját, külön másolt fejléc-JSX-ét tartotta karban. */
 export default function AppHeader({
     brandHref, brandLabel, brandSublabel, brandIcon,
@@ -42,7 +42,7 @@ export default function AppHeader({
     }, []);
 
     return (
-        <header className={`safe-top sticky top-0 z-30 shadow-lg shadow-indigo-900/10 transition-[backdrop-filter] duration-300 ${scrolled ? 'backdrop-blur-md' : ''}`}>
+        <header className={`safe-top sticky top-0 z-[1050] shadow-lg shadow-indigo-900/10 transition-[backdrop-filter] duration-300 ${scrolled ? 'backdrop-blur-md' : ''}`}>
             <div
                 className="absolute inset-0 gradient-drift transition-opacity duration-300 ease-out"
                 style={{

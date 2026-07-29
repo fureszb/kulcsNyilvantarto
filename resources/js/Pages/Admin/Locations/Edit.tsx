@@ -1,6 +1,10 @@
-import { useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
+import { useForm, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-draw';
+import 'leaflet-draw/dist/leaflet.draw.css';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -31,6 +35,7 @@ interface Location {
     items_count?: number;
     items?: Item[];
     groups?: ItemGroup[];
+    polygon?: [number, number][] | null;
 }
 
 interface Props {
@@ -61,6 +66,85 @@ export default function LocationEdit({ location }: Props) {
         is_active: location.is_active,
     });
 
+    const mapContainerRef = useRef<HTMLDivElement>(null);
+    const mapRef = useRef<L.Map | null>(null);
+    const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
+    const [geofenceSaving, setGeofenceSaving] = useState(false);
+    const [geofenceMessage, setGeofenceMessage] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!mapContainerRef.current || mapRef.current) return;
+
+        const hasPolygon = !!location.polygon && location.polygon.length >= 3;
+        const center: [number, number] = hasPolygon ? location.polygon![0] : [47.4979, 19.0402];
+
+        const map = L.map(mapContainerRef.current).setView(center, hasPolygon ? 16 : 12);
+        mapRef.current = map;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap közreműködők',
+            maxZoom: 19,
+        }).addTo(map);
+
+        const drawnItems = new L.FeatureGroup();
+        drawnItemsRef.current = drawnItems;
+        map.addLayer(drawnItems);
+
+        if (hasPolygon) {
+            const polygonLayer = L.polygon(location.polygon as [number, number][]);
+            drawnItems.addLayer(polygonLayer);
+        }
+
+        const drawControl = new (L.Control as any).Draw({
+            draw: {
+                polygon: true,
+                polyline: false,
+                rectangle: false,
+                circle: false,
+                circlemarker: false,
+                marker: false,
+            },
+            edit: {
+                featureGroup: drawnItems,
+            },
+        });
+        map.addControl(drawControl);
+
+        // Csak egy zóna telephelyenként — új rajzolásnál a régit töröljük.
+        map.on((L as any).Draw.Event.CREATED, (e: any) => {
+            drawnItems.clearLayers();
+            drawnItems.addLayer(e.layer);
+        });
+
+        return () => {
+            map.remove();
+            mapRef.current = null;
+        };
+    }, []);
+
+    function saveGeofence() {
+        const layers = drawnItemsRef.current?.getLayers() ?? [];
+        const polygonLayer = layers[0] as L.Polygon | undefined;
+
+        const polygon = polygonLayer
+            ? (polygonLayer.getLatLngs()[0] as L.LatLng[]).map((p) => [p.lat, p.lng] as [number, number])
+            : null;
+
+        setGeofenceSaving(true);
+        setGeofenceMessage(null);
+
+        router.put(route('admin.locations.polygon.update', location.id), { polygon }, {
+            preserveScroll: true,
+            onSuccess: () => setGeofenceMessage('Zóna elmentve!'),
+            onError: () => setGeofenceMessage('Hiba a mentés során.'),
+            onFinish: () => setGeofenceSaving(false),
+        });
+    }
+
+    function clearGeofence() {
+        drawnItemsRef.current?.clearLayers();
+    }
+
     function submit(e: React.FormEvent) {
         e.preventDefault();
         put(route('admin.locations.update', location.id));
@@ -78,7 +162,7 @@ export default function LocationEdit({ location }: Props) {
 
     return (
         <AdminLayout title="Helyszín szerkesztése">
-            <div className="max-w-xl">
+            <div className="max-w-2xl">
                 <a href={route('admin.locations.index')} className="text-sm text-slate-500 hover:text-blue-700 flex items-center gap-1 mb-5">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/>
@@ -214,6 +298,23 @@ export default function LocationEdit({ location }: Props) {
                             <a href={route('admin.locations.index')} className="btn-secondary">Mégse</a>
                         </div>
                     </form>
+                </div>
+
+                <div className="card p-6 mt-6">
+                    <h2 className="text-lg font-semibold text-slate-800 mb-1">Geofencing zóna</h2>
+                    <p className="text-sm text-slate-500 mb-4">
+                        Rajzolja fel a telephelyhez tartozó sokszög-zónát a térképen (a rajzoló eszköz a bal
+                        felső sarokban). Az ide rendelt őrök helyzetkövetése ez alapján dönti el, hogy a zónán
+                        belül vagy kívül tartózkodnak-e.
+                    </p>
+                    <div ref={mapContainerRef} style={{ height: '420px' }} className="rounded-lg border border-slate-200" />
+                    <div className="flex items-center gap-3 pt-4">
+                        <button type="button" onClick={saveGeofence} disabled={geofenceSaving} className="btn-primary">
+                            {geofenceSaving ? 'Mentés...' : 'Zóna mentése'}
+                        </button>
+                        <button type="button" onClick={clearGeofence} className="btn-secondary">Törlés</button>
+                        {geofenceMessage && <span className="text-sm text-slate-500">{geofenceMessage}</span>}
+                    </div>
                 </div>
             </div>
         </AdminLayout>

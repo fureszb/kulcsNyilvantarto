@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from '@inertiajs/react';
 import { motion } from 'motion/react';
 import AppLayout from '../../Layouts/AppLayout';
+import VideoPlayer from '../../Components/VideoPlayer';
 import type { Exam } from '../../types';
 
 declare function route(name: string, params?: unknown): string;
@@ -16,6 +17,9 @@ interface StepData {
     question: string;
     question_type: 'radio' | 'checkbox' | 'text';
     answers: Answer[];
+    media_url?: string;
+    media_type?: string;
+    media_width?: number;
 }
 
 interface ResultAnswer {
@@ -94,6 +98,16 @@ export default function ExamShow({
     const startedAtRef = useRef<string>('');
     const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null);
     const allAnswersRef = useRef<UserAnswer[]>([]);
+
+    // zoom modal
+    const [zoomItem, setZoomItem] = useState<{ url: string; type: string } | null>(null);
+
+    useEffect(() => {
+        if (!zoomItem) return;
+        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setZoomItem(null); };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [zoomItem]);
 
     const step = steps[currentStep];
     const progress = steps.length > 0 ? ((currentStep + 1) / steps.length) * 100 : 0;
@@ -236,6 +250,7 @@ export default function ExamShow({
     const attemptsLeft = maxAttempts !== null ? maxAttempts - attemptsUsed : null;
 
     return (
+        <>
         <AppLayout title={exam.title}>
             {/* Hero */}
             <motion.div
@@ -396,7 +411,27 @@ export default function ExamShow({
                     <p className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">
                         {currentStep + 1}. kérdés / {steps.length}
                     </p>
-                    <h2 className="text-lg font-bold text-slate-800 mb-6 leading-snug">{step.question}</h2>
+                    <h2 className="text-lg font-bold text-slate-800 mb-4 leading-snug">{step.question}</h2>
+
+                    {step.media_url && (
+                        <div className="mb-6">
+                            {step.media_type === 'video' ? (
+                                <VideoPlayer src={step.media_url} width={step.media_width} maxHeight="max-h-96" loop />
+                            ) : (
+                                <div className="rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center relative group">
+                                    <img src={step.media_url} style={{ width: `${step.media_width ?? 100}%` }} className="max-h-96 object-contain" alt="" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setZoomItem({ url: step.media_url!, type: step.media_type ?? 'image' })}
+                                        className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-black/40 hover:bg-black/65 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Nagyítás"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {step.question_type === 'radio' && (
                         <div className="space-y-3">
@@ -592,5 +627,28 @@ export default function ExamShow({
                 </motion.div>
             )}
         </AppLayout>
+
+        {zoomItem && (
+            <div
+                className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
+                onClick={() => setZoomItem(null)}
+            >
+                <button
+                    className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                    onClick={() => setZoomItem(null)}
+                    title="Bezárás (Esc)"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                <div onClick={e => e.stopPropagation()} className="flex items-center justify-center max-w-full max-h-[90vh]">
+                    {zoomItem.type !== 'video' ? (
+                        <img src={zoomItem.url} className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" alt="" />
+                    ) : (
+                        <video src={zoomItem.url} className="max-w-full max-h-[90vh] rounded-lg shadow-2xl" controls controlsList="nodownload" autoPlay />
+                    )}
+                </div>
+            </div>
+        )}
+        </>
     );
 }

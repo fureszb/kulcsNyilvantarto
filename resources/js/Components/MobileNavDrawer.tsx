@@ -39,8 +39,22 @@ export default function MobileNavDrawer({ open, onClose, brandLabel, brandSublab
     const { canPromptNative, showIosGuide, busy, promptInstall } = usePWAInstall();
     const [showInstallHint, setShowInstallHint] = useState(false);
 
+    // Egyetlen forrásból vezérelt mounted/closing állapot — akkor is helyesen
+    // záródik be a panel, ha az `open` false-ra váltása NEM a saját requestClose-on
+    // (X gomb / backdrop / Escape) keresztül történt, hanem külső forrásból (pl. a
+    // szülő state-je más úton változott). Korábban csak az open→true ágat kezeltük,
+    // ezért egy külső close esetén a drawer örökre nyitva ragadt.
     useEffect(() => {
-        if (open) { setMounted(true); setClosing(false); }
+        if (open) {
+            setMounted(true);
+            setClosing(false);
+            return;
+        }
+        if (!mounted) return;
+        setClosing(true);
+        const timer = setTimeout(() => { setMounted(false); setClosing(false); }, 240);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
     useEffect(() => {
@@ -57,8 +71,7 @@ export default function MobileNavDrawer({ open, onClose, brandLabel, brandSublab
     }, [mounted]);
 
     function requestClose() {
-        setClosing(true);
-        setTimeout(() => { setMounted(false); setClosing(false); onClose(); }, 240);
+        onClose();
     }
 
     async function handleInstallClick() {
@@ -74,11 +87,11 @@ export default function MobileNavDrawer({ open, onClose, brandLabel, brandSublab
     return (
         <>
             <div
-                className={`fixed inset-0 z-[95] bg-black/60 backdrop-blur-sm ${hiddenClass} ${closing ? 'animate-fade-out' : 'animate-fade-in'}`}
+                className={`fixed inset-0 z-[1250] bg-black/60 backdrop-blur-sm ${hiddenClass} ${closing ? 'animate-fade-out' : 'animate-fade-in'}`}
                 onClick={requestClose}
             />
             <div
-                className={`fixed inset-y-0 right-0 z-[100] w-full max-w-sm ${hiddenClass} flex flex-col shadow-2xl ${closing ? 'animate-drawer-out' : 'animate-drawer-in'}`}
+                className={`fixed inset-y-0 right-0 z-[1260] w-full max-w-sm ${hiddenClass} flex flex-col shadow-2xl ${closing ? 'animate-drawer-out' : 'animate-drawer-in'}`}
                 style={{ backgroundImage: 'linear-gradient(180deg, rgb(7, 29, 79) 0%, #0032a1 55%, rgb(10, 2, 22) 100%)' }}
                 role="dialog"
                 aria-modal="true"

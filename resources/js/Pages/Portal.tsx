@@ -10,7 +10,6 @@ import {
     useSortable, rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import PushToggle from '../Components/PushToggle';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
 import AppHeader from '../Components/AppHeader';
 import LiveClock from '../Components/LiveClock';
@@ -38,6 +37,15 @@ interface EmergencyContact {
     note?: string | null;
 }
 
+interface PresenceInfo {
+    on_duty: boolean;
+    schedule_label: string | null;
+    has_location: boolean;
+    venue_name: string | null;
+    checked_count: number;
+    total_count: number;
+}
+
 interface Props {
     welcomeName?: string | null;
     checksToday: number;
@@ -46,6 +54,7 @@ interface Props {
     venueMode?: 'buildings' | 'tenants';
     securityModuleVisible: boolean;
     emergencyContacts: EmergencyContact[];
+    presence?: PresenceInfo;
 }
 
 interface ModuleDef {
@@ -60,6 +69,7 @@ interface ModuleDef {
     badgeKey?: 'newNotes' | 'newMessages';
     onlyNonPm?: boolean;
     adminOnly?: boolean;
+    managerOnly?: boolean;
     featured?: boolean;
 }
 
@@ -151,6 +161,17 @@ const ALL_MODULES: ModuleDef[] = [
         adminOnly: true,
     },
     {
+        id: 'presence',
+        routeName: 'presence.index',
+        title: 'Ki van bent',
+        description: 'Élő térkép: ki melyik telephelyen tartózkodik, geofencing zóna-riasztásokkal.',
+        iconPath: 'M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z',
+        accentColor: 'emerald',
+        features: ['Élő térkép és jelenlét', 'Geofencing zóna-riasztás', 'Telephelyenkénti bontás'],
+        actionLabel: 'Térkép megnyitása',
+        managerOnly: true,
+    },
+    {
         id: 'documents',
         routeName: 'documents.index',
         title: 'Dokumentumok',
@@ -159,6 +180,16 @@ const ALL_MODULES: ModuleDef[] = [
         accentColor: 'sky',
         features: ['10 jegyzőkönyv-típus', 'Digitális aláírás', 'Letölthető PDF'],
         actionLabel: 'Dokumentumok megnyitása',
+    },
+    {
+        id: 'nfc-log',
+        routeName: 'nfc-log.index',
+        title: 'NFC napló',
+        description: 'Be-/kilépések és elutasított próbálkozások szűrhető naplója.',
+        iconPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-4 8h4m-4 4h4m-6-4h.01M9 16h.01',
+        accentColor: 'amber',
+        features: ['NFC-alapú azonosítás', 'Dátum-tartomány szűrés', 'Telephelyenkénti bontás'],
+        actionLabel: 'Napló megnyitása',
     },
 ];
 
@@ -253,6 +284,24 @@ const ACCENT: Record<string, AccentConfig> = {
         badge: 'bg-teal-500',
         beamColor: '#14b8a6',
         spotColor: 'rgba(20,184,166,0.30)',
+    },
+    emerald: {
+        iconBg: 'bg-emerald-50 border-emerald-100 text-emerald-600',
+        iconHover: 'group-hover:bg-emerald-100 group-hover:border-emerald-200',
+        iconAnim: 'motion-safe:group-hover:scale-110',
+        titleHover: 'group-hover:text-emerald-700',
+        gradient: 'from-emerald-600 to-emerald-400',
+        shimmer: 'via-emerald-50/60',
+        shadow: 'hover:shadow-emerald-100/80',
+        border: 'hover:border-emerald-200',
+        footerText: 'text-emerald-600 group-hover:text-emerald-700',
+        arrowBg: 'bg-emerald-50 border-emerald-100',
+        arrowHover: 'group-hover:bg-emerald-600 group-hover:border-emerald-600',
+        arrowIcon: 'text-emerald-500 group-hover:text-white',
+        check: 'text-emerald-400',
+        badge: 'bg-emerald-500',
+        beamColor: '#10b981',
+        spotColor: 'rgba(16,185,129,0.30)',
     },
     orange: {
         iconBg: 'bg-orange-50 border-orange-100 text-orange-600',
@@ -913,7 +962,7 @@ function CountUp({ target, duration = 800 }: { target: number; duration?: number
     return <>{val}</>;
 }
 
-export default function Portal({ welcomeName, checksToday, trainingsCompleted, locations, venueMode = 'buildings', securityModuleVisible, emergencyContacts }: Props) {
+export default function Portal({ welcomeName, checksToday, trainingsCompleted, locations, venueMode = 'buildings', securityModuleVisible, emergencyContacts, presence }: Props) {
     const page = usePage<PageProps>();
     const { auth, tenant, nav } = page.props;
     const user       = auth.user;
@@ -967,9 +1016,11 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
     }, [welcomeName]);
 
     const canVezenyles = !!user && user.role !== 'property_manager';
+    const canManage = !!user && ['admin', 'property_manager', 'security_lead', 'area_director'].includes(user.role);
     const visibleModules = ALL_MODULES.filter(m => {
         if (m.onlyNonPm && !isNotPm) return false;
         if (m.adminOnly && !canVezenyles) return false;
+        if (m.managerOnly && !canManage) return false;
         if (m.id === 'security' && !securityModuleVisible && isNotPm) return false;
         return true;
     });
@@ -1079,7 +1130,6 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                 onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
             >
                 <LiveClock />
-                <PushToggle />
                 {user && (
                     <>
                         <Link href={route('profile.edit')} className="hidden sm:flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-2.5 py-1 hover:bg-white/20 transition-colors">
@@ -1171,6 +1221,19 @@ export default function Portal({ welcomeName, checksToday, trainingsCompleted, l
                         </div>
                         {/* Glassmorphism stat chips */}
                         <div className="flex flex-wrap gap-3">
+                            {presence && (
+                                <div className={`flex items-center gap-3 backdrop-blur-sm rounded-xl px-4 py-3 border ${presence.on_duty ? 'bg-emerald-500/15 border-emerald-400/35' : 'bg-white/[0.13] border-white/25'}`}>
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${presence.on_duty ? 'bg-emerald-500/20 border-emerald-400/30' : 'bg-white/10 border-white/20'}`}>
+                                        <svg className={`w-4 h-4 ${presence.on_duty ? 'text-emerald-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-slate-400 leading-none mb-1">Mai állapotod</p>
+                                        <p className={`text-sm font-extrabold leading-none ${presence.on_duty ? 'text-emerald-400' : 'text-white'}`}>
+                                            {presence.on_duty ? `Szolgálatban — ${presence.schedule_label}` : 'Nincs beosztva mára'}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                             <div className="flex items-center gap-3 bg-white/[0.13] border border-white/25 backdrop-blur-sm rounded-xl px-4 py-3">
                                 <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center shrink-0">
                                     <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>

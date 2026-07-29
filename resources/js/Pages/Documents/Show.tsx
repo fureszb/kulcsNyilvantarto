@@ -1,8 +1,9 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import {
     FileText, Car, Package, AlertTriangle, DoorOpen, ClipboardList,
     KeyRound, Search, AlertOctagon, Flame, Download, ArrowLeft,
-    MapPin, User, CheckCircle2, Clock, ExternalLink, type LucideIcon,
+    MapPin, User, CheckCircle2, Clock, ExternalLink, ShieldCheck, type LucideIcon,
 } from 'lucide-react';
 import { useOwnLayout } from '../../hooks/useOwnLayout';
 import type { DocumentSummary, DocumentType } from '../../types';
@@ -11,6 +12,7 @@ declare function route(name: string, params?: unknown): string;
 
 interface Props {
     document: DocumentSummary;
+    canReview: boolean;
 }
 
 const TYPE_LABELS: Record<DocumentType, string> = {
@@ -39,11 +41,20 @@ const TYPE_ICONS: Record<DocumentType, LucideIcon> = {
     tuzkulcs_tuzkazetta_kiadas: Flame,
 };
 
-export default function DocumentsShow({ document }: Props) {
+export default function DocumentsShow({ document, canReview }: Props) {
     const label = TYPE_LABELS[document.document_type] ?? document.document_type;
     const Icon = TYPE_ICONS[document.document_type] ?? FileText;
     const isFinal = document.status === 'finalized';
     const Layout = useOwnLayout();
+    const [isReviewing, setIsReviewing] = useState(false);
+
+    function handleReview() {
+        setIsReviewing(true);
+        router.post(route('documents.review', document.id), {}, {
+            preserveScroll: true,
+            onFinish: () => setIsReviewing(false),
+        });
+    }
 
     return (
         <Layout title={label}>
@@ -98,6 +109,33 @@ export default function DocumentsShow({ document }: Props) {
                         </div>
                     </div>
                 </div>
+
+                {/* Vezetői jóváhagyás */}
+                {canReview && (
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm px-5 py-4 mb-6 flex items-center justify-between gap-4 flex-wrap">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${document.reviewed_at ? 'bg-emerald-50' : 'bg-slate-100'}`}>
+                                <ShieldCheck className={`w-4.5 h-4.5 ${document.reviewed_at ? 'text-emerald-600' : 'text-slate-400'}`} />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-slate-700">Vezetői jóváhagyás</p>
+                                <p className="text-xs text-slate-400 mt-0.5">
+                                    {document.reviewed_at ? `Jóváhagyta: ${document.reviewed_by?.name ?? 'ismeretlen'}` : 'Még nincs jóváhagyva'}
+                                </p>
+                            </div>
+                        </div>
+                        {!document.reviewed_at && (
+                            <button
+                                type="button"
+                                onClick={handleReview}
+                                disabled={isReviewing}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+                            >
+                                {isReviewing ? 'Jóváhagyás...' : 'Jóváhagyás'}
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 {/* PDF előnézet */}
                 {document.pdf_path ? (

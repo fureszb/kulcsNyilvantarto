@@ -61,6 +61,20 @@ class TrainingStepController extends Controller
             ->with('success', 'Lépés hozzáadva!');
     }
 
+    public function reorder(Request $request, Training $training)
+    {
+        $request->validate([
+            'order'   => 'required|array|min:1',
+            'order.*' => 'integer|exists:tenant.training_steps,id',
+        ]);
+
+        foreach ($request->input('order') as $index => $stepId) {
+            $training->steps()->where('id', $stepId)->update(['sort_order' => $index]);
+        }
+
+        return back()->with('success', 'Sorrend frissítve!');
+    }
+
     public function edit(Training $training, TrainingStep $step)
     {
         $step->load('answers');

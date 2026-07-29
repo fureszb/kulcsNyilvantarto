@@ -1,5 +1,6 @@
 import { useForm, Link } from '@inertiajs/react';
 import { useOwnLayout } from '../../hooks/useOwnLayout';
+import PushNotificationSwitch from '../../Components/PushNotificationSwitch';
 
 declare function route(name: string, params?: unknown): string;
 
@@ -136,6 +137,21 @@ export default function ProfileEdit({ user }: Props) {
                             <InputField label="Jelenlegi jelszó" id="current_password" type="password" value={data.current_password} onChange={v => setData('current_password', v)} error={errors.current_password} autoComplete="current-password"/>
                             <InputField label="Új jelszó" id="password" type="password" value={data.password} onChange={v => setData('password', v)} error={errors.password} autoComplete="new-password"/>
                             <InputField label="Új jelszó megerősítése" id="password_confirmation" type="password" value={data.password_confirmation} onChange={v => setData('password_confirmation', v)} autoComplete="new-password"/>
+                        </div>
+                    </div>
+
+                    {/* Notifications */}
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden lg:col-span-2">
+                        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                Értesítések
+                            </p>
+                        </div>
+                        <div className="px-6 py-5">
+                            <PushNotificationSwitch />
                         </div>
                     </div>
                 </div>

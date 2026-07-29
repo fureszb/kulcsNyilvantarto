@@ -31,6 +31,7 @@ class UserController extends Controller
             'assignableLocations'  => Location::orderBy('name')->get(['id', 'name']),
             'assignableLeads'      => $this->securityLeads(),
             'assignableDirectors'  => $this->areaDirectors(),
+            'assignedNfcLocationIds' => collect(),
         ]);
     }
 
@@ -76,6 +77,10 @@ class UserController extends Controller
         } else {
             TenantUser::where('director_id', $user->id)->update(['director_id' => null]);
         }
+
+        // NFC beléptetési jogosultság — szerepkörtől független, explicit lista.
+        $nfcLocationIds = collect($request->input('nfc_location_ids', []))->map(fn ($id) => (int) $id)->all();
+        $user->nfcLocations()->sync($nfcLocationIds);
     }
 
     public function store(Request $request)
@@ -93,6 +98,8 @@ class UserController extends Controller
             'director_id'    => 'nullable|integer',
             'lead_ids'       => 'nullable|array',
             'lead_ids.*'     => 'integer',
+            'nfc_location_ids'   => 'nullable|array',
+            'nfc_location_ids.*' => 'integer',
         ]);
 
         $user = TenantUser::create([
@@ -130,6 +137,7 @@ class UserController extends Controller
                 : collect(),
             'assignedDirectorId'  => $user->director_id,
             'assignedLeadIds'     => $user->supervisedLeads()->pluck('id'),
+            'assignedNfcLocationIds' => $user->nfcLocations()->pluck('locations.id'),
         ]);
     }
 
@@ -148,6 +156,8 @@ class UserController extends Controller
             'director_id'    => 'nullable|integer',
             'lead_ids'       => 'nullable|array',
             'lead_ids.*'     => 'integer',
+            'nfc_location_ids'   => 'nullable|array',
+            'nfc_location_ids.*' => 'integer',
         ]);
 
         $data = [

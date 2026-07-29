@@ -7,6 +7,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         channels: __DIR__.'/../routes/channels.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'property-manager' => \App\Http\Middleware\PropertyManagerMiddleware::class,
             'area-director'    => \App\Http\Middleware\AreaDirectorMiddleware::class,
             'security-lead'    => \App\Http\Middleware\EnsureSecurityLead::class,
+            'api-tenant-auth'  => \App\Http\Middleware\Api\TenantTokenAuth::class,
         ]);
 
         // TenantMiddleware-nek a SubstituteBindings előtt kell futnia,

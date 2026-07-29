@@ -32,8 +32,12 @@ class SecurityReportController extends Controller
         $this->authorizeForUsers();
         $user = Auth::guard('tenant')->user();
 
-        if ($user && $user->isAdmin()) {
+        if ($user->isAdmin() || $user->isPropertyManager() || $user->isAreaDirector()) {
             $reports = SecurityDailyReport::orderByDesc('report_date')->orderByDesc('id')->paginate(30);
+        } elseif ($user->isSecurityLead()) {
+            $managedLocationIds = $user->managedLocations()->pluck('locations.id');
+            $reports = SecurityDailyReport::whereHas('locations', fn ($q) => $q->whereIn('locations.id', $managedLocationIds))
+                ->orderByDesc('report_date')->orderByDesc('id')->paginate(30);
         } else {
             $reports = SecurityDailyReport::whereHas('shares', fn($q) => $q->where('user_id', $user->id))
                 ->orderByDesc('report_date')->orderByDesc('id')->paginate(30);
@@ -43,13 +47,14 @@ class SecurityReportController extends Controller
             'reports'   => $reports,
             'user'      => $user,
             'isAdmin'   => $user->isAdmin(),
-            'canCreate' => !$user->isPropertyManager(),
+            'canCreate' => $user->canCreateSecurityReport(),
         ]);
     }
 
     public function create()
     {
         $this->authorizeForUsers();
+        abort_unless(Auth::guard('tenant')->user()->canCreateSecurityReport(), 403);
         $sortedUsers  = $this->usersSortedByFrequency();
         $preparedBy   = Auth::guard('tenant')->user()->name;
         $locations    = Location::orderBy('name')->get(['id', 'name']);
@@ -59,6 +64,7 @@ class SecurityReportController extends Controller
     public function store(Request $request)
     {
         $this->authorizeForUsers();
+        abort_unless(Auth::guard('tenant')->user()->canCreateSecurityReport(), 403);
         $request->validate([
             'report_date'     => 'required|date',
             'prepared_by'     => 'required|string|max:255',
@@ -127,16 +133,9 @@ class SecurityReportController extends Controller
     {
         $this->authorizeForUsers();
         $authUser = Auth::guard('tenant')->user();
+        $this->authorizeViewReport($authUser, $security);
 
-        abort_if(
-            !$authUser->isAdmin()
-                && !$authUser->isPropertyManager()
-                && $authUser->id !== $security->created_by_user_id
-                && !$security->shares()->where('user_id', $authUser->id)->exists(),
-            403
-        );
-
-        $security->load('locations:id,name');
+        $security->load(['locations:id,name', 'reviewedBy']);
 
         $sharedUsers = TenantUser::whereIn('id', $security->shares()->pluck('user_id'))->get();
         $allUsers    = TenantUser::where('is_active', true)->orderBy('name')->get();
@@ -146,7 +145,43 @@ class SecurityReportController extends Controller
             'sharedUsers' => $sharedUsers,
             'allUsers'    => $allUsers,
             'isCreator'   => $isCreator,
+            'canReview'   => $authUser->canManage(),
         ]);
+    }
+
+    /** Vezetői jóváhagyás/átnézés jelölése — lásd `Api\SecurityReportController::review()`, ugyanaz a szabály mindkét felületen. */
+    public function review(SecurityDailyReport $security)
+    {
+        $this->authorizeForUsers();
+        $authUser = Auth::guard('tenant')->user();
+        abort_unless($authUser->canManage(), 403);
+        $this->authorizeViewReport($authUser, $security);
+
+        $security->update(['reviewed_at' => now(), 'reviewed_by_user_id' => $authUser->id]);
+
+        return back()->with('success', 'Napi jelentés jóváhagyva.');
+    }
+
+    private function authorizeViewReport(TenantUser $authUser, SecurityDailyReport $security): void
+    {
+        if ($authUser->isSecurityLead()) {
+            $managedLocationIds = $authUser->managedLocations()->pluck('locations.id');
+            abort_unless(
+                $authUser->id === $security->created_by_user_id
+                    || $security->locations()->whereIn('locations.id', $managedLocationIds)->exists(),
+                403
+            );
+            return;
+        }
+
+        abort_if(
+            !$authUser->isAdmin()
+                && !$authUser->isPropertyManager()
+                && !$authUser->isAreaDirector()
+                && $authUser->id !== $security->created_by_user_id
+                && !$security->shares()->where('user_id', $authUser->id)->exists(),
+            403
+        );
     }
 
     public function edit(SecurityDailyReport $security)

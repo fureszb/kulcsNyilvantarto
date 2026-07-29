@@ -26,6 +26,8 @@ interface ExamStep {
     order: number;
     question: string;
     question_type?: string;
+    media_path?: string;
+    media_width?: number;
     answers?: ExamAnswer[];
 }
 
@@ -49,6 +51,70 @@ const TYPE_BADGE: Record<string, [string, string]> = {
 
 interface AnswerDraft {
     text: string;
+}
+
+type MediaMode = 'none' | 'file' | 'url';
+
+const DEFAULT_MEDIA_WIDTH = 100;
+
+function MediaField({ label, mode, onModeChange, file, onFileChange, url, onUrlChange, error }: {
+    label: string; mode: MediaMode; onModeChange: (m: MediaMode) => void;
+    file: File | null; onFileChange: (f: File | null) => void;
+    url: string; onUrlChange: (u: string) => void;
+    error?: string;
+}) {
+    return (
+        <div>
+            <label className="form-label">{label}</label>
+            <div className="flex gap-2 mb-2 flex-wrap">
+                {(['none', 'file', 'url'] as MediaMode[]).map(m => (
+                    <button key={m} type="button" onClick={() => onModeChange(m)}
+                        className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
+                            mode === m
+                                ? m === 'none' ? 'bg-slate-700 text-white border-slate-700'
+                                : m === 'file' ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-teal-600 text-white border-teal-600'
+                                : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                        }`}>
+                        {m === 'none' ? 'Nincs' : m === 'file' ? 'Fájl' : 'URL'}
+                    </button>
+                ))}
+            </div>
+            {mode === 'file' && (
+                <>
+                    <input type="file" accept="image/*,video/*"
+                        onChange={e => onFileChange(e.target.files?.[0] ?? null)}
+                        className="block w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                    <p className="text-xs text-slate-400 mt-1">Max. 50 MB · jpg, png, gif, webp, mp4, webm</p>
+                </>
+            )}
+            {mode === 'url' && (
+                <input type="url" value={url} onChange={e => onUrlChange(e.target.value)}
+                    className="form-input" placeholder="https://..."/>
+            )}
+            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+        </div>
+    );
+}
+
+function WidthField({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+    return (
+        <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs font-semibold text-slate-500 shrink-0">Megjelenítési szélesség</span>
+            <input
+                type="number" min={10} max={100} value={value}
+                onChange={e => onChange(Math.max(10, Math.min(100, Number(e.target.value) || DEFAULT_MEDIA_WIDTH)))}
+                className="w-20 form-input text-sm text-center py-1"
+            />
+            <span className="text-xs text-slate-400">%</span>
+            {value !== DEFAULT_MEDIA_WIDTH && (
+                <button type="button" onClick={() => onChange(DEFAULT_MEDIA_WIDTH)}
+                    className="text-xs px-2 py-1 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors">
+                    Visszaállítás
+                </button>
+            )}
+        </div>
+    );
 }
 
 function StepAccordion({ step, index, examId }: { step: ExamStep; index: number; examId: number }) {
@@ -146,6 +212,21 @@ function NewStepForm({ examId }: { examId: number }) {
     const [correctCheckboxes, setCorrectCheckboxes] = useState<number[]>([]);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState('');
+    const [mediaMode, setMediaMode] = useState<MediaMode>('none');
+    const [mediaFile, setMediaFile] = useState<File | null>(null);
+    const [mediaUrl, setMediaUrl] = useState('');
+    const [mediaError, setMediaError] = useState('');
+    const [mediaWidth, setMediaWidth] = useState(DEFAULT_MEDIA_WIDTH);
+
+    const MAX_FILE_SIZE = 50 * 1024 * 1024;
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+
+    function handleMediaFile(f: File | null) {
+        setMediaError('');
+        if (f && f.size > MAX_FILE_SIZE) { setMediaError('A fájl mérete meghaladja az 50 MB-os limitet.'); return; }
+        if (f && !ALLOWED_TYPES.includes(f.type)) { setMediaError('Nem támogatott fájlformátum.'); return; }
+        setMediaFile(f);
+    }
 
     function addAnswer() {
         setAnswers([...answers, { text: '' }]);
@@ -174,23 +255,29 @@ function NewStepForm({ examId }: { examId: number }) {
     function submit(e: React.FormEvent) {
         e.preventDefault();
         if (!question.trim()) { setError('A kérdés megadása kötelező.'); return; }
+        if (mediaError) return;
         setError('');
         setProcessing(true);
 
-        const formData: Record<string, unknown> = {
-            question,
-            question_type: qtype,
-        };
+        const formData = new FormData();
+        formData.append('question', question);
+        formData.append('question_type', qtype);
         answers.forEach((a, idx) => {
-            formData[`answers[${idx}][text]`] = a.text;
+            formData.append(`answers[${idx}][text]`, a.text);
         });
         if (qtype === 'radio') {
-            formData['correct'] = correctRadio;
+            formData.append('correct', String(correctRadio));
         } else if (qtype === 'checkbox') {
-            formData['correct[]'] = correctCheckboxes;
+            correctCheckboxes.forEach(i => formData.append('correct[]', String(i)));
         }
+        if (mediaMode === 'file' && mediaFile) formData.append('media', mediaFile);
+        else if (mediaMode === 'url' && mediaUrl) formData.append('media_url', mediaUrl);
+        formData.append('media_width', String(mediaWidth));
 
-        router.post(route('admin.exams.steps.store', examId), formData, {
+        router.post(route('admin.exams.steps.store', examId), formData as unknown as Record<string, unknown>, {
+            onError: (errors) => {
+                if (errors.media) setMediaError(errors.media);
+            },
             onFinish: () => setProcessing(false),
         });
     }
@@ -215,6 +302,17 @@ function NewStepForm({ examId }: { examId: number }) {
                         required
                     />
                     {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+                </div>
+
+                <div>
+                    <MediaField
+                        label="Médiatartalom (kép/videó)"
+                        mode={mediaMode} onModeChange={setMediaMode}
+                        file={mediaFile} onFileChange={handleMediaFile}
+                        url={mediaUrl} onUrlChange={setMediaUrl}
+                        error={mediaError}
+                    />
+                    <WidthField value={mediaWidth} onChange={setMediaWidth} />
                 </div>
 
                 <div>

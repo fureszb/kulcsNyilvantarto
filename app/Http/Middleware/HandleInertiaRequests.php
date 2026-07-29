@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\NfcNotification;
 use App\Models\PmMessage;
 use App\Models\ShiftNote;
 use Carbon\Carbon;
@@ -28,6 +29,7 @@ class HandleInertiaRequests extends Middleware
 
         $newNotes    = 0;
         $newMessages = 0;
+        $newNfcNotifications = 0;
 
         if ($tenantUser && ! $tenantUser->isPropertyManager()) {
             $since = $tenantUser->notes_read_at ?? Carbon::parse('1970-01-01');
@@ -39,6 +41,10 @@ class HandleInertiaRequests extends Middleware
             $newMessages = PmMessage::visibleTo($tenantUser->id)
                 ->where('created_at', '>', $since)
                 ->count();
+        }
+
+        if ($tenantUser) {
+            $newNfcNotifications = NfcNotification::where('user_id', $tenantUser->id)->whereNull('read_at')->count();
         }
 
         return [
@@ -65,6 +71,7 @@ class HandleInertiaRequests extends Middleware
             'nav' => [
                 'newNotes'    => $newNotes,
                 'newMessages' => $newMessages,
+                'newNfcNotifications' => $newNfcNotifications,
             ],
         ];
     }

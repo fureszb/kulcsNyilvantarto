@@ -4,7 +4,10 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\AiDocumentController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\NfcAccessLogController;
+use App\Http\Controllers\NfcNotificationController;
 use App\Http\Controllers\PmMessageController;
+use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\ShiftNoteController;
 use App\Http\Controllers\Admin\EmergencyContactController;
 use App\Http\Controllers\Admin\ExamController as AdminExamController;
@@ -12,6 +15,7 @@ use App\Http\Controllers\Admin\ExamStepController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\ItemGroupController;
 use App\Http\Controllers\Admin\LocationController;
+use App\Http\Controllers\Admin\NfcTagController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TrainingController as AdminTrainingController;
@@ -138,6 +142,7 @@ Route::prefix('{tenant}')
             Route::get('/security/{security}/edit',        [SecurityReportController::class, 'edit'])->name('security.edit');
             Route::put('/security/{security}',             [SecurityReportController::class, 'update'])->name('security.update');
             Route::post('/security/{security}/shares',     [SecurityReportController::class, 'updateShares'])->name('security.shares.update');
+            Route::post('/security/{security}/review',     [SecurityReportController::class, 'review'])->name('security.review');
 
             // Váltóüzenetek (user + admin, PM nem látja)
             Route::get('/notes',           [ShiftNoteController::class, 'index'])->name('notes.index');
@@ -148,6 +153,8 @@ Route::prefix('{tenant}')
             // PM üzenetek megtekintése (user + admin)
             Route::get('/messages', [PmMessageController::class, 'index'])->name('messages.index');
             Route::post('/messages/{message}/reply', [PmMessageController::class, 'storeReply'])->name('messages.reply');
+            Route::put('/messages/{message}/replies/{reply}', [PmMessageController::class, 'updateReply'])->name('messages.replies.update');
+            Route::delete('/messages/{message}/replies/{reply}', [PmMessageController::class, 'destroyReply'])->name('messages.replies.destroy');
 
             // AI asszisztens (RAG chat + dokumentumok)
             Route::get('/ai',                        [AiChatController::class, 'show'])->name('ai.chat');
@@ -172,6 +179,7 @@ Route::prefix('{tenant}')
                 Route::get('/{document}', [DocumentController::class, 'show'])->name('show');
                 Route::get('/{document}/preview', [DocumentController::class, 'preview'])->name('preview');
                 Route::get('/{document}/download', [DocumentController::class, 'download'])->name('download');
+                Route::post('/{document}/review', [DocumentController::class, 'review'])->name('review');
                 Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy');
 
                 Route::get('/create/incident-report', [IncidentReportController::class, 'create'])->name('incident-report.create');
@@ -239,6 +247,8 @@ Route::prefix('{tenant}')
             Route::get('/messages',                        [PropertyManagerController::class, 'messages'])->name('messages');
             Route::post('/messages',                       [PropertyManagerController::class, 'storeMessage'])->name('messages.store');
             Route::post('/messages/{message}/reply',       [PropertyManagerController::class, 'replyToMessage'])->name('messages.reply');
+            Route::put('/messages/{message}/replies/{reply}', [PropertyManagerController::class, 'updateReply'])->name('messages.replies.update');
+            Route::delete('/messages/{message}/replies/{reply}', [PropertyManagerController::class, 'destroyReply'])->name('messages.replies.destroy');
             Route::get('/messages/{message}/edit',         [PropertyManagerController::class, 'editMessage'])->name('messages.edit');
             Route::put('/messages/{message}',              [PropertyManagerController::class, 'updateMessage'])->name('messages.update');
             Route::delete('/messages/{message}',           [PropertyManagerController::class, 'destroyMessage'])->name('messages.destroy');
@@ -249,6 +259,7 @@ Route::prefix('{tenant}')
             Route::get('/',                              [DirectorController::class, 'dashboard'])->name('dashboard');
             Route::post('/leads/{leadId}/goals',         [DirectorController::class, 'setGoal'])->name('set-goal');
             Route::get('/monthly-report',                [DirectorController::class, 'monthlyReport'])->name('monthly-report');
+            Route::get('/inventory',                     [DirectorController::class, 'inventory'])->name('inventory');
         });
 
         // Biztonsági vezető portál
@@ -272,6 +283,18 @@ Route::prefix('{tenant}')
             Route::delete('/team/workers/{user}',   [SecurityLeadController::class, 'removeTeamWorker'])->name('team.workers.destroy');
             Route::post('/team/pm',                 [SecurityLeadController::class, 'setTeamPm'])->name('team.pm.store');
             Route::delete('/team/pm/{user}',         [SecurityLeadController::class, 'removeTeamPm'])->name('team.pm.destroy');
+        });
+
+        // Ki van bent — NFC beléptetés élő nézete (admin/PM/biztonsági vezető/igazgató)
+        Route::get('/presence', [PresenceController::class, 'index'])->name('presence.index')->middleware('tenant-user');
+
+        // NFC beléptetési napló — szűrhető lista (felhasználó, telephely, dátum)
+        Route::get('/nfc-log', [NfcAccessLogController::class, 'index'])->name('nfc-log.index')->middleware('tenant-user');
+
+        // NFC értesítési harang (biztonsági vezető/PM kapja meg a be-/kilépés eseményeket)
+        Route::middleware('tenant-user')->group(function () {
+            Route::get('/nfc-notifications', [NfcNotificationController::class, 'index'])->name('nfc-notifications.index');
+            Route::post('/nfc-notifications/read', [NfcNotificationController::class, 'markRead'])->name('nfc-notifications.read');
         });
 
         // Vezénylés / beosztás — olvasás mindenkinek (PM kivételével, a controller tiltja),
@@ -311,6 +334,10 @@ Route::prefix('{tenant}')
 
                 // Helyszínek
                 Route::resource('locations', LocationController::class);
+                Route::put('locations/{location}/polygon', [LocationController::class, 'updatePolygon'])->name('locations.polygon.update');
+
+                // NFC matricák
+                Route::resource('nfc-tags', NfcTagController::class)->except(['show']);
                 Route::post('locations/{location}/items',          [ItemController::class, 'store'])->name('locations.items.store');
                 Route::put('locations/{location}/items/{item}',    [ItemController::class, 'update'])->name('locations.items.update');
                 Route::delete('locations/{location}/items/{item}', [ItemController::class, 'destroy'])->name('locations.items.destroy');
@@ -330,6 +357,7 @@ Route::prefix('{tenant}')
                 Route::resource('trainings', AdminTrainingController::class)->except(['show']);
                 Route::get('trainings/{training}/steps',                 [TrainingStepController::class, 'index'])->name('trainings.steps.index');
                 Route::post('trainings/{training}/steps',                [TrainingStepController::class, 'store'])->name('trainings.steps.store');
+                Route::post('trainings/{training}/steps/reorder',        [TrainingStepController::class, 'reorder'])->name('trainings.steps.reorder');
                 Route::get('trainings/{training}/steps/{step}/edit',     [TrainingStepController::class, 'edit'])->name('trainings.steps.edit');
                 Route::put('trainings/{training}/steps/{step}',          [TrainingStepController::class, 'update'])->name('trainings.steps.update');
                 Route::delete('trainings/{training}/steps/{step}',       [TrainingStepController::class, 'destroy'])->name('trainings.steps.destroy');

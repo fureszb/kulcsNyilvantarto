@@ -3,6 +3,8 @@ import { Link, router, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
 import AppHeader from '../Components/AppHeader';
+import NotificationBell from '../Components/NotificationBell';
+import PushPermissionBanner from '../Components/PushPermissionBanner';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -175,6 +177,7 @@ export default function SecurityLeadLayout({ children, title }: Props) {
                     onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
                     hiddenFrom="lg"
                 >
+                    <NotificationBell />
                     <div className="relative hidden sm:block">
                         <button
                             type="button"
@@ -218,6 +221,8 @@ export default function SecurityLeadLayout({ children, title }: Props) {
                         </button>
                     </form>
                 </AppHeader>
+
+                <PushPermissionBanner />
 
                 <MobileNavDrawer
                     open={mobileOpen}
