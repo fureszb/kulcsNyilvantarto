@@ -16,6 +16,14 @@ const config: CapacitorConfig = {
     server: {
         url: 'https://cortexopsystems.com',
         cleartext: false,
+        // Ha a server.url betöltése hálózati/HTTP hibával elszáll (nincs net
+        // hidegindításkor — a WebView ilyenkor sosem jut el JS-t futtató
+        // állapotba, tehát semmiféle JS-oldali offline-detektálás nem tudná
+        // ezt lekezelni), a Capacitor natívan ezt a helyi (webDir-beli)
+        // oldalt tölti be automatikusan (lásd Bridge.java getErrorUrl() /
+        // BridgeWebViewClient.onReceivedError — ez nem saját kód, beépített
+        // Capacitor-mechanizmus).
+        errorPath: 'offline.html',
     },
     backgroundColor: '#0f172a',
     ios: {

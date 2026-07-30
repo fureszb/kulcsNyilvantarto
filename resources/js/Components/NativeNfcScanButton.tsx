@@ -15,8 +15,8 @@ export default function NativeNfcScanButton() {
 
     useEffect(() => {
         if (!Capacitor.isNativePlatform()) return;
-        setPendingCount(getQueueLength());
-        onOfflineQueueChanged(() => setPendingCount(getQueueLength()));
+        getQueueLength().then(setPendingCount);
+        onOfflineQueueChanged(() => { getQueueLength().then(setPendingCount); });
     }, []);
 
     if (!Capacitor.isNativePlatform()) return null;
@@ -27,7 +27,7 @@ export default function NativeNfcScanButton() {
         const outcome = await scanNfcTag();
         setState('idle');
         setResult(outcome);
-        setPendingCount(getQueueLength());
+        setPendingCount(await getQueueLength());
     }
 
     async function cancel() {

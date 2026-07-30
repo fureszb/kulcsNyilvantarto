@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="hu">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>KK Nyilvántartó — nincs kapcsolat</title>
+    <style>
+        html, body { height: 100%; margin: 0; }
+        body {
+            background: #0f172a;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .icon { width: 56px; height: 56px; margin-bottom: 20px; opacity: .8; }
+        h1 { font-size: 18px; font-weight: 700; margin: 0 0 8px; }
+        p { font-size: 14px; color: rgba(255,255,255,.6); margin: 0 0 20px; max-width: 320px; line-height: 1.5; }
+        #pending {
+            font-size: 13px;
+            color: #fbbf24;
+            margin-bottom: 20px;
+            display: none;
+        }
+        button {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:active { opacity: .8; }
+    </style>
+</head>
+<body>
+    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.83m-4.243 2.83a5 5 0 010-7.072M3 3l18 18" />
+    </svg>
+    <h1>Nincs internetkapcsolat</h1>
+    <p>Nem sikerült kapcsolódni a szerverhez. Amint visszajön a net, próbáld újra — a korábban rögzített, még nem szinkronizált beolvasások automatikusan elküldésre kerülnek.</p>
+    <p id="pending"></p>
+    <button onclick="retry()">Újrapróbálkozás</button>
+
+    <script>
+        function retry() {
+            window.location.href = 'https://cortexopsystems.com';
+        }
+
+        // A window.Capacitor.Plugins.* a Capacitor natív híd globálisan
+        // elérhető API-ja — ezen az oldalon nincs build lépés/bundler
+        // (statikus fájl a webDir-ben), ezért nem importáljuk a plugint,
+        // hanem a beépített globálison keresztül hívjuk. A queue a
+        // Preferences pluginban van (resources/js/native/offlineQueue.ts),
+        // NEM localStorage-ban, mert ez az oldal más origin-ről (file://)
+        // fut, mint az élő PWA — localStorage nem lenne közös.
+        (function showPendingCount() {
+            try {
+                window.Capacitor.Plugins.Preferences.get({ key: 'kk_offline_queue' }).then(function (result) {
+                    var queue = result && result.value ? JSON.parse(result.value) : [];
+                    if (queue.length > 0) {
+                        var el = document.getElementById('pending');
+                        el.textContent = queue.length + ' rögzített beolvasás vár szinkronizálásra.';
+                        el.style.display = 'block';
+                    }
+                });
+            } catch (e) { /* nincs Capacitor híd (pl. böngészős preview) — nem kritikus */ }
+        })();
+    </script>
+</body>
+</html>

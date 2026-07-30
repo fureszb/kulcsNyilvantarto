@@ -30,10 +30,39 @@ class NfcAccessController extends Controller
         $data = $request->validate([
             'tag_uid'     => 'required|string|max:255',
             'scanned_at'  => 'nullable|date',
+            // A natív offline-queue (resources/js/native/offlineQueue.ts) egy
+            // kliens-generált UUID-t is küld, hogy egy hálózat-nélkül eltett,
+            // majd visszajövő neten újraküldött scan ne fusson le kétszer
+            // (ami dupla "jogosulatlan kísérlet" broadcastot/push-t okozna
+            // mindenkinek). Nélküle (pl. régi kliens) nincs dedup, ugyanaz a
+            // viselkedés, mint korábban.
+            'client_ref'  => 'nullable|string|max:64',
         ]);
 
         $user = $request->user();
         $occurredAt = $data['scanned_at'] ?? now()->toIso8601String();
+
+        if (!empty($data['client_ref'])) {
+            $duplicate = ActivityLog::where('user_id', $user->id)
+                ->whereIn('event_type', ['nfc.checkpoint', 'nfc.denied'])
+                ->where('metadata->client_ref', $data['client_ref'])
+                ->where('created_at', '>=', now()->subHours(2))
+                ->first();
+
+            if ($duplicate) {
+                return $duplicate->event_type === 'nfc.denied'
+                    ? response()->json([
+                        'status'  => 'denied',
+                        'message' => 'Nincs jogosultsága ehhez a telephelyhez.',
+                        'tag'     => ['id' => null, 'label' => $duplicate->metadata['tag_label'] ?? null],
+                    ], 403)
+                    : response()->json([
+                        'status'   => 'checked',
+                        'location' => ['id' => null, 'name' => $duplicate->metadata['location_name'] ?? null],
+                        'tag'      => ['id' => null, 'label' => $duplicate->metadata['tag_label'] ?? null],
+                    ]);
+            }
+        }
 
         $tag = NfcTag::where('uid', $data['tag_uid'])->where('is_active', true)->with('location')->first();
 
@@ -47,6 +76,7 @@ class NfcAccessController extends Controller
         if (!$hasAccess) {
             ActivityLog::record('nfc.denied', $user, "Elutasított ellenőrzés — {$location->name}", [
                 'tag_uid' => $tag->uid, 'tag_label' => $tag->label, 'location_id' => $location->id, 'location_name' => $location->name,
+                'client_ref' => $data['client_ref'] ?? null,
             ]);
 
             $this->notifyEveryone($user, $location, 'denied', $occurredAt);
@@ -60,6 +90,7 @@ class NfcAccessController extends Controller
 
         ActivityLog::record('nfc.checkpoint', $user, "Ellenőrizve — {$tag->label} ({$location->name})", [
             'tag_uid' => $tag->uid, 'tag_label' => $tag->label, 'location_id' => $location->id, 'location_name' => $location->name,
+            'client_ref' => $data['client_ref'] ?? null,
         ]);
 
         $this->notifyEveryone($user, $location, 'checkpoint', $occurredAt);

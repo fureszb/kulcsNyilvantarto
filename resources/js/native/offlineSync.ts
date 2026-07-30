@@ -11,9 +11,17 @@ const ENDPOINTS: Record<QueuedAction['type'], string> = {
 
 let flushing = false;
 let onQueueChanged: (() => void) | null = null;
+let onSessionExpired: (() => void) | null = null;
 
 export function onOfflineQueueChanged(callback: () => void): void {
     onQueueChanged = callback;
+}
+
+/** A UI (AppLayout) ide iratkozik fel, hogy bannert mutasson, ha a
+ *  szinkronizálás lejárt munkamenet miatt akadt el — anélkül a user offline
+ *  szakasz után csendben soha nem szinkronizálna, észrevétlenül. */
+export function onOfflineSyncSessionExpired(callback: () => void): void {
+    onSessionExpired = callback;
 }
 
 /** Sorban, egymás után küldi be a felgyűlt elemeket — HTTP-választ kapó
@@ -27,20 +35,21 @@ export async function flushOfflineQueue(): Promise<void> {
     flushing = true;
 
     try {
-        for (const item of getQueue()) {
+        for (const item of await getQueue()) {
             try {
                 await axios.post(route(ENDPOINTS[item.type]), item.payload);
-                removeFromQueue(item.id);
+                await removeFromQueue(item.id);
                 onQueueChanged?.();
             } catch (error) {
                 if (!axios.isAxiosError(error) || !error.response) {
                     break; // nincs net, próbáljuk később
                 }
                 if (error.response.status === 401 || error.response.status === 419) {
+                    onSessionExpired?.();
                     break; // lejárt munkamenet, be kell jelentkezni újra
                 }
                 // egyéb HTTP-válasz (siker, 403, 404) — a szerver döntött, kivesszük
-                removeFromQueue(item.id);
+                await removeFromQueue(item.id);
                 onQueueChanged?.();
             }
         }

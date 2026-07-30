@@ -1,7 +1,10 @@
 node_modules/
-www/
 dist/
 *.tsbuildinfo
+
+# www/ NEM build-output többé (a React/Vite kliens törölve) — a benne lévő
+# index.html + offline.html kézzel írt, natívan szükséges fájlok (lásd
+# capacitor.config.ts server.errorPath), ezeket trackelni KELL.
 
 # Android
 android/.gradle/

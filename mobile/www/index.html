@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="hu">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>KK Nyilvántartó</title>
+</head>
+<body style="margin:0;background:#0f172a;">
+    <!--
+        A Capacitor CLI-nek kötelező egy index.html a webDir gyökerében, de
+        éles működés közben ez SOHA nem töltődik be: a capacitor.config.ts
+        server.url-je miatt a WebView induláskor egyenesen az élő PWA-t
+        (https://cortexopsystems.com) tölti be, ezt a fájlt megkerülve.
+        Ha a szerver mégis elérhetetlen, a Capacitor NEM ezt, hanem a
+        server.errorPath által megadott offline.html-t tölti be automatikusan
+        (lásd capacitor.config.ts + Bridge.java getErrorUrl()).
+    -->
+</body>
+</html>

@@ -7,10 +7,11 @@ import AppHeader from '../Components/AppHeader';
 import LiveClock from '../Components/LiveClock';
 import NotificationBell from '../Components/NotificationBell';
 import NativeNfcScanButton from '../Components/NativeNfcScanButton';
+import SessionExpiredBanner from '../Components/SessionExpiredBanner';
 import { getEcho } from '../echo';
 import { startGeofenceTracking } from '../native/geofence';
 import { enableNativePush, onPushNotificationTapped } from '../native/push';
-import { initOfflineSync } from '../native/offlineSync';
+import { initOfflineSync, onOfflineSyncSessionExpired } from '../native/offlineSync';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -23,6 +24,7 @@ export default function AppLayout({ children, title }: Props) {
     const { auth, tenant, nav } = page.props;
     const [mobileOpen, setMobileOpen] = useState(false);
     const [extraMessages, setExtraMessages] = useState(0);
+    const [sessionExpired, setSessionExpired] = useState(false);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const channelRef = useRef<any>(null);
     const user = auth.user;
@@ -60,6 +62,7 @@ export default function AppLayout({ children, title }: Props) {
         startGeofenceTracking();
         enableNativePush();
         onPushNotificationTapped((url) => router.visit(url));
+        onOfflineSyncSessionExpired(() => setSessionExpired(true));
         initOfflineSync();
     }, [user?.id]);
 
@@ -125,6 +128,8 @@ export default function AppLayout({ children, title }: Props) {
                     </>
                 )}
             </AppHeader>
+
+            {sessionExpired && <SessionExpiredBanner loginHref={route('login')} />}
 
             <MobileNavDrawer
                 open={mobileOpen}
