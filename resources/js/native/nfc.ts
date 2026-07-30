@@ -1,8 +1,16 @@
 import axios from 'axios';
 import { CapacitorNfc, type NfcEvent, type NfcSessionEndEvent } from '@capgo/capacitor-nfc';
+import { enqueueAction, generateClientRef } from './offlineQueue';
+
+// Rövid timeout a natív hívásokon: gyenge jelnél inkább essen gyorsan
+// "queued"-be, mint hogy percekig pörögjön a beolvasás-spinner. A globális
+// axios-defaultokat (resources/js/bootstrap.ts) szándékosan nem állítjuk
+// át, mert azokat más, hosszabb ideig futó kérések (AI chat stream, export)
+// is használják.
+const NATIVE_REQUEST_TIMEOUT_MS = 8000;
 
 export interface NfcScanResult {
-    status: 'checked' | 'denied' | 'error';
+    status: 'checked' | 'denied' | 'error' | 'queued';
     message?: string;
     locationName?: string;
     tagLabel?: string;
@@ -43,17 +51,26 @@ export async function scanNfcTag(): Promise<NfcScanResult> {
                 return;
             }
 
+            const tagUid = formatTagUid(idBytes);
+            const scannedAt = new Date().toISOString();
+            const clientRef = generateClientRef();
+            const payload = { tag_uid: tagUid, scanned_at: scannedAt, client_ref: clientRef };
+
             try {
-                const { data } = await axios.post(route('native.nfc.scan'), {
-                    tag_uid: formatTagUid(idBytes),
-                    scanned_at: new Date().toISOString(),
-                });
+                const { data } = await axios.post(route('native.nfc.scan'), payload, { timeout: NATIVE_REQUEST_TIMEOUT_MS });
                 finish({ status: 'checked', locationName: data.location?.name, tagLabel: data.tag?.label });
             } catch (error) {
                 if (axios.isAxiosError(error) && error.response?.status === 403) {
                     finish({ status: 'denied', message: error.response.data?.message ?? 'Nincs jogosultsága ehhez a telephelyhez.' });
                 } else if (axios.isAxiosError(error) && error.response?.status === 404) {
                     finish({ status: 'denied', message: 'Ismeretlen NFC matrica.' });
+                } else if (axios.isAxiosError(error) && !error.response) {
+                    // nincs szerver-válasz (hálózati hiba VAGY timeout), nem üzleti
+                    // elutasítás: eltesszük, ugyanazzal a client_ref-fel, hogy a
+                    // szerver a szinkronnál felismerje, ha időközben mégis
+                    // megérkezett volna élőben (dupla broadcast/push elkerülése)
+                    await enqueueAction('nfc_scan', payload);
+                    finish({ status: 'queued', tagLabel: tagUid });
                 } else {
                     finish({ status: 'error', message: 'Hálózati hiba történt a beolvasás közben.' });
                 }

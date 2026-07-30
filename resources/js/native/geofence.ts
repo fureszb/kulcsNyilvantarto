@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { Geolocation, type CallbackID } from '@capacitor/geolocation';
+import { enqueueAction } from './offlineQueue';
 
 const MIN_PING_INTERVAL_MS = 30_000;
+const NATIVE_REQUEST_TIMEOUT_MS = 8000;
 
 let watchId: CallbackID | null = null;
 let lastPingAt = 0;
@@ -27,13 +29,23 @@ export async function startGeofenceTracking(): Promise<boolean> {
         if (now - lastPingAt < MIN_PING_INTERVAL_MS) return;
         lastPingAt = now;
 
-        axios.post(route('native.geofence.ping'), {
+        const pingPayload = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
             accuracy: position.coords.accuracy,
             recorded_at: new Date(position.timestamp).toISOString(),
-        }).catch(() => {
-            // hálózati hiba esetén a következő ping (legfeljebb
+        };
+
+        axios.post(route('native.geofence.ping'), pingPayload, { timeout: NATIVE_REQUEST_TIMEOUT_MS }).catch(async (error) => {
+            if (axios.isAxiosError(error) && !error.response) {
+                // nincs net (vagy timeout) — eltesszük, a native/offlineSync.ts
+                // szinkronizálja. Dedup nem kell: a GuardPosition::updateOrCreate
+                // eleve idempotens ugyanarra a userre, duplikált beküldés nem okoz
+                // extra riasztást (csak megerősített zóna-átlépésnél tüzel, lásd
+                // GeofenceController::ping OUTSIDE_THRESHOLD debounce-a).
+                await enqueueAction('geofence_ping', pingPayload);
+            }
+            // egyéb hiba esetén a következő ping (legfeljebb
             // MIN_PING_INTERVAL_MS múlva) úgyis megpróbálja újra
         });
     });

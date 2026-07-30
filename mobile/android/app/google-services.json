@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1053074785105",
+    "project_id": "cortexopsystems",
+    "storage_bucket": "cortexopsystems.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1053074785105:android:6b904b5da6022f98eb8970",
+        "android_client_info": {
+          "package_name": "hu.kknyilvantarto.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-s96tJNjmyiHE6gdfAQN-hGILoGM2gSg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
