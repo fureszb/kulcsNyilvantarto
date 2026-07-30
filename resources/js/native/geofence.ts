@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Geolocation, type CallbackID } from '@capacitor/geolocation';
+import { enqueueAction } from './offlineQueue';
 
 const MIN_PING_INTERVAL_MS = 30_000;
 
@@ -27,13 +28,19 @@ export async function startGeofenceTracking(): Promise<boolean> {
         if (now - lastPingAt < MIN_PING_INTERVAL_MS) return;
         lastPingAt = now;
 
-        axios.post(route('native.geofence.ping'), {
+        const pingPayload = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
             accuracy: position.coords.accuracy,
             recorded_at: new Date(position.timestamp).toISOString(),
-        }).catch(() => {
-            // hálózati hiba esetén a következő ping (legfeljebb
+        };
+
+        axios.post(route('native.geofence.ping'), pingPayload).catch((error) => {
+            if (axios.isAxiosError(error) && !error.response) {
+                // nincs net — eltesszük, a native/offlineSync.ts szinkronizálja
+                enqueueAction('geofence_ping', pingPayload);
+            }
+            // egyéb hiba esetén a következő ping (legfeljebb
             // MIN_PING_INTERVAL_MS múlva) úgyis megpróbálja újra
         });
     });

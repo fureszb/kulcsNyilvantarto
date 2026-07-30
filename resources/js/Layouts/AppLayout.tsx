@@ -10,6 +10,7 @@ import NativeNfcScanButton from '../Components/NativeNfcScanButton';
 import { getEcho } from '../echo';
 import { startGeofenceTracking } from '../native/geofence';
 import { enableNativePush, onPushNotificationTapped } from '../native/push';
+import { initOfflineSync } from '../native/offlineSync';
 import type { PageProps } from '../types';
 
 interface Props {
@@ -59,6 +60,7 @@ export default function AppLayout({ children, title }: Props) {
         startGeofenceTracking();
         enableNativePush();
         onPushNotificationTapped((url) => router.visit(url));
+        initOfflineSync();
     }, [user?.id]);
 
     const currentYear = new Date().getFullYear();

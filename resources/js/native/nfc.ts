@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { CapacitorNfc, type NfcEvent, type NfcSessionEndEvent } from '@capgo/capacitor-nfc';
+import { enqueueAction } from './offlineQueue';
 
 export interface NfcScanResult {
-    status: 'checked' | 'denied' | 'error';
+    status: 'checked' | 'denied' | 'error' | 'queued';
     message?: string;
     locationName?: string;
     tagLabel?: string;
@@ -43,10 +44,13 @@ export async function scanNfcTag(): Promise<NfcScanResult> {
                 return;
             }
 
+            const tagUid = formatTagUid(idBytes);
+            const scannedAt = new Date().toISOString();
+
             try {
                 const { data } = await axios.post(route('native.nfc.scan'), {
-                    tag_uid: formatTagUid(idBytes),
-                    scanned_at: new Date().toISOString(),
+                    tag_uid: tagUid,
+                    scanned_at: scannedAt,
                 });
                 finish({ status: 'checked', locationName: data.location?.name, tagLabel: data.tag?.label });
             } catch (error) {
@@ -54,6 +58,11 @@ export async function scanNfcTag(): Promise<NfcScanResult> {
                     finish({ status: 'denied', message: error.response.data?.message ?? 'Nincs jogosultsága ehhez a telephelyhez.' });
                 } else if (axios.isAxiosError(error) && error.response?.status === 404) {
                     finish({ status: 'denied', message: 'Ismeretlen NFC matrica.' });
+                } else if (axios.isAxiosError(error) && !error.response) {
+                    // nincs szerver-válasz — hálózati hiba, nem üzleti elutasítás:
+                    // eltesszük, a native/offlineSync.ts szinkronizálja, ha visszajön a net
+                    enqueueAction('nfc_scan', { tag_uid: tagUid, scanned_at: scannedAt });
+                    finish({ status: 'queued', tagLabel: tagUid });
                 } else {
                     finish({ status: 'error', message: 'Hálózati hiba történt a beolvasás közben.' });
                 }
