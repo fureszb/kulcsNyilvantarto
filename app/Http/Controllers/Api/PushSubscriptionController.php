@@ -29,7 +29,21 @@ class PushSubscriptionController extends Controller
     {
         $user = $request->user();
 
-        DeviceToken::where('user_id', $user->id)->delete();
+        // A device_token opcionális — a meglévő Kotlin kliens (lásd
+        // KKnyilvantartoKOTLIN/.../PushSubscriptionApi.kt) üres törzzsel
+        // hívja, ezért a régi (a user ÖSSZES eszközét törlő) viselkedést meg
+        // kell tartani, ha nincs megadva. HA viszont a hívó (pl. a natív
+        // Capacitor híd, lásd resources/js/native/push.ts) elküldi a saját
+        // tokenjét, csak AZT az egy eszközt töröljük — enélkül egy
+        // többeszközös user egyik eszközön való kijelentkezése a többi
+        // eszközén is némán megölte volna a push-t.
+        $data = $request->validate([
+            'device_token' => ['sometimes', 'nullable', 'string', 'max:500'],
+        ]);
+
+        DeviceToken::where('user_id', $user->id)
+            ->when(!empty($data['device_token']), fn ($q) => $q->where('device_token', $data['device_token']))
+            ->delete();
 
         return response()->json(['status' => 'unsubscribed']);
     }

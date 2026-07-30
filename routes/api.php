@@ -62,12 +62,16 @@ Route::prefix('{tenant}')
             Route::put('/checks/{check}', [CheckController::class, 'update'])->name('api.checks.update');
 
             // NFC beléptetés
-            Route::post('/nfc/scan', [NfcAccessController::class, 'scan'])->name('api.nfc.scan');
+            // throttle: a scan minden hívásnál broadcast+push-riasztást küld
+            // MINDEN másik tenant-usernek (lásd NfcAccessController::
+            // notifyEveryone) — enélkül egy hibás/rosszhiszemű kliens
+            // notification-spam vektor lenne.
+            Route::post('/nfc/scan', [NfcAccessController::class, 'scan'])->middleware('throttle:30,1')->name('api.nfc.scan');
             Route::get('/nfc/history', [NfcAccessController::class, 'history'])->name('api.nfc.history');
             Route::get('/nfc/today-checklist', [NfcAccessController::class, 'todayChecklist'])->name('api.nfc.today-checklist');
 
             // Geofencing — élő GPS-ping és zóna-riasztás
-            Route::post('/geofence/ping', [GeofenceController::class, 'ping'])->name('api.geofence.ping');
+            Route::post('/geofence/ping', [GeofenceController::class, 'ping'])->middleware('throttle:30,1')->name('api.geofence.ping');
             Route::get('/geofence/events/{userId}', [GeofenceController::class, 'events'])->name('api.geofence.events');
 
             // Vezénylés (napi-szintű, terepi funkciók)

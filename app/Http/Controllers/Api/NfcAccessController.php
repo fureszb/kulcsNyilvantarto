@@ -46,6 +46,13 @@ class NfcAccessController extends Controller
             $duplicate = ActivityLog::where('user_id', $user->id)
                 ->whereIn('event_type', ['nfc.checkpoint', 'nfc.denied'])
                 ->where('metadata->client_ref', $data['client_ref'])
+                // A tag_uid egyezés is kötelező: enélkül egy (hibás vagy
+                // szándékosan újrafelhasznált) client_ref-fel A matrica
+                // korábbi eredményét kapná vissza valaki B matrica
+                // beolvasásaként, úgy, hogy B tényleges ellenőrzése soha nem
+                // futott le szerver-oldalon — hamis "checked" választ adna
+                // anélkül, hogy a napló ezt valaha rögzítette volna.
+                ->where('metadata->tag_uid', $data['tag_uid'])
                 ->where('created_at', '>=', now()->subHours(2))
                 ->first();
 

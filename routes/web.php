@@ -236,9 +236,17 @@ Route::prefix('{tenant}')
         // változtatás nélküli $request->user()-je ugyanúgy a bejelentkezett
         // TenantUsert adja vissza, mint a bearer-tokenes mobil API-nál.
         Route::middleware('auth:tenant')->prefix('native')->name('native.')->group(function () {
-            Route::post('/nfc/scan', [\App\Http\Controllers\Api\NfcAccessController::class, 'scan'])->name('nfc.scan');
+            // throttle: enélkül egy hitelesített, de rosszhiszemű/hibás kliens
+            // percenként több tucatszor tudná meghívni a scan/ping végpontot,
+            // ami minden hívásnál broadcast+push-riasztást küld MINDEN másik
+            // tenant-usernek (lásd NfcAccessController::notifyEveryone /
+            // GeofenceController::notifyBosses) — ez már önmagában egy
+            // notification-spam vektor, nem csak erőforrás-pazarlás.
+            Route::post('/nfc/scan', [\App\Http\Controllers\Api\NfcAccessController::class, 'scan'])
+                ->middleware('throttle:30,1')->name('nfc.scan');
             Route::get('/nfc/history', [\App\Http\Controllers\Api\NfcAccessController::class, 'history'])->name('nfc.history');
-            Route::post('/geofence/ping', [\App\Http\Controllers\Api\GeofenceController::class, 'ping'])->name('geofence.ping');
+            Route::post('/geofence/ping', [\App\Http\Controllers\Api\GeofenceController::class, 'ping'])
+                ->middleware('throttle:30,1')->name('geofence.ping');
             Route::post('/push/subscribe-native', [\App\Http\Controllers\Api\PushSubscriptionController::class, 'subscribeNative'])
                 ->middleware('throttle:20,1')->name('push.subscribe-native');
             Route::post('/push/unsubscribe-native', [\App\Http\Controllers\Api\PushSubscriptionController::class, 'unsubscribeNative'])

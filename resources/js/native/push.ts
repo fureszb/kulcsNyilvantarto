@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { Preferences } from '@capacitor/preferences';
+
+const DEVICE_TOKEN_KEY = 'kk_push_device_token';
 
 function currentPlatform(): 'android' | 'ios' {
     return Capacitor.getPlatform() === 'ios' ? 'ios' : 'android';
@@ -26,6 +29,7 @@ export async function enableNativePush(): Promise<boolean> {
                     device_token: token.value,
                     platform: currentPlatform(),
                 });
+                await Preferences.set({ key: DEVICE_TOKEN_KEY, value: token.value });
                 resolve(true);
             } catch {
                 resolve(false);
@@ -43,7 +47,12 @@ export async function enableNativePush(): Promise<boolean> {
 
 export async function disableNativePush(): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
-    await axios.post(route('native.push.unsubscribe-native')).catch(() => {});
+    // A saját eszköz tokenjét küldjük — enélkül a backend (kompatibilitásból
+    // a device_token nélkül hívó Kotlin klienssel) a user ÖSSZES eszközének
+    // push-jét törölné, nem csak ezét.
+    const { value: deviceToken } = await Preferences.get({ key: DEVICE_TOKEN_KEY });
+    await axios.post(route('native.push.unsubscribe-native'), deviceToken ? { device_token: deviceToken } : {}).catch(() => {});
+    await Preferences.remove({ key: DEVICE_TOKEN_KEY });
 }
 
 /** Értesítés-tapra navigáció — a natív push payload `url` mezője (lásd
