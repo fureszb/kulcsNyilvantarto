@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Területi igazgató &ndash; KulcsNyilvantarto Platform</title><style>
+@page {
+    size: A4;
+    margin: 12mm 12mm 13mm 12mm;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 9.2pt;
+    line-height: 1.45;
+    color: #334155;
+    background: #ffffff;
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 700; color: #0f172a; }
+p { margin: 0 0 6pt; }
+strong { color: #0f172a; font-weight: 700; }
+
+/* ---------- Fejléc ---------- */
+.hero {
+    background: #0f172a;
+    color: #ffffff;
+    padding: 13pt 15pt 14pt;
+    border-radius: 6pt;
+    border-left: 5pt solid #b45309;
+}
+.hero .kicker {
+    font-size: 6.9pt;
+    letter-spacing: 1.5pt;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #fcd34d;
+    margin-bottom: 5pt;
+}
+.hero h1 {
+    color: #ffffff;
+    font-size: 17.5pt;
+    line-height: 1.18;
+    letter-spacing: -0.35pt;
+    margin-bottom: 5pt;
+}
+.hero .sub {
+    color: #cbd5e1;
+    font-size: 9.4pt;
+    line-height: 1.45;
+    margin: 0;
+    max-width: 155mm;
+}
+
+/* ---------- Meta sáv ---------- */
+.meta {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    border-spacing: 5pt 0;
+    margin: 7pt 0 0;
+}
+.meta .m {
+    display: table-cell;
+    vertical-align: top;
+    background: #f1f5f9;
+    border: 0.6pt solid #e2e8f0;
+    border-top: 2pt solid #b45309;
+    border-radius: 4pt;
+    padding: 6pt 7pt;
+}
+.meta .m .lbl {
+    font-size: 6.6pt;
+    letter-spacing: 0.8pt;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 700;
+    margin-bottom: 2pt;
+}
+.meta .m .val { font-size: 8.6pt; color: #0f172a; font-weight: 600; line-height: 1.3; }
+
+/* ---------- Szekciók ---------- */
+.section { margin-top: 12pt; }
+.section > h2 {
+    font-size: 11pt;
+    letter-spacing: -0.15pt;
+    padding-bottom: 3.5pt;
+    border-bottom: 1.6pt solid #b45309;
+    margin-bottom: 7pt;
+}
+.section > h2 .num {
+    display: inline-block;
+    color: #b45309;
+    font-size: 9pt;
+    margin-right: 5pt;
+    font-variant-numeric: tabular-nums;
+}
+.lead { font-size: 9pt; color: #64748b; margin: -3pt 0 7pt; }
+
+/* ---------- Kártyarács (table-alapú, WeasyPrint-biztos) ---------- */
+.grid { display: table; width: 100%; table-layout: fixed; border-spacing: 5pt 0; }
+.grid .cell { display: table-cell; vertical-align: top; }
+.grid.rowgap { margin-bottom: 5pt; }
+
+.card {
+    background: #ffffff;
+    border: 0.7pt solid #e2e8f0;
+    border-radius: 5pt;
+    padding: 7.5pt 8.5pt;
+    page-break-inside: avoid;
+    height: 100%;
+}
+.card h3 {
+    font-size: 9.2pt;
+    margin-bottom: 3pt;
+    line-height: 1.25;
+}
+.card p { font-size: 8.5pt; color: #334155; margin: 0; line-height: 1.42; }
+.card .tag {
+    display: inline-block;
+    margin-top: 5pt;
+    font-size: 6.8pt;
+    letter-spacing: 0.5pt;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #92400e;
+    background: #fffbeb;
+    border: 0.6pt solid #b45309;
+    border-radius: 20pt;
+    padding: 1.6pt 6pt;
+}
+
+/* Fájdalompont-kártya */
+.card.pain { background: #f8fafc; border-color: #fecaca; border-left: 2.6pt solid #dc2626; }
+.card.pain h3 { color: #991b1b; }
+.card.pain h3 .mk { color: #dc2626; margin-right: 3pt; }
+
+/* Megoldás-kártya */
+.card.fix { border-left: 2.6pt solid #b45309; }
+.card.fix h3 .mk { color: #b45309; margin-right: 3pt; }
+
+/* ---------- Számsáv ---------- */
+.facts { display: table; width: 100%; table-layout: fixed; border-spacing: 5pt 0; margin-top: 3pt; }
+.facts .f {
+    display: table-cell;
+    vertical-align: top;
+    text-align: center;
+    background: #0f172a;
+    border-radius: 5pt;
+    padding: 9pt 6pt 8pt;
+    page-break-inside: avoid;
+}
+.facts .f .big {
+    display: block;
+    font-size: 17pt;
+    font-weight: 800;
+    color: #fcd34d;
+    letter-spacing: -0.6pt;
+    line-height: 1;
+    margin-bottom: 3.5pt;
+}
+.facts .f .cap { font-size: 7.6pt; color: #cbd5e1; line-height: 1.35; display: block; }
+
+/* ---------- Modul-lista ---------- */
+.mods { margin: 0; padding: 0; list-style: none; }
+.mods li {
+    padding: 4.6pt 0 4.6pt 15pt;
+    border-bottom: 0.6pt solid #e2e8f0;
+    font-size: 8.6pt;
+    position: relative;
+    page-break-inside: avoid;
+}
+.mods li:last-child { border-bottom: none; }
+.mods li:before {
+    content: "\25B8";
+    position: absolute;
+    left: 3pt;
+    top: 4.4pt;
+    color: #b45309;
+    font-size: 8.5pt;
+}
+.mods li b { color: #0f172a; }
+
+/* ---------- ROI tábla ---------- */
+.roi {
+    border: 0.8pt solid #e2e8f0;
+    border-radius: 5pt;
+    overflow: hidden;
+    page-break-inside: avoid;
+}
+.roi table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+.roi th {
+    background: #0f172a;
+    color: #ffffff;
+    text-align: left;
+    font-size: 7.2pt;
+    letter-spacing: 0.7pt;
+    text-transform: uppercase;
+    padding: 5.5pt 8pt;
+    font-weight: 700;
+}
+.roi td { padding: 5.2pt 8pt; border-top: 0.6pt solid #e2e8f0; vertical-align: top; }
+.roi tr:nth-child(even) td { background: #f8fafc; }
+.roi td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 600; color: #0f172a; }
+.roi td.note { color: #64748b; font-size: 7.8pt; }
+.roi tr.sum td {
+    background: #fffbeb !important;
+    border-top: 1.4pt solid #b45309;
+    font-weight: 700;
+    color: #92400e;
+}
+.assump { font-size: 7.4pt; color: #64748b; margin: 5pt 0 0; line-height: 1.4; }
+
+/* ---------- CTA ---------- */
+.cta {
+    margin-top: 12pt;
+    background: #fffbeb;
+    border: 0.8pt solid #b45309;
+    border-left: 4pt solid #b45309;
+    border-radius: 5pt;
+    padding: 10pt 12pt;
+    page-break-inside: avoid;
+}
+.cta h3 { font-size: 10.5pt; color: #92400e; margin-bottom: 4pt; }
+.cta p { font-size: 8.8pt; margin-bottom: 5pt; }
+.cta ul { margin: 0; padding-left: 13pt; }
+.cta li { font-size: 8.6pt; margin-bottom: 2.6pt; }
+
+/* ---------- Idézet ---------- */
+.quote {
+    border-left: 2.6pt solid #b45309;
+    background: #f8fafc;
+    padding: 7pt 10pt;
+    border-radius: 0 4pt 4pt 0;
+    font-size: 8.8pt;
+    color: #334155;
+    page-break-inside: avoid;
+}
+
+/* ---------- Lábléc ---------- */
+.footer {
+    margin-top: 13pt;
+    padding-top: 6pt;
+    border-top: 0.8pt solid #e2e8f0;
+    font-size: 7.2pt;
+    color: #64748b;
+    line-height: 1.45;
+}
+.footer .brand { color: #0f172a; font-weight: 700; }
+.footer .price { color: #92400e; font-weight: 700; }
+
+.pagebreak { page-break-before: always; }
+</style></head><body><div class="hero"><div class="kicker">Regionális vezetői adatlap &middot; Kontrolling</div><h1>Ma a vezetőit benyomás alapján méri. Holnap egy nyilvános képlet alapján.</h1><p class="sub">Irodaházankénti és vezetőnkénti teljesítmény-pontszám, célkitűzés-kezelés és hat havi trend &ndash; ugyanabból az adatból, ami az operatív munkavégzés során amúgy is keletkezik. Nincs külön adatbekérés.</p></div><div class="meta"><div class="m"><div class="lbl">Látókör</div><div class="val">Minden felügyelt biztonsági vezető és irodaházaik</div></div><div class="m"><div class="lbl">Kulcsmodul</div><div class="val">Teljesítmény-irányítópult és célkitűzés</div></div><div class="m"><div class="lbl">Riport-ciklus</div><div class="val">Élő, visszamenőleg 6 hónap</div></div></div><div class="section"><h2><span class="num">01</span>Amiről ma nincs adata</h2><p class="lead">Nem a döntéseivel van baj, hanem azzal, hogy mikor kap hozzá információt.</p><div class="grid rowgap"><div class="cell"><div class="card pain"><h3><span class="mk">&#9642;</span>A vezetők összehasonlítása</h3><p>Öt biztonsági vezetője van. Melyik teljesít jobban? A válasz ma abból áll, hogy ki panaszkodik ritkábban, és kinél nem volt ügyfélpanasz. Ez nem mérés, hanem benyomás.</p></div></div><div class="cell"><div class="card pain"><h3><span class="mk">&#9642;</span>A fluktuáció késése</h3><p>Egy helyszínen elkezdenek kilépni az emberek. Ez ma akkor derül ki, amikor már nem lehet feltölteni a szolgálatot &ndash; jellemzően 2&ndash;3 hónappal a folyamat kezdete után.</p></div></div><div class="cell"><div class="card pain"><h3><span class="mk">&#9642;</span>Az ügyfélpanasz</h3><p>A megbízó felhívja, hogy három hete nem kapott jelentést, és volt egy incidens, amiről Ön nem tudott. Ekkor hallja először &ndash; és a beosztottja ekkor kezd el adatot gyűjteni.</p></div></div></div></div><div class="section"><h2><span class="num">02</span>Amit a vezetői irányítópult ad</h2><div class="grid rowgap"><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Teljesítmény-pontszám &ndash; nyilvános képlettel</h3><p>Irodaházanként: az aktív dolgozók átlagos készültségi szintje (elvégzett kötelező oktatások és vizsgák aránya) <strong>mínusz</strong> a fluktuációs büntetés (az adott hónapban kilépettek aránya). A képlet nyílt és auditálható &ndash; nem fekete doboz. Az eredmény negatív is lehet, és ez szándékos.</p><span class="tag">Teljesítmény modul</span></div></div><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Vezetőnkénti, súlyozott összesítő</h3><p>Minden felügyelt biztonsági vezető névjegykártya-szerű összesítője, a felügyelt irodaházak <strong>létszámmal súlyozott</strong> átlagával &ndash; hogy egy 3 fős helyszín ne torzítsa el ugyanúgy a képet, mint egy 25 fős. Lenyitható irodaházankénti bontással.</p><span class="tag">Vezetői kártyák</span></div></div></div><div class="grid rowgap"><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Célkitűzés &ndash; vezetőre és helyszínre</h3><p>Havi célérték beállítása egy adott biztonsági vezetőre: elvárt oktatottsági százalék és maximális fluktuációs százalék. Cégszinten vagy egy konkrét irodaházra vonatkoztatva &ndash; így a teljesítményről szóló beszélgetés számokra épül, nem benyomásokra.</p><span class="tag">Célkitűzés-kezelés</span></div></div><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Hat havi trend, hónapról hónapra</h3><p>Nem pillanatkép: az elmúlt (alapértelmezetten) hat hónap alakulása, hónapról hónapra számított javulással vagy romlással. Egy rossz hónap nem ítélet, egy hat hónapos lejtmenet viszont beavatkozási pont.</p><span class="tag">Havi riport</span></div></div></div><div class="grid rowgap"><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Nyitott kritikus jegyzőkönyvek</h3><p>A még nem jóváhagyott kárfelvételi, bombariadó- és kiürítési jegyzőkönyvek listája &ndash; mobil nézetben az irányítópult tetején, heti incidens-trenddel és élő jelenlét-számlálóval. A panasz előtt látja, nem utána.</p><span class="tag">Dokumentumok</span></div></div><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Teljes körű Vezénylés-hozzáférés</h3><p>Minden felügyelt terület beosztása, pótlás-kijelölés, változásnapló és Excel-import &ndash; ha egy vezetője kiesik vagy szabadságon van, Ön azonnal át tudja venni a területet, nem kell átadás-átvételre várni.</p><span class="tag">Vezénylés modul</span></div></div></div></div><div class="section"><h2><span class="num">03</span>Ami ebből mérhetővé válik</h2><div class="facts"><div class="f"><span class="big">6</span><span class="cap">hónap visszamenőleges trend, hónapról hónapra számított változással</span></div><div class="f"><span class="big">2</span><span class="cap">célérték vezetőnként: oktatottsági % és maximális fluktuációs %</span></div><div class="f"><span class="big">0</span><span class="cap">külön adatbekérés &ndash; a mutatók az operatív munkából keletkeznek</span></div></div></div><div class="section"><h2><span class="num">04</span>A jogköre és a mutató korlátai &ndash; nyíltan</h2><p class="lead">Egy kontrolling-eszköz akkor használható, ha a határai is ismertek.</p><ul class="mods"><li><b>Amit mér</b> &mdash; készültségi szint (oktatás/vizsga-teljesítés) és fluktuáció. Ez a két mutató az, ami a rendszerben objektíven és manipulációmentesen keletkezik.</li><li><b>Amit NEM mér</b> &mdash; ügyfél-elégedettséget, incidens-kezelési minőséget vagy szubjektív vezetői kvalitást. A pontszám a vezetői beszélgetés kiindulópontja, nem a végeredménye.</li><li><b>Miért lehet negatív</b> &mdash; ha egy hónapban a kilépések aránya meghaladja a készültségi szintet, a pontszám negatívba fordul &ndash; ez tudatosan éles jelzés, nem hiba.</li><li><b>Adminisztrátori szintű jogkör</b> &mdash; teljesítmény-áttekintés, célkitűzés, havi riportok, teljes Vezénylés-hozzáférés, AI-tudásbázis feltöltés és forrásmegjelölés, minden dokumentum megtekintése.</li><li><b>Amit nem lát</b> &mdash; ellenőrzési előzményeket, CSV-exportot és aktivitásnaplót &ndash; ezek adminisztrátori, illetve ingatlankezelői jogkörök.</li></ul></div><div class="section"><div class="quote"><strong>Amiért a képlet nyílt:</strong> egy teljesítménymutató, amit a mért fél nem tud levezetni, nem motivál &ndash; csak gyanút kelt. Itt minden vezetője pontosan tudja, mit kell tennie a javításért: képzést befejeztetni és embert megtartani. Mindkettő valódi vezetői munka.</div></div><div class="section"><h2><span class="num">05</span>Megtérülés &ndash; a fluktuáció korai észlelésének értéke</h2><p class="lead">A modell 40 helyszínt és helyszínenként átlagosan 3 fő állandó állományt feltételez (120 fő).</p><div class="roi"><table><thead><tr><th>Tétel</th><th>Érték</th><th>Levezetés</th></tr></thead><tbody><tr><td>Egy kilépő munkatárs pótlásának teljes költsége</td><td class="num">180 000 Ft</td><td class="note">toborzás + oktatás + betanulási kiesés + túlóra-fedezés</td></tr><tr><td>Éves kilépés 50%-os iparági fluktuációnál</td><td class="num">60 fő / év</td><td class="note">120 fő állomány</td></tr><tr><td>Éves fluktuációs költség ma</td><td class="num">10 800 000 Ft</td><td class="note">60 &times; 180 000 Ft</td></tr><tr><td>Korai észleléssel elért javulás (50% &rarr; 42%)</td><td class="num">&minus;9,6 fő / év</td><td class="note">8 százalékpont, konzervatív becslés</td></tr><tr><td>Éves megtakarítás a fluktuáción</td><td class="num">1 728 000 Ft</td><td class="note">9,6 &times; 180 000 Ft</td></tr><tr><td>Vezetői kontrolling-idő (riportgyűjtés, egyeztetés)</td><td class="num">+1 440 000 Ft</td><td class="note">20 óra/hó &times; 12 &times; 6 000 Ft igazgatói önköltség</td></tr><tr class="sum"><td>Kimutatható éves haszon &ndash; kizárólag ezen a két tételen</td><td class="num">3 168 000 Ft / év</td><td class="note">2,2 helyszín teljes éves platformdíja</td></tr></tbody></table></div><p class="assump"><strong>Számítási alap:</strong> 40 helyszín &times; 120 000 Ft/hó = 57,6 MFt/év teljes platformdíj. A fenti 3,17 MFt <em>kizárólag</em> a fluktuációs és kontrolling-oldalt fedi &ndash; az operatív megtakarítás (biztonsági vezetőnként 25 óra/hó), a kárvita-kockázat és az árbevételi oldal a tulajdonosi adatlapon szerepel. Minden érték iparági becslés, saját adattal felülírandó.</p></div><div class="cta"><h3>Amit javaslok: mérjünk visszamenőlegesen, ne előre</h3><p>A rendszer értékét nem az mutatja meg, hogy mit ígér, hanem hogy a múltbeli adataira ráillesztve mit mutatott volna ki időben.</p><ul><li><strong>Retrospektív teszt:</strong> adja meg két helyszín elmúlt 6 havi belépési/kilépési és képzési adatát. Kiszámoljuk a pontszámot visszamenőleg, és megnézzük, hogy a mutató jelezte-e a problémát, mielőtt Ön értesült róla.</li><li><strong>Ha jelezte:</strong> tudjuk, mennyi lett volna a reakcióidő-nyereség &ndash; és ez az egyetlen érv, ami ebben a pozícióban számít.</li><li><strong>Ha nem jelezte:</strong> azt is megmondjuk, és megbeszéljük, milyen mutatóra van valójában szüksége. Ez sem üres kör.</li><li><strong>Időigény:</strong> 1 óra adategyeztetés, 1 óra közös kiértékelés.</li></ul></div><div class="footer"><span class="brand">KulcsNyilv&aacute;ntart&oacute; Platform</span> &nbsp;&middot;&nbsp; T&ouml;bb c&eacute;get kiszolg&aacute;l&oacute; biztons&aacute;gi l&eacute;tes&iacute;tm&eacute;nygazd&aacute;lkod&aacute;si &eacute;s &odblac;rszolg&aacute;lat-ir&aacute;ny&iacute;t&aacute;si rendszer (PWA + nat&iacute;v Android/iOS)<br>Adatlap: <strong>Területi igazgató</strong> &nbsp;&middot;&nbsp; List&aacute;s d&iacute;j: <span class="price">120 000 Ft / helyszín / hó</span> &nbsp;&middot;&nbsp; Regionális vezetői adatlap &ndash; a teljes ROI-levezetés a tulajdonosi lapon.</div></body></html>

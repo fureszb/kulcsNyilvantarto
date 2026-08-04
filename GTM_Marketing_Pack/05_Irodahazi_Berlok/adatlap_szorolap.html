@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Irodaházi bérlő &ndash; KulcsNyilvantarto Platform</title><style>
+@page {
+    size: A4;
+    margin: 12mm 12mm 13mm 12mm;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 9.2pt;
+    line-height: 1.45;
+    color: #334155;
+    background: #ffffff;
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 700; color: #0f172a; }
+p { margin: 0 0 6pt; }
+strong { color: #0f172a; font-weight: 700; }
+
+/* ---------- Fejléc ---------- */
+.hero {
+    background: #0f172a;
+    color: #ffffff;
+    padding: 13pt 15pt 14pt;
+    border-radius: 6pt;
+    border-left: 5pt solid #059669;
+}
+.hero .kicker {
+    font-size: 6.9pt;
+    letter-spacing: 1.5pt;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #6ee7b7;
+    margin-bottom: 5pt;
+}
+.hero h1 {
+    color: #ffffff;
+    font-size: 17.5pt;
+    line-height: 1.18;
+    letter-spacing: -0.35pt;
+    margin-bottom: 5pt;
+}
+.hero .sub {
+    color: #cbd5e1;
+    font-size: 9.4pt;
+    line-height: 1.45;
+    margin: 0;
+    max-width: 155mm;
+}
+
+/* ---------- Meta sáv ---------- */
+.meta {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    border-spacing: 5pt 0;
+    margin: 7pt 0 0;
+}
+.meta .m {
+    display: table-cell;
+    vertical-align: top;
+    background: #f1f5f9;
+    border: 0.6pt solid #e2e8f0;
+    border-top: 2pt solid #059669;
+    border-radius: 4pt;
+    padding: 6pt 7pt;
+}
+.meta .m .lbl {
+    font-size: 6.6pt;
+    letter-spacing: 0.8pt;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 700;
+    margin-bottom: 2pt;
+}
+.meta .m .val { font-size: 8.6pt; color: #0f172a; font-weight: 600; line-height: 1.3; }
+
+/* ---------- Szekciók ---------- */
+.section { margin-top: 12pt; }
+.section > h2 {
+    font-size: 11pt;
+    letter-spacing: -0.15pt;
+    padding-bottom: 3.5pt;
+    border-bottom: 1.6pt solid #059669;
+    margin-bottom: 7pt;
+}
+.section > h2 .num {
+    display: inline-block;
+    color: #059669;
+    font-size: 9pt;
+    margin-right: 5pt;
+    font-variant-numeric: tabular-nums;
+}
+.lead { font-size: 9pt; color: #64748b; margin: -3pt 0 7pt; }
+
+/* ---------- Kártyarács (table-alapú, WeasyPrint-biztos) ---------- */
+.grid { display: table; width: 100%; table-layout: fixed; border-spacing: 5pt 0; }
+.grid .cell { display: table-cell; vertical-align: top; }
+.grid.rowgap { margin-bottom: 5pt; }
+
+.card {
+    background: #ffffff;
+    border: 0.7pt solid #e2e8f0;
+    border-radius: 5pt;
+    padding: 7.5pt 8.5pt;
+    page-break-inside: avoid;
+    height: 100%;
+}
+.card h3 {
+    font-size: 9.2pt;
+    margin-bottom: 3pt;
+    line-height: 1.25;
+}
+.card p { font-size: 8.5pt; color: #334155; margin: 0; line-height: 1.42; }
+.card .tag {
+    display: inline-block;
+    margin-top: 5pt;
+    font-size: 6.8pt;
+    letter-spacing: 0.5pt;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #047857;
+    background: #ecfdf5;
+    border: 0.6pt solid #059669;
+    border-radius: 20pt;
+    padding: 1.6pt 6pt;
+}
+
+/* Fájdalompont-kártya */
+.card.pain { background: #f8fafc; border-color: #fecaca; border-left: 2.6pt solid #dc2626; }
+.card.pain h3 { color: #991b1b; }
+.card.pain h3 .mk { color: #dc2626; margin-right: 3pt; }
+
+/* Megoldás-kártya */
+.card.fix { border-left: 2.6pt solid #059669; }
+.card.fix h3 .mk { color: #059669; margin-right: 3pt; }
+
+/* ---------- Számsáv ---------- */
+.facts { display: table; width: 100%; table-layout: fixed; border-spacing: 5pt 0; margin-top: 3pt; }
+.facts .f {
+    display: table-cell;
+    vertical-align: top;
+    text-align: center;
+    background: #0f172a;
+    border-radius: 5pt;
+    padding: 9pt 6pt 8pt;
+    page-break-inside: avoid;
+}
+.facts .f .big {
+    display: block;
+    font-size: 17pt;
+    font-weight: 800;
+    color: #6ee7b7;
+    letter-spacing: -0.6pt;
+    line-height: 1;
+    margin-bottom: 3.5pt;
+}
+.facts .f .cap { font-size: 7.6pt; color: #cbd5e1; line-height: 1.35; display: block; }
+
+/* ---------- Modul-lista ---------- */
+.mods { margin: 0; padding: 0; list-style: none; }
+.mods li {
+    padding: 4.6pt 0 4.6pt 15pt;
+    border-bottom: 0.6pt solid #e2e8f0;
+    font-size: 8.6pt;
+    position: relative;
+    page-break-inside: avoid;
+}
+.mods li:last-child { border-bottom: none; }
+.mods li:before {
+    content: "\25B8";
+    position: absolute;
+    left: 3pt;
+    top: 4.4pt;
+    color: #059669;
+    font-size: 8.5pt;
+}
+.mods li b { color: #0f172a; }
+
+/* ---------- ROI tábla ---------- */
+.roi {
+    border: 0.8pt solid #e2e8f0;
+    border-radius: 5pt;
+    overflow: hidden;
+    page-break-inside: avoid;
+}
+.roi table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+.roi th {
+    background: #0f172a;
+    color: #ffffff;
+    text-align: left;
+    font-size: 7.2pt;
+    letter-spacing: 0.7pt;
+    text-transform: uppercase;
+    padding: 5.5pt 8pt;
+    font-weight: 700;
+}
+.roi td { padding: 5.2pt 8pt; border-top: 0.6pt solid #e2e8f0; vertical-align: top; }
+.roi tr:nth-child(even) td { background: #f8fafc; }
+.roi td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 600; color: #0f172a; }
+.roi td.note { color: #64748b; font-size: 7.8pt; }
+.roi tr.sum td {
+    background: #ecfdf5 !important;
+    border-top: 1.4pt solid #059669;
+    font-weight: 700;
+    color: #047857;
+}
+.assump { font-size: 7.4pt; color: #64748b; margin: 5pt 0 0; line-height: 1.4; }
+
+/* ---------- CTA ---------- */
+.cta {
+    margin-top: 12pt;
+    background: #ecfdf5;
+    border: 0.8pt solid #059669;
+    border-left: 4pt solid #059669;
+    border-radius: 5pt;
+    padding: 10pt 12pt;
+    page-break-inside: avoid;
+}
+.cta h3 { font-size: 10.5pt; color: #047857; margin-bottom: 4pt; }
+.cta p { font-size: 8.8pt; margin-bottom: 5pt; }
+.cta ul { margin: 0; padding-left: 13pt; }
+.cta li { font-size: 8.6pt; margin-bottom: 2.6pt; }
+
+/* ---------- Idézet ---------- */
+.quote {
+    border-left: 2.6pt solid #059669;
+    background: #f8fafc;
+    padding: 7pt 10pt;
+    border-radius: 0 4pt 4pt 0;
+    font-size: 8.8pt;
+    color: #334155;
+    page-break-inside: avoid;
+}
+
+/* ---------- Lábléc ---------- */
+.footer {
+    margin-top: 13pt;
+    padding-top: 6pt;
+    border-top: 0.8pt solid #e2e8f0;
+    font-size: 7.2pt;
+    color: #64748b;
+    line-height: 1.45;
+}
+.footer .brand { color: #0f172a; font-weight: 700; }
+.footer .price { color: #047857; font-weight: 700; }
+
+.pagebreak { page-break-before: always; }
+</style></head><body><div class="hero"><div class="kicker">Bérlői tájékoztató &middot; Szolgáltatási szint</div><h1>A kulcsaik, a talált tárgyak és a tűzriadó &ndash; mindegyikről aláírt dokumentum készül.</h1><p class="sub">Az épület biztonsági szolgálata digitális nyilvántartásra áll át. Bérlőként ez azt jelenti, hogy a korábban szóban vagy füzetben elintézett ügyekből visszakereshető, aláírt jegyzőkönyvek lesznek.</p></div><div class="meta"><div class="m"><div class="lbl">Kinek szól</div><div class="val">Bérlői kapcsolattartó, irodavezető</div></div><div class="m"><div class="lbl">Amit tenni kell</div><div class="val">Semmit &ndash; az üzemeltető és a szolgálat vezeti be</div></div><div class="m"><div class="lbl">Ami változik</div><div class="val">Bizonyíthatóság kulcs-, kár- és kiürítési ügyekben</div></div></div><div class="section"><h2><span class="num">01</span>Amit ma nem lehet visszakeresni</h2><p class="lead">Nem gyakori helyzetek &ndash; de amikor előfordulnak, nagy a tét.</p><div class="grid rowgap"><div class="cell"><div class="card pain"><h3><span class="mk">&#9642;</span>&bdquo;Kinél van a kulcsunk?&rdquo;</h3><p>A tartalék irodakulcsot évekkel ezelőtt leadták a portán. Hogy azóta ki vette fel és mikor adta vissza, arról egy kézzel vezetett füzet szól &ndash; ha egyáltalán megvan.</p></div></div><div class="cell"><div class="card pain"><h3><span class="mk">&#9642;</span>A tűzriadó utáni kérdés</h3><p>Kiürítés volt. Bent maradt-e valaki az Önök területéről? Ki volt a tűzvédelmi felelős? Ez ma szóban hangzik el a gyülekezőhelyen, és sehol nem rögzül.</p></div></div><div class="cell"><div class="card pain"><h3><span class="mk">&#9642;</span>A kárügy bizonyítéka</h3><p>Egy takarítás vagy költöztetés során kár keletkezik. A biztosítói kárrendezéshez jegyzőkönyv kell, tanúval, aláírással, pontos időintervallummal &ndash; napokkal később már nem rekonstruálható.</p></div></div></div></div><div class="section"><h2><span class="num">02</span>Amit ezután kap &ndash; kérés nélkül</h2><div class="grid rowgap"><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Kulcs- és kártyaátadás, aláírással</h3><p>Minden kiadás és visszavétel dokumentálva: azonosító, cég/munkahely, kiadás és visszavétel időpontja, a felvevő igazolványszáma. Három aláírás &ndash; felvevő, leadó, visszavevő &ndash; a PDF-be ágyazva.</p><span class="tag">Jegyzőkönyv-típus</span></div></div><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Bérlőnkénti kiürítési nyilvántartás</h3><p>Tűzriadó vagy kiürítés esetén az Önök cége külön tételként rögzül: bent maradt-e valaki, és ki volt a tűzvédelmi felelős &ndash; az ő aláírásával. Ez az a dokumentum, amit egy hatósági vizsgálat kér.</p><span class="tag">Jegyzőkönyv-típus</span></div></div></div><div class="grid rowgap"><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Kárfelvételi jegyzőkönyv, teljes adattartalommal</h3><p>Esemény időintervalluma, helyszín, tárgy, a károkozó teljes azonosító adatai, tanú, eseményleírás, és hogy beismerte-e. Aláírja a károkozó, a biztonsági szolgálat és a képviselő. Biztosítói kárrendezéshez használható formában, azonnal.</p><span class="tag">Jegyzőkönyv-típus</span></div></div><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Talált tárgy nyilvántartás</h3><p>A megtalált tárgy leírása, az észlelés helye és ideje, kiadáskor pedig az átvevő teljes adatlapja és aláírása. Nincs többé &bdquo;valaki elvitte a portáról&rdquo; helyzet.</p><span class="tag">Jegyzőkönyv-típus</span></div></div></div><div class="grid rowgap"><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Gépjármű beléptető napló</h3><p>A telephelyre belépő és kilépő járművek naplózása rendszámmal, céggel, be- és kilépési időponttal &ndash; szállítmány- vagy parkolási vita esetén visszakereshető.</p><span class="tag">Jegyzőkönyv-típus</span></div></div><div class="cell"><div class="card fix"><h3><span class="mk">&#9679;</span>Igazolt bejárás az Önök szintjén is</h3><p>A szolgálat a folyosókon elhelyezett NFC-matricákat olvassa be. Ha felmerül a kérdés, hogy hajnalban járt-e ott őr, az üzemeltető időbélyeges listával tud válaszolni &ndash; nem emlékezetből.</p><span class="tag">NFC-checkpoint</span></div></div></div></div><div class="section"><h2><span class="num">03</span>A költségoldal &ndash; hogy arányában lássa</h2><div class="facts"><div class="f"><span class="big">6 667 Ft</span><span class="cap">a rendszer havi díjának egy bérlőre eső része egy 18 bérlős irodaházban</span></div><div class="f"><span class="big">&lt; 0,3%</span><span class="cap">ugyanez egy 400 m&sup2;-es iroda havi bérleti díjához viszonyítva</span></div><div class="f"><span class="big">10</span><span class="cap">jogilag strukturált jegyzőkönyv-típus, aláírt PDF-ként azonnal letölthető</span></div></div></div><div class="section"><h2><span class="num">04</span>Amit érdemes az üzemeltetőtől kérnie</h2><p class="lead">A rendszert nem Ön rendeli meg &ndash; de Ön tudja kikötni, hogy mit lásson belőle.</p><ul class="mods"><li><b>Másolatot minden Önöket érintő jegyzőkönyvről</b> &mdash; kulcsátadás, kárfelvétel, talált tárgy, kiürítési nyilvántartás &ndash; PDF-ként, az esemény napján, nem hónap végén.</li><li><b>A kiürítési nyilvántartás bérlői sorát</b> &mdash; tűzvédelmi felelősük nevével és aláírásával &ndash; ez az Önök tűzvédelmi dokumentációjának is része.</li><li><b>Bejárás-igazolást vitás esetben</b> &mdash; az Önök szintjén elhelyezett checkpont időbélyeges beolvasási listáját &ndash; nem folyamatosan, hanem konkrét kérdésre.</li><li><b>Kulcsnyilvántartás-kivonatot</b> &mdash; évente egyszer: mely kulcsaik és kártyáik vannak a portán nyilvántartva, és azok legutóbbi ellenőrzésének eredménye.</li><li><b>Amit NEM kérhet</b> &mdash; az őrszolgálat beosztását, GPS-pozícióit vagy belső teljesítménymutatóit &ndash; ezek a szolgáltató munkajogi és üzleti adatai.</li></ul></div><div class="section"><div class="quote"><strong>A lényeg röviden:</strong> Önöknek ebből nem lesz többletfeladata. Az egyetlen változás az, hogy ami eddig szóban vagy egy füzetben történt, az ezután aláírt PDF-ként keletkezik &ndash; és fél év múlva is előkereshető, amikor a biztosító vagy egy hatóság kérdez.</div></div><div class="cta"><h3>Amit a bérlői kapcsolattartótól kérünk</h3><p>A bevezetéshez az Önök oldaláról összesen három adat kell:</p><ul><li><strong>A tűzvédelmi felelősük neve és elérhetősége</strong> &ndash; hogy a kiürítési nyilvántartásban az Önök sora előre kitöltve, a megfelelő aláíróval jelenjen meg.</li><li><strong>A jelenleg a portán tárolt kulcsaik és kártyáik listája</strong> &ndash; az induló leltár összevetéséhez. Ha eltérés van, azt most a legolcsóbb tisztázni.</li><li><strong>Egy e-mail-cím</strong>, ahová az Önöket érintő jegyzőkönyvek másolata automatikusan megy.</li><li>Ezt az üzemeltetőnek vagy a biztonsági szolgálat vezetőjének küldje &ndash; a beállítást ők végzik el.</li></ul></div><div class="footer"><span class="brand">KulcsNyilv&aacute;ntart&oacute; Platform</span> &nbsp;&middot;&nbsp; T&ouml;bb c&eacute;get kiszolg&aacute;l&oacute; biztons&aacute;gi l&eacute;tes&iacute;tm&eacute;nygazd&aacute;lkod&aacute;si &eacute;s &odblac;rszolg&aacute;lat-ir&aacute;ny&iacute;t&aacute;si rendszer (PWA + nat&iacute;v Android/iOS)<br>Adatlap: <strong>Irodaházi bérlő</strong> &nbsp;&middot;&nbsp; List&aacute;s d&iacute;j: <span class="price">120 000 Ft / helyszín / hó</span> &nbsp;&middot;&nbsp; Bérlői tájékoztató &ndash; a rendszert az épület üzemeltetője vezeti be.</div></body></html>
