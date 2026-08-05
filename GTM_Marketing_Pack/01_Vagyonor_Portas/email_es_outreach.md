@@ -21,41 +21,28 @@
 
 Kedves Kollégák!
 
-A következő hetekben bevezetünk egy rendszert, amivel az eddigi papíralapú
-adminisztráció nagy része a telefonotokon fog elkészülni. Mielőtt bárki azt gondolná,
-hogy ez plusz feladat: **pont az ellenkezője a cél.**
+A következő hetekben bevezetünk egy rendszert, amivel az eddigi papírmunka nagy része
+a telefonotokon fog elkészülni. Mielőtt bárki azt gondolná, hogy ez plusz feladat:
+**pont az ellenkezője a cél.**
 
-**Ahogy most megy.** Az átadás-átvételi füzetet kézzel vezetitek. Egy kárfelvételi
-jegyzőkönyv 20&ndash;30 perc kézírás, aláírásokkal, másolással. A beosztást telefonon
-egyeztetitek. És ha valaki utólag megkérdőjelezi, hogy a bejárás megtörtént-e,
-nincs mit felmutatni.
+Egy kárfelvételi jegyzőkönyv ma 20&ndash;30 perc kézírás, aláírásokkal és iktatással.
+Ezután űrlapon töltitek ki, az aláírásokat a képernyőn gyűjtitek be, a PDF magától
+elkészül: 6&ndash;8 perc. A bejárást a checkpontra tett NFC-matricához érintett
+telefonnal igazoljátok &ndash; három másodperc. A beosztásban a saját sorotokba
+beírhatjátok, hogy nem értek rá vagy hogy vállaltok túlórát; nem kell telefonálni.
 
-**Ahogy ezután megy.** A kulcsellenőrzésnél a teljes tétellistát látjátok bérlő szerinti
-csoportban, egyenként pipálva &ndash; a hiányzó tétel nem "kimarad", hanem megjegyzéssel
-rögzül, és az értesítő e-mail automatikusan kimegy. A bejárást a checkpontra tett
-NFC-matricához érintett telefonnal igazoljátok: három másodperc. A jegyzőkönyvet
-űrlapon töltitek ki, az aláírásokat a képernyőn gyűjtitek be, a PDF magától elkészül.
-A beosztásban a saját sorotokba beírhatjátok, hogy nem értek rá, hogy bizonytalan,
-vagy hogy vállaltok túlórát.
+**Amit előre tisztázok, mert tudom, hogy felmerül:**
 
-**Amit előre tisztázni akarok, mert tudom, hogy felmerül:**
-
-- A **GPS csak szolgálat alatt** fut, és a zóna elhagyását/visszatérését jelzi &ndash;
-  nem az útvonalatokat követi. A GPS-pontatlanság miatti téves riasztás ellen a rendszer
-  csak három egymást követő jelzés után lép.
+- A **GPS csak szolgálat alatt** fut, és a zóna elhagyását jelzi &ndash; nem az
+  útvonalatokat követi. Téves riasztás ellen csak három egymást követő jelzés után lép.
 - Az **aláírásképetek** a szerveren kizárólag a PDF elkészültéig létezik, utána
-  véglegesen törlődik. Csak a kész dokumentumba ágyazva marad meg.
-- **Térerő nélkül is működik:** a beolvasás eltárolódik és magától elmegy, amikor
-  visszajön a kapcsolat &ndash; duplikáció nélkül.
+  véglegesen törlődik.
+- **Térerő nélkül is működik:** a beolvasás eltárolódik és magától elmegy, duplikáció nélkül.
 
-A lényeg, amiért ezt csináljuk: **minden elvégzett munkátok névvel és időbélyeggel
-rögzül.** Ha egy vitatott ügyben rátok mutatnak, ez a rendszer mellettetek szól.
+A lényeg, amiért csináljuk: **minden elvégzett munkátok névvel és időbélyeggel rögzül.**
+Ha egy vitatott ügyben rátok mutatnak, ez a rendszer mellettetek szól.
 
-A bevezetés első hetében a papírfüzetet párhuzamosan vezetjük, hogy senki ne maradjon
-adat nélkül. Betanulás: egy kb. 20 perces oktatási modul a rendszerben.
-
-Kérdéseket a szolgálatvezetőnek, vagy közvetlenül a beépített AI-asszisztensnek
-tehettek fel &ndash; az a cég saját szabályzataiból válaszol.
+Az első héten a papírfüzet párhuzamosan megy. Betanulás: egy kb. 20 perces oktatási modul.
 
 Üdvözlettel,
 [Név] &ndash; [Beosztás]
@@ -80,22 +67,3 @@ Nem kell hosszan indokolni, elég egy mondat válaszban.
 [Név]
 
 ---
-
-## Kifogáskezelési útmutató (belső &ndash; szolgálatvezetőnek)
-
-| Amit mondanak | Ami mögötte van | Ahogy érdemes válaszolni |
-|---|---|---|
-| "Ez megfigyelés, követnek minket." | Bizalmatlanság, félelem a fegyelmi következményektől. | "A rendszer nem útvonalat rögzít, hanem zóna-be- és kilépést, csak szolgálat alatt. Amit rögzít, az ugyanaz, amit eddig is le kellett írnod a füzetbe &ndash; csak most nem lehet elveszíteni és nem lehet rád fogni." |
-| "Nem értek a telefonhoz." | Valós kompetencia-szorongás, gyakran idősebb kollégáknál. | Ne érveljünk: mutassuk meg. Egy NFC-scan és egy kulcsellenőrzés élőben, a saját telefonján, két perc alatt. Ez a kifogás demóval szűnik meg, magyarázattal nem. |
-| "Több munka lesz, nem kevesebb." | Korábbi rossz tapasztalat bevezetett rendszerekkel. | Konkrét összehasonlítás: kárfelvételi jegyzőkönyv kézzel 20&ndash;30 perc + iktatás, űrlapon 6&ndash;8 perc + azonnali PDF. Ajánljuk fel, hogy az első héten párhuzamosan megy a papír &ndash; így maga méri le. |
-| "Nincs térerő a garázsszinten / a lépcsőházban." | Jogos üzemeltetési aggály. | "Az offline sor pontosan erre készült: a beolvasás a telefonon vár, és magától elmegy, amikor visszajön a jel. Kétszer nem küldi el." |
-| "Ha elromlik a telefon / lemerül, akkor mi van?" | Felelősségi kérdés. | Tisztázzuk előre az eljárásrendet: kiesés esetén a papíralapú vészforgatókönyv él, és a bejegyzés utólag pótolható. Ezt a szolgálati utasításban is rögzítsük. |
-| "Miért kell nekem vizsgázni?" | Az oktatási modult ellenőrzésként éli meg. | "A vizsgaeredmény a te oldaladon is bizonyíték: dokumentálja, hogy megkaptad a felkészítést. Egy incidens utáni kivizsgálásnál ez téged véd." |
-
----
-
-## Beszélgetés-nyitók (műszakértekezletre)
-
-- "Volt olyan, hogy utólag kellett igazolnod, hogy megcsináltál valamit &ndash; és nem tudtad?"
-- "Mennyi időt viszel el egy hónapban a papírmunka? Nem azt kérdezem, hány jegyzőkönyv, hanem hogy hány óra."
-- "Ha holnap eltűnik egy kulcs, kinél kezdenék a keresést &ndash; és ki tudná bizonyítani, hogy nem nála van?"

@@ -1,10 +1,17 @@
 # GTM Marketing Pack &ndash; KulcsNyilvántartó Platform
 
-Szerepkörönkénti értékesítési csomag. Minden mappa két fájlt tartalmaz:
+Szerepkörönkénti értékesítési csomag. Minden mappa három fájlt tartalmaz:
 
-- `email_es_outreach.md` &ndash; 3 tárgymező-variáció, fő e-mail, követő e-mail,
-  kifogáskezelési útmutató, beszélgetés-nyitók.
+- `email_es_outreach.md` &ndash; **ügyfélnek küldhető**: 3 tárgymező-variáció,
+  fő e-mail (150&ndash;250 szó), követő e-mail.
+- `BELSO_kifogaskezeles.md` &ndash; **ügyfélnek NEM továbbítható**: kifogáskezelési
+  útmutató és beszélgetés-nyitók. A másik fél feltételezett motivációit elemzi;
+  ha ügyfél kezébe kerül, a kapcsolatot rontja.
 - `adatlap_szorolap.html` &ndash; A4-es, nyomdakész adatlap (CSS Paged Media, 12 mm margó).
+
+A két markdown fájl szétválasztása a generátorban automatikus (`split_outreach`),
+a `## Kifogáskezelési útmutató` címsornál vág. Új szerepkör felvételekor ezt a
+címsort kell használni, különben a belső rész az ügyfélnek küldhető fájlban marad.
 
 ## Mappák
 

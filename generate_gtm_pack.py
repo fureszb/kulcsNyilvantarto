@@ -59,8 +59,8 @@ body {
     margin: 0;
     padding: 0;
     font-family: "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-    font-size: 9.2pt;
-    line-height: 1.45;
+    font-size: __BASE__;
+    line-height: 1.5;
     color: __BODY__;
     background: #ffffff;
 }
@@ -302,9 +302,14 @@ strong { color: __INK__; font-weight: 700; }
 
 
 def build_css(p):
-    """Persona-akcentre szabott stíluslap."""
+    """Persona-akcentre szabott stíluslap.
+
+    A `base` kulccsal a szerepkör felülírhatja az alap betűméretet: az operatív
+    (nem irodai) olvasóknak szánt lapok nagyobb törzsbetűvel készülnek.
+    """
     return (
-        CSS.replace("__CHROME__", BRAND["chrome"])
+        CSS.replace("__BASE__", p.get("base", "9.2pt"))
+        .replace("__CHROME__", BRAND["chrome"])
         .replace("__ACCENT_LIGHT__", p.get("accent_light", BRAND["accent_light"]))
         .replace("__ACCENT_SOFT__", p["accent_soft"])
         .replace("__ACCENT_DARK__", p["accent_dark"])
@@ -421,17 +426,19 @@ def render_flyer(p):
     if p.get("quote"):
         parts.append('<div class="section"><div class="quote">%s</div></div>' % p["quote"])
 
-    if p.get("roi"):
-        parts.append(render_section(
-            "%02d" % n, p["roi"]["title"], render_roi(p["roi"]), p["roi"].get("lead")
-        ))
-        n += 1
-
+    # A CTA tudatosan a ROI-tábla ELŐTT áll: a döntési kérés ne az utolsó oldal
+    # aljára, a számsorok mögé kerüljön.
     cta_items = "".join("<li>%s</li>" % b for b in p["cta"]["bullets"])
     parts.append(
         '<div class="cta"><h3>%s</h3><p>%s</p><ul>%s</ul></div>'
         % (p["cta"]["h"], p["cta"]["p"], cta_items)
     )
+
+    if p.get("roi"):
+        parts.append(render_section(
+            "%02d" % n, p["roi"]["title"], render_roi(p["roi"]), p["roi"].get("lead")
+        ))
+        n += 1
 
     parts.append(
         '<div class="footer"><span class="brand">KulcsNyilv&aacute;ntart&oacute; Platform</span> '
@@ -462,8 +469,9 @@ P1 = {
     "accent_dark": "#0f766e",
     "accent_soft": "#f0fdfa",
     "accent_light": "#5eead4",
+    "base": "10.2pt",
     "kicker": "Munkatársi tájékoztató &middot; Operatív szint",
-    "title": "A telefonod lesz az átadás-átvételi füzet, a jegyzőkönyv és a beosztás.",
+    "title": "Ha valaki utólag rád kérdez, lesz mit felmutatnod.",
     "subtitle": "Nem több adminisztráció &ndash; kevesebb. Ami eddig papíron ment, az "
                 "másodpercek alatt elvégezhető művelet lesz, és minden elvégzett munkád "
                 "névvel és időbélyeggel, visszakereshetően rögzül. Ez elsősorban téged véd.",
@@ -514,7 +522,7 @@ P1 = {
     "facts_title": "Amit ez időben jelent",
     "facts": [
         ("3 mp", "egy NFC-checkpoint beolvasása a papíralapú bejárási lap kitöltése helyett"),
-        ("0 perc", "iktatás &ndash; a jegyzőkönyv PDF-ként azonnal elkészül és letölthető"),
+        ("6&ndash;8 perc", "egy kárfelvételi jegyzőkönyv kitöltése a korábbi 20&ndash;30 perc helyett"),
         ("100", "a legutóbbi 100 beolvasásod visszakereshető az NFC-előzményekben"),
     ],
     "mods_title": "Amit fontos tudnod &ndash; őszintén",
@@ -581,41 +589,28 @@ P1_EMAIL = """# Vagyonőr / Portás &ndash; belső bevezetési kommunikáció
 
 Kedves Kollégák!
 
-A következő hetekben bevezetünk egy rendszert, amivel az eddigi papíralapú
-adminisztráció nagy része a telefonotokon fog elkészülni. Mielőtt bárki azt gondolná,
-hogy ez plusz feladat: **pont az ellenkezője a cél.**
+A következő hetekben bevezetünk egy rendszert, amivel az eddigi papírmunka nagy része
+a telefonotokon fog elkészülni. Mielőtt bárki azt gondolná, hogy ez plusz feladat:
+**pont az ellenkezője a cél.**
 
-**Ahogy most megy.** Az átadás-átvételi füzetet kézzel vezetitek. Egy kárfelvételi
-jegyzőkönyv 20&ndash;30 perc kézírás, aláírásokkal, másolással. A beosztást telefonon
-egyeztetitek. És ha valaki utólag megkérdőjelezi, hogy a bejárás megtörtént-e,
-nincs mit felmutatni.
+Egy kárfelvételi jegyzőkönyv ma 20&ndash;30 perc kézírás, aláírásokkal és iktatással.
+Ezután űrlapon töltitek ki, az aláírásokat a képernyőn gyűjtitek be, a PDF magától
+elkészül: 6&ndash;8 perc. A bejárást a checkpontra tett NFC-matricához érintett
+telefonnal igazoljátok &ndash; három másodperc. A beosztásban a saját sorotokba
+beírhatjátok, hogy nem értek rá vagy hogy vállaltok túlórát; nem kell telefonálni.
 
-**Ahogy ezután megy.** A kulcsellenőrzésnél a teljes tétellistát látjátok bérlő szerinti
-csoportban, egyenként pipálva &ndash; a hiányzó tétel nem "kimarad", hanem megjegyzéssel
-rögzül, és az értesítő e-mail automatikusan kimegy. A bejárást a checkpontra tett
-NFC-matricához érintett telefonnal igazoljátok: három másodperc. A jegyzőkönyvet
-űrlapon töltitek ki, az aláírásokat a képernyőn gyűjtitek be, a PDF magától elkészül.
-A beosztásban a saját sorotokba beírhatjátok, hogy nem értek rá, hogy bizonytalan,
-vagy hogy vállaltok túlórát.
+**Amit előre tisztázok, mert tudom, hogy felmerül:**
 
-**Amit előre tisztázni akarok, mert tudom, hogy felmerül:**
-
-- A **GPS csak szolgálat alatt** fut, és a zóna elhagyását/visszatérését jelzi &ndash;
-  nem az útvonalatokat követi. A GPS-pontatlanság miatti téves riasztás ellen a rendszer
-  csak három egymást követő jelzés után lép.
+- A **GPS csak szolgálat alatt** fut, és a zóna elhagyását jelzi &ndash; nem az
+  útvonalatokat követi. Téves riasztás ellen csak három egymást követő jelzés után lép.
 - Az **aláírásképetek** a szerveren kizárólag a PDF elkészültéig létezik, utána
-  véglegesen törlődik. Csak a kész dokumentumba ágyazva marad meg.
-- **Térerő nélkül is működik:** a beolvasás eltárolódik és magától elmegy, amikor
-  visszajön a kapcsolat &ndash; duplikáció nélkül.
+  véglegesen törlődik.
+- **Térerő nélkül is működik:** a beolvasás eltárolódik és magától elmegy, duplikáció nélkül.
 
-A lényeg, amiért ezt csináljuk: **minden elvégzett munkátok névvel és időbélyeggel
-rögzül.** Ha egy vitatott ügyben rátok mutatnak, ez a rendszer mellettetek szól.
+A lényeg, amiért csináljuk: **minden elvégzett munkátok névvel és időbélyeggel rögzül.**
+Ha egy vitatott ügyben rátok mutatnak, ez a rendszer mellettetek szól.
 
-A bevezetés első hetében a papírfüzetet párhuzamosan vezetjük, hogy senki ne maradjon
-adat nélkül. Betanulás: egy kb. 20 perces oktatási modul a rendszerben.
-
-Kérdéseket a szolgálatvezetőnek, vagy közvetlenül a beépített AI-asszisztensnek
-tehettek fel &ndash; az a cég saját szabályzataiból válaszol.
+Az első héten a papírfüzet párhuzamosan megy. Betanulás: egy kb. 20 perces oktatási modul.
 
 Üdvözlettel,
 [Név] &ndash; [Beosztás]
@@ -730,7 +725,7 @@ P2 = {
     "facts": [
         ("10", "jogilag strukturált jegyzőkönyv-típus, aláírt PDF-ként azonnal letölthető"),
         ("&lt; 1 perc", "amíg egy NFC-bejárás vagy geofence-esemény megjelenik a felületén"),
-        ("0", "adminisztratív teher az Ön oldalán &ndash; a rendszert a szolgáltató üzemelteti"),
+        ("Napi", "jelentés jóváhagyással &ndash; a korábbi havi, 2&ndash;3 hetet késő riport helyett"),
     ],
     "mods_title": "Amit a szerepköre szándékosan NEM tartalmaz",
     "mods_lead": "A korlátok nem hiányosságok &ndash; a nyilvántartás hitelességét védik.",
@@ -813,55 +808,34 @@ P2_EMAIL = """# Ingatlankezelő / Property Manager &ndash; értékesítési csom
 
 Kedves [Név]!
 
-Köszönöm a múlt heti bemutatóra szánt időt. Egy dolgot emelnék ki, ami akkor
-elhangzott, de érdemes külön leírni, mert ez a rendszer legfontosabb hozadéka
-az Ön pozíciójából.
+Köszönöm a múlt heti bemutatóra szánt időt. Egy dolgot emelnék ki belőle, mert
+az Ön pozíciójából ez a lényeg.
 
-**A jelenlegi helyzet:** amikor a tulajdonos vagy egy bérlő rákérdez, hogy megtörtént-e
-egy bejárás vagy ki nyúlt egy kulcshoz, Önnek ma két lehetősége van &ndash; elhinni a
-szolgáltató beszámolóját, vagy órákat tölteni kamerafelvétel visszanézésével.
-A havi Word-riport 2&ndash;3 héttel az esemény után érkezik. Ez nem a szolgáltató hibája:
-egyszerűen nincs mit felmutatni, mert az adat papírfüzetben keletkezik.
+Amikor a tulajdonos vagy egy bérlő rákérdez, hogy megtörtént-e egy bejárás, ma két
+lehetősége van: elhinni a szolgáltató beszámolóját, vagy kamerafelvételt visszanézni.
+A havi riport 2&ndash;3 héttel az esemény után érkezik. Ez nem a szolgáltató hibája &ndash;
+nincs mit felmutatni, mert az adat papírfüzetben keletkezik.
 
-**Amit a rendszer ehelyett ad Önnek:** egy saját, csak-olvasási felügyeleti hozzáférést
-a szolgáltató operatív rendszeréhez. Ebben:
+A rendszer erre egy saját, csak-olvasási felügyeleti hozzáférést ad Önnek. Az őr a
+helyszínen elhelyezett matricához érinti a telefonját; minden beolvasás névvel,
+időbélyeggel és checkpont-címkével rögzül, és élőben megjelenik Önnél. A napi
+jelentést &bdquo;átnézve&rdquo; jelöléssel hagyja jóvá, a geofence-riasztás pedig
+a telefonjára érkezik.
 
-- **Az NFC-bejárás nem önbevallás.** Az őr a helyszínen elhelyezett fizikai matricához
-  érinti a telefonját. Minden beolvasás névvel, időbélyeggel és checkpont-címkével
-  ("Hátsó bejárat") rögzül, és élőben, oldalfrissítés nélkül jelenik meg Önnél.
-- **A napi biztonsági jelentést Ön "átnézve" jelöléssel láthatja el.** Ez dokumentált
-  visszacsatolás a szolgáltató felé, nem e-mail-váltás, amit három hónap múlva
-  senki nem talál meg.
-- **Teljes aktivitásnaplóhoz fér hozzá.** Be- és kilépések, ellenőrzés-leadások,
-  NFC-események, dokumentum-műveletek &ndash; a rendszerben ehhez az adminisztrátoron
-  kívül kizárólag az ingatlankezelői szerepkör fér hozzá.
-- **A geofence-riasztás a telefonjára érkezik.** Ha egy szolgálatban lévő őr elhagyja
-  az épület térképi lehatárolását, Ön azonnal értesül róla &ndash; nem másnap, a jelentésből.
+A gyakorlati következmény: a szerződésében szereplő &bdquo;rendszeres bejárás&rdquo;
+ma nem számonkérhető kötelezettség. A beolvasások időbélyeges listájával azzá válik.
 
-**Amit szándékosan nem tartalmaz a szerepköre:** ellenőrzési eredményt nem szerkeszthet,
-jegyzőkönyvet nem hozhat létre, és a szolgáltató munkaerő-beosztásához (Vezénylés modul)
-egyáltalán nincs hozzáférése. Ezek nem hiányosságok, hanem a nyilvántartás bizonyító
-erejének és a felelősségi lánc tisztaságának a feltételei &ndash; ha Ön is szerkeszthetné
-a rekordot, az egy vitás ügyben pont az értékét veszítené el.
+**Javaslatom:** egy irodaház, két hét, a jelenlegi jelentési renddel párhuzamosan.
+Ehhez egy helyszín, egy kapcsolattartó a szolgáltatónál és 6&ndash;12 checkpont
+kijelölése kell. A beállítást mi végezzük.
 
-**A gyakorlati következmény, ami miatt írok:** a jelenlegi szolgáltatói szerződésében
-szereplő "rendszeres bejárás" ma nem mérhető kötelezettség. A checkpont-beolvasások
-időbélyeges listájával viszont azzá válik &ndash; és teljesítés-igazolásként hivatkozható.
-
-**Javaslatom:** válasszunk ki egyetlen irodaházat, ott beállítjuk a checkpontokat és
-az Ön hozzáférését, és két hétig párhuzamosan fut a jelenlegi jelentési renddel.
-Ehhez egy helyszín, egy kapcsolattartó a szolgáltatónál és a checkpontok kijelölése kell
-&ndash; jellemzően 6&ndash;12 pont épületenként.
-
-Melyik épület lenne erre a legalkalmasabb? Ha megnevezi, a beállítást a mi oldalunkon
-elvégezzük.
+Melyik épület lenne erre a legalkalmasabb?
 
 Üdvözlettel,
 [Név]
 
-**P.S.** A platformdíj (120 000 Ft/helyszín/hó) rendszerint a biztonsági szolgáltatónál
-merül fel, nem az ingatlankezelőnél. Ha ebben a konstrukcióban gondolkodik, szívesen
-átküldöm azt az érvelést, amit a szolgáltatója felé érdemes használni.
+**P.S.** A platformdíj rendszerint a biztonsági szolgáltatónál merül fel, nem az
+ingatlankezelőnél. Ha ez a kérdés, átküldöm a szolgáltatója felé használható érvelést.
 
 ---
 
@@ -919,39 +893,33 @@ P3 = {
     "accent_soft": "#eef2ff",
     "accent_light": "#a5b4fc",
     "kicker": "Operatív vezetői adatlap &middot; 3&ndash;10 irodaház",
-    "title": "Hajnali kettőkor kiesik egy 24 órás szolgálat. Innen 4 perc, nem 40.",
-    "subtitle": "A rendszer a saját felügyelt irodaházaira szűkített nézetet ad: élő "
-                "&bdquo;ki van bent&rdquo; nézet, automatikus pótlás-jelölt-ajánlás, geofence-riasztás, "
-                "leltár- és csapatkezelés &ndash; egy felületen, telefonról is.",
+    "title": "Nem akkor tudja meg, hogy baj van, amikor felhívják.",
+    "subtitle": "Élő &bdquo;ki van bent&rdquo; nézet, NFC-bejárás-visszaigazolás és "
+                "GPS-zónariasztás &ndash; a saját felügyelt irodaházaira szűkítve, "
+                "telefonon is. Az esemény akkor éri el, amikor történik, nem másnap "
+                "a jelentésből.",
     "meta": [
         ("Látókör", "Kizárólag a saját felügyelt irodaházai"),
-        ("Kritikus modul", "Vezénylés és a &bdquo;Ki van bent&rdquo; élő nézet"),
+        ("Kritikus modul", "&bdquo;Ki van bent&rdquo; élő nézet és geofence-riasztás"),
         ("Eszköz", "Web (PWA) + natív Android/iOS"),
     ],
-    "pains_title": "A három legdrágább órája",
-    "pains_lead": "Nem a döntés nehéz &ndash; az információ összegyűjtése viszi el az időt.",
+    "pains_title": "Amit ma késve tud meg",
+    "pains_lead": "Nem a döntés nehéz &ndash; az információ megszerzése viszi el az időt.",
     "pains": [
-        {"h": "A pótlás-keresés",
-         "p": "Kiesik egy 24 órás szolgálat. Következik az Excel-tábla nyitogatása, "
-              "a fejben tartott &bdquo;ki pihent eleget&rdquo; logika, majd 8&ndash;15 telefonhívás. "
-              "Éjszaka, a saját szabadidejében."},
         {"h": "&bdquo;Ki van most bent?&rdquo;",
          "p": "Az ügyfél rákérdez, hogy ki adja a szolgálatot. A válasz a beosztási "
               "Excelből és két telefonhívásból áll össze &ndash; és nem biztos, hogy "
               "aki a táblában szerepel, az ténylegesen ott is van."},
-        {"h": "A havi adatgyűjtés",
-         "p": "Ellenőrzési lapok, napi jelentések, jegyzőkönyvek 5&ndash;8 helyszínről, "
-              "különböző formában, különböző késéssel. A riport összeállítása "
-              "hónapvégi rutinfeladat &ndash; 6&ndash;8 óra."},
+        {"h": "Az incidens, amiről nem szólnak",
+         "p": "Egy kárfelvétel vagy egy jogosulatlan belépési kísérlet a műszak "
+              "papírjain marad. Ön a heti egyeztetésen hall róla &ndash; addigra "
+              "a bérlő már az ingatlankezelőnek panaszkodott."},
+        {"h": "Az őrizetlen terület",
+         "p": "Ha egy szolgálatban lévő őr elhagyja a helyszínt, arról ma nincs jelzés. "
+              "Az akkor derül ki, ha közben történik valami &ndash; vagy soha."},
     ],
-    "fix_title": "Amit a rendszer átvesz",
+    "fix_title": "Amit valós időben látsz",
     "solutions": [
-        {"h": "Automatikus pótlás-jelölt-ajánlás", "tag": "Vezénylés modul",
-         "p": "A kieső 24 órás szolgálatot a rendszer két 12 órás blokkra bontja, és "
-              "megnevezi a természetes jelöltet: éjszakára azt, aki előző nap 24 órázott "
-              "(logikusan folytatja), nappalra azt, aki két napja dolgozott, de tegnap "
-              "már nem (kipihente magát). Mellettük az aznap szabad kollégák, "
-              "alacsonyabb prioritással. Kijelölés egy kattintás &ndash; naplózva."},
         {"h": "&bdquo;Ki van bent&rdquo; &ndash; élő, és megbízható forrásból", "tag": "Élő jelenlét",
          "p": "A nézet nem NFC-önbejelentésből dolgozik, hanem a Vezénylés aznapi "
               "beosztásából &ndash; ez akkor is helyes, ha valaki éppen nem olvasott be "
@@ -962,24 +930,30 @@ P3 = {
               "azonnal push-értesítés megy ki. A GPS-pontatlanság kiszűrésére a rendszer csak "
               "3 egymást követő &bdquo;kívüli&rdquo; jelzés után riaszt &ndash; így a riasztás "
               "nem válik olyan zajjá, amit egy idő után mindenki figyelmen kívül hagy."},
-        {"h": "Leltár és csapat &ndash; saját kézben", "tag": "Adminisztráció (szűkített)",
-         "p": "A saját irodaházaiban felveheti/módosíthatja a kulcs- és kártyatételeket, "
-              "a tétel-csoportokat, és hozzárendelheti a dolgozókat és az ingatlankezelőt. "
-              "Nem kell adminisztrátorra várnia minden bérlőváltásnál."},
-        {"h": "Vizsga-emlékeztető, célzottan", "tag": "Oktatás / Vizsga",
-         "p": "Látja, kinek van elmaradt vagy lejáró képzése, és egy lépésben kiküldi "
-              "az emlékeztetőt. Az oktatottsági szint ráadásul közvetlenül beszámít "
-              "a saját teljesítmény-pontszámába."},
-        {"h": "Jegyzőkönyvek és jelentések &ndash; a csapatáról", "tag": "Dokumentumok",
-         "p": "A felügyelt irodaházak dolgozóinak jegyzőkönyveit látja, és &bdquo;átnézve&rdquo; "
-              "jelöléssel láthatja el, a napi jelentéseket ugyanígy. Nincs több "
-              "e-mailben körbeküldött szkennelt papír."},
+        {"h": "Kritikus jegyzőkönyv, amint elkészül", "tag": "Incidenskezelés",
+         "p": "Kárfelvétel, talált tárgy, bombariadó, kiürítés &ndash; a dolgozó a "
+              "helyszínen tölti ki, és Ön azonnal push-értesítést kap róla. Nem a heti "
+              "egyeztetésen értesül, hanem akkor, amikor még reagálni tud."},
+        {"h": "Jogosulatlan belépési kísérlet &ndash; naplózva", "tag": "NFC-checkpoint",
+         "p": "Ha egy dolgozó olyan helyszínen próbál checkpontot beolvasni, ahova "
+              "nincs explicit jogosultsága, a rendszer elutasítja, és <strong>az "
+              "elutasított kísérletet is rögzíti</strong>. A napló szűrhető dátumra "
+              "és helyszínre, a látókör automatikusan az Ön irodaházaira szűkül."},
+        {"h": "Bejárás-lefedettség, nem bejárás-ígéret", "tag": "&bdquo;Mai bejárás&rdquo;",
+         "p": "Helyszínenként látszik, mely checkpontokat olvasták már be aznap és "
+              "melyeket nem. Nem utólagos kiolvasás egy járőróráról &ndash; élő kép, "
+              "amiből a műszak közben még lehet intézkedni."},
+        {"h": "Pótlás kiesés esetén &ndash; ajánlott jelölttel", "tag": "Vezénylés modul",
+         "p": "Ha kiesik egy 24 órás szolgálat, a rendszer két 12 órás blokkra bontja, "
+              "és sorrendbe állítja a jelölteket: éjszakára azt, aki előző nap 24 órázott, "
+              "nappalra azt, aki két napja dolgozott, de tegnap már nem. Kijelölés egy "
+              "kattintás, minden lépés naplózva."},
     ],
     "facts_title": "Amit ez számokban jelent",
     "facts": [
-        ("2", "kattintás egy 24 órás kiesés lefedéséhez: a jelölt kiválasztása és kijelölése"),
-        ("200", "utolsó pótlás-esemény visszakereshető, emberi nyelvű változásnaplóban"),
+        ("Azonnal", "élő felületfrissítés és push minden NFC-eseményről és zónariasztásról"),
         ("3", "egymást követő GPS-jelzés kell egy riasztáshoz &ndash; nincs téves riasztás-zaj"),
+        ("200", "utolsó pótlás-esemény visszakereshető, emberi nyelvű változásnaplóban"),
     ],
     "mods_title": "A jogköre pontos határai",
     "mods_lead": "A rendszer a hierarchiát (területi igazgató &rarr; biztonsági vezető "
@@ -996,10 +970,10 @@ P3 = {
                        "adminisztrációját és a teljesítmény-irányítópultot &ndash; ezek "
                        "adminisztrátori, illetve területi igazgatói jogkörök."),
     ],
-    "quote": "<strong>A legerősebb egyetlen funkció:</strong> a pótlás-jelölt-ajánló nem "
-             "listát ad, hanem <strong>sorrendet</strong> &ndash; és a mögötte lévő logika "
-             "ugyanaz, amit ma fejben csinál. A különbség, hogy hajnali kettőkor a rendszer "
-             "nem fárad el, és minden kijelölés naplózva marad.",
+    "quote": "<strong>A különbség egy mondatban:</strong> ma azt tudja, mi <em>volt</em> "
+             "&ndash; a jelentésekből, késve. A rendszerrel azt látja, mi <em>van</em>: "
+             "ki van bent, hol van, mit olvasott be, és mi történt az elmúlt órában. "
+             "Az incidenskezelésben ez a különbség a reagálás és a magyarázkodás között.",
     "roi": {
         "title": "Vezetői időmérleg &ndash; 5 felügyelt irodaház esetén",
         "lead": "Az értékek a jelenlegi (Excel + telefon) munkaszervezésre vonatkoznak.",
@@ -1060,44 +1034,31 @@ P3_EMAIL = """# Biztonsági vezető (security_lead) &ndash; értékesítési cso
 
 ## E-mail &ndash; fő változat
 
-**Tárgy:** Hajnali kettőkor kiesik egy 24 órás &ndash; a rendszer megnevezi, kit hívjon
+**Tárgy:** Mennyi idő telik el nálad egy incidens és az értesülés között?
 
 Szia [Név]!
 
-A demón sok modul szóba került, de utólag azt gondolom, hogy a te pozíciódból két
-dolog számít igazán. Ezt a kettőt írom le, a többit hagyjuk.
+A demón sok modul szóba került. A te pozíciódból viszont egyetlen dolog számít:
+mikor tudod meg, hogy baj van.
 
-**1. A pótlás-keresés.** Ma ez így megy: kiesik egy 24 órás szolgálat, kinyitod az
-Excelt, végiggondolod, ki pihent eleget, és jön 8&ndash;15 telefon &ndash; jellemzően
-éjszaka, a saját szabadidődben.
+Ma egy kárfelvétel vagy egy jogosulatlan belépési kísérlet a műszak papírjain marad,
+és te a heti egyeztetésen hallasz róla &ndash; addigra a bérlő már az ingatlankezelőnek
+panaszkodott. Ha egy szolgálatban lévő őr elhagyja a helyszínt, arról ma nincs jelzés.
+És ha az ügyfél rákérdez, hogy ki van bent, a válasz két telefonból áll össze.
 
-A rendszer ugyanezt a logikát futtatja le, csak azonnal. A kieső 24 órát két 12 órás
-blokkra bontja, és megnevezi a természetes jelöltet: **éjszakára** azt, aki előző nap
-már 24 órás szolgálatban volt (logikusan folytatja), **nappalra** azt, aki két nappal
-korábban dolgozott 24 órát, de előző nap már nem (kipihente magát). Mellettük felkínálja
-az aznap szabad kollégákat is, alacsonyabb prioritással. A kijelölés egy kattintás,
-és minden művelet naplózódik &ndash; ki, mikor, kit jelölt ki vagy vont vissza.
-Ez a napló nem adminisztráció: ez a védelmed, amikor később valaki megkérdőjelezi a döntést.
+A rendszer ezen a három ponton változtat. A **&bdquo;ki van bent&rdquo; nézet** élő, és
+azért megbízható, mert nem az NFC-önbejelentésből dolgozik, hanem a Vezénylés aznapi
+beosztásából &ndash; akkor is helyes, ha valaki éppen nem olvasott be checkpontot.
+A **kritikus jegyzőkönyvről** (kárfelvétel, bombariadó, kiürítés) azonnal push-értesítést
+kapsz, nem a heti egyeztetésen. A **zónariasztás** akkor jön, amikor az őr elhagyja
+a területet &ndash; és csak 3 egymást követő GPS-jelzés után, hogy ne szokj le róla.
 
-**2. A "ki van bent" kérdés.** Ez ma két telefonból és egy Excel-nézésből áll össze, és
-még akkor sem biztos. A rendszer élő nézete azért megbízható, mert **nem az NFC-önbejelentésből
-dolgozik, hanem a Vezénylés aznapi beosztásából** &ndash; tehát akkor is helyes, ha valaki
-történetesen nem scannelt. Emellé odateszi az élő GPS-pozíciót és a zóna-státuszt.
-A nézet automatikusan a te irodaházaidra szűkül, nem kell szűrögetni.
+Mindhárom nézet automatikusan a te irodaházaidra szűkül.
 
-**Amit még érdemes tudni a jogkörödről:** a saját irodaházaidban kezelheted a
-kulcs-/kártyatételeket és a tétel-csoportokat, hozzárendelheted a dolgozókat és az
-ingatlankezelőt, szerkesztheted a beosztást óraszámmal együtt, és kiküldheted a
-vizsga-emlékeztetőket. Jegyzőkönyvet nem hozol létre (az dolgozói jogkör), de a
-csapatodét látod és jóváhagyhatod.
+**Javaslatom:** egy irodaház, 6&ndash;12 checkpont felragasztva, két hét. Utána megnézzük
+a bejárás-lefedettséget, és hogy hány eseményről értesültél korábban, mint eddig.
 
-**A javaslatom nem demó.** Küldd át a múlt havi beosztási táblázatodat &ndash; egy
-lépésben beimportáljuk, a területek és a dolgozók automatikusan létrejönnek. Utána a
-következő valós kiesésnél megnézzük egyszerre, kit ajánl a rendszer, és kit hívtál volna te.
-**Ha nem egyezik, az nekem fontosabb információ, mint ha egyezik** &ndash; mert akkor
-van mit igazítani a logikán.
-
-45 perc közös beállítás, és a múlt havi Excel. Ennyi kell hozzá. Mikor jó?
+45 perc közös beállítás kell hozzá. Mikor jó?
 
 Üdv,
 [Név]
@@ -1154,34 +1115,49 @@ P4 = {
     "accent_dark": "#92400e",
     "accent_soft": "#fffbeb",
     "accent_light": "#fcd34d",
-    "kicker": "Regionális vezetői adatlap &middot; Kontrolling",
-    "title": "Ma a vezetőit benyomás alapján méri. Holnap egy nyilvános képlet alapján.",
-    "subtitle": "Irodaházankénti és vezetőnkénti teljesítmény-pontszám, célkitűzés-kezelés "
-                "és hat havi trend &ndash; ugyanabból az adatból, ami az operatív "
-                "munkavégzés során amúgy is keletkezik. Nincs külön adatbekérés.",
+    "kicker": "Regionális vezetői adatlap &middot; Költség és skálázás",
+    "title": "Ugyanannyi vezetővel több helyszín &ndash; ha a beosztás nem viszi el a hetüket.",
+    "subtitle": "A területi szint három tétele: a vezetői adminisztráció kiváltása, "
+                "a túlóra- és pótlásköltség csökkentése, és az új helyszín felvételének "
+                "átfutási ideje. Mindhárom mögé mérőszám kerül, nem becslés.",
     "meta": [
         ("Látókör", "Minden felügyelt biztonsági vezető és irodaházaik"),
-        ("Kulcsmodul", "Teljesítmény-irányítópult és célkitűzés"),
-        ("Riport-ciklus", "Élő, visszamenőleg 6 hónap"),
+        ("Kulcsmodul", "Vezénylés (teljes) + teljesítmény-irányítópult"),
+        ("Elszámolási egység", "Helyszín &ndash; a skálázás természetes mértéke"),
     ],
-    "pains_title": "Amiről ma nincs adata",
-    "pains_lead": "Nem a döntéseivel van baj, hanem azzal, hogy mikor kap hozzá információt.",
+    "pains_title": "Ahol ma a pénz elfolyik",
+    "pains_lead": "Három tétel, amit ma egyik vezetője sem tud számszerűsíteni Önnek.",
     "pains": [
-        {"h": "A vezetők összehasonlítása",
-         "p": "Öt biztonsági vezetője van. Melyik teljesít jobban? A válasz ma abból áll, "
-              "hogy ki panaszkodik ritkábban, és kinél nem volt ügyfélpanasz. "
-              "Ez nem mérés, hanem benyomás."},
+        {"h": "A vezetői kapacitás elégetése",
+         "p": "Egy biztonsági vezető havi 25&ndash;30 órát tölt Excel-beosztással, "
+              "pótlás-telefonálással és riportgyűjtéssel. Ez az idő nem a helyszínek "
+              "felügyeletére megy &ndash; és ez szab határt annak, hány helyszínt bír el."},
+        {"h": "A pótlás és a túlóra ára",
+         "p": "Egy kiesett 24 órás szolgálatot ma az kap meg, aki felveszi a telefont &ndash; "
+              "nem az, akinél ez a legolcsóbb. A túlórakeret pedig csak hónap végén, "
+              "a bérszámfejtésen válik láthatóvá."},
         {"h": "A fluktuáció késése",
          "p": "Egy helyszínen elkezdenek kilépni az emberek. Ez ma akkor derül ki, amikor "
               "már nem lehet feltölteni a szolgálatot &ndash; jellemzően 2&ndash;3 hónappal "
-              "a folyamat kezdete után."},
-        {"h": "Az ügyfélpanasz",
-         "p": "A megbízó felhívja, hogy három hete nem kapott jelentést, és volt egy "
-              "incidens, amiről Ön nem tudott. Ekkor hallja először &ndash; és a beosztottja "
-              "ekkor kezd el adatot gyűjteni."},
+              "a folyamat kezdete után, amikor a pótlás a legdrágább."},
     ],
-    "fix_title": "Amit a vezetői irányítópult ad",
+    "fix_title": "Amit ez a három tételen változtat",
     "solutions": [
+        {"h": "A beosztás nem vezetői kézimunka többé", "tag": "Vezénylés modul",
+         "p": "Havi rács, Excel-import a meglévő táblázatból, a dolgozó a saját sorába "
+              "maga jelöli be, ha nem ér rá vagy túlórát vállal. A vezetőnként felszabaduló "
+              "20&ndash;25 óra nem elbocsátás &ndash; ennyivel több helyszínt bír el "
+              "ugyanaz a vezető."},
+        {"h": "Pótlás oda, ahol a legolcsóbb", "tag": "Pótlás-ajánló",
+         "p": "A kieső 24 órás szolgálatra a rendszer sorrendbe állítja a jelölteket "
+              "pihenőidő szerint, és felkínálja az aznap szabad kollégákat is. "
+              "A döntés így nem attól függ, ki veszi fel elsőként a telefont &ndash; "
+              "és minden kijelölés naplózva marad."},
+        {"h": "Új helyszín felvétele nem IT-projekt", "tag": "Skálázhatóság",
+         "p": "Az elszámolási egység a helyszín. Új ügyfél cég felvétele azonnal "
+              "létrehozza a teljesen elkülönített adatbázisát, új irodaház felvétele "
+              "pedig adminisztrációs művelet &ndash; nincs telepítés, nincs helyszíni "
+              "szerver, nincs migrációs ablak."},
         {"h": "Teljesítmény-pontszám &ndash; nyilvános képlettel", "tag": "Teljesítmény modul",
          "p": "Irodaházanként: az aktív dolgozók átlagos készültségi szintje (elvégzett "
               "kötelező oktatások és vizsgák aránya) <strong>mínusz</strong> a fluktuációs "
@@ -1202,20 +1178,13 @@ P4 = {
          "p": "Nem pillanatkép: az elmúlt (alapértelmezetten) hat hónap alakulása, "
               "hónapról hónapra számított javulással vagy romlással. Egy rossz hónap "
               "nem ítélet, egy hat hónapos lejtmenet viszont beavatkozási pont."},
-        {"h": "Nyitott kritikus jegyzőkönyvek", "tag": "Dokumentumok",
-         "p": "A még nem jóváhagyott kárfelvételi, bombariadó- és kiürítési jegyzőkönyvek "
-              "listája &ndash; mobil nézetben az irányítópult tetején, heti incidens-trenddel "
-              "és élő jelenlét-számlálóval. A panasz előtt látja, nem utána."},
-        {"h": "Teljes körű Vezénylés-hozzáférés", "tag": "Vezénylés modul",
-         "p": "Minden felügyelt terület beosztása, pótlás-kijelölés, változásnapló és "
-              "Excel-import &ndash; ha egy vezetője kiesik vagy szabadságon van, "
-              "Ön azonnal át tudja venni a területet, nem kell átadás-átvételre várni."},
     ],
     "facts_title": "Ami ebből mérhetővé válik",
     "facts": [
+        ("20&ndash;25 ó", "vezetőnként havonta felszabaduló kapacitás a beosztás "
+                          "és a riportgyűjtés kiváltásából"),
         ("6", "hónap visszamenőleges trend, hónapról hónapra számított változással"),
-        ("2", "célérték vezetőnként: oktatottsági % és maximális fluktuációs %"),
-        ("0", "külön adatbekérés &ndash; a mutatók az operatív munkából keletkeznek"),
+        ("1", "elszámolási egység: a helyszín &ndash; a bővülés lineárisan tervezhető"),
     ],
     "mods_title": "A jogköre és a mutató korlátai &ndash; nyíltan",
     "mods_lead": "Egy kontrolling-eszköz akkor használható, ha a határai is ismertek.",
@@ -1237,7 +1206,7 @@ P4 = {
              "pontosan tudja, mit kell tennie a javításért: képzést befejeztetni és "
              "embert megtartani. Mindkettő valódi vezetői munka.",
     "roi": {
-        "title": "Megtérülés &ndash; a fluktuáció korai észlelésének értéke",
+        "title": "Megtérülés &ndash; munkaerőköltség és vezetői kapacitás",
         "lead": "A modell 40 helyszínt és helyszínenként átlagosan 3 fő állandó állományt "
                 "feltételez (120 fő).",
         "head": ["Tétel", "Érték", "Levezetés"],
@@ -1301,63 +1270,41 @@ P4_EMAIL = """# Területi igazgató (area_director) &ndash; értékesítési cso
 
 ## E-mail &ndash; fő változat
 
-**Tárgy:** Öt biztonsági vezető &ndash; melyik teljesít jobban? Ma erre nincs adata
+**Tárgy:** Hány helyszínt bír el ma egy biztonsági vezetője &ndash; és miért annyit?
 
 Kedves [Név]!
 
-A bemutatón sok modult láttunk. Az Ön pozíciójából viszont a rendszernek egyetlen
-igazi tétje van, és arról szeretnék konkrétan írni.
+A bemutatón sok modult láttunk. Az Ön pozíciójából viszont három tétel számít,
+és mindhárom ugyanoda vezet.
 
-**A jelenlegi helyzet.** Öt biztonsági vezetője van. Ha ma meg kellene mondania, melyik
-teljesít jobban, a válasz abból állna össze, hogy ki panaszkodik ritkábban és kinél nem
-volt eszkaláció. Ez nem mérés. Ennek pedig az a következménye, hogy a fluktuáció akkor
-derül ki, amikor már nem lehet feltölteni a szolgálatot &ndash; jellemzően két-három
-hónappal a folyamat tényleges kezdete után &ndash;, az ügyfél-eszkalációról pedig
-a megbízó telefonjából értesül, nem a saját rendszeréből.
+**Egy.** Egy biztonsági vezető havi 25&ndash;30 órát tölt Excel-beosztással,
+pótlás-telefonálással és riportgyűjtéssel. Ez az idő nem a helyszínek felügyeletére
+megy &ndash; és ez szabja meg, hány helyszínt bír el. A rendszerrel ebből
+20&ndash;25 óra szabadul fel havonta, vezetőnként. Ez nem létszámleépítés,
+hanem nagyobb terület ugyanazzal a csapattal.
 
-**Amit a rendszer ehelyett ad.** Irodaházankénti teljesítmény-pontszámot, egy nyílt
-képlet alapján: az aktív dolgozók átlagos készültségi szintje (a rendszerben elvégzett
-kötelező oktatások és vizsgák arányából) **mínusz** a fluktuációs büntetés (az adott
-hónapban kilépett dolgozók aránya az aktív állományhoz képest). Vezetői szinten ez a
-felügyelt irodaházak **létszámmal súlyozott** átlaga &ndash; hogy egy 3 fős helyszín
-ne torzítson ugyanúgy, mint egy 25 fős.
+**Kettő.** A kiesett 24 órás szolgálatot ma az kapja meg, aki felveszi a telefont,
+nem az, akinél ez a legolcsóbb. A rendszer pihenőidő szerint sorrendbe állítja a
+jelölteket, és minden kijelölést naplóz &ndash; a túlórakeret nem hónap végén,
+a bérszámfejtésen válik láthatóvá.
 
-Ehhez jön a célkitűzés-kezelés (vezetőnként havi elvárt oktatottsági és maximális
-fluktuációs százalék, akár konkrét irodaházra szűkítve), a hat havi visszamenőleges
-trend hónapról hónapra számított változással, és az irányítópulton a még nem jóváhagyott
-kritikus jegyzőkönyvek listája.
+**Három.** A fluktuáció ma akkor derül ki, amikor a szolgálatot már nem lehet
+feltölteni. 120 fős állománynál és 50%-os iparági fluktuációnál a kilépések éves
+költsége nagyságrendileg 10,8 MFt (180 000 Ft/fő). Nyolc százalékpontos javulás
+1,7 MFt/év &ndash; a visszanyert vezetői idővel együtt kb. 3,2 MFt.
 
-**Amit előre kimondok, mielőtt Ön kérdezné.** Ez a mutató **két dolgot mér: képzettséget
-és fluktuációt.** Nem méri az ügyfél-elégedettséget, az incidenskezelés minőségét és a
-vezetői kvalitást. A pontszám a vezetői beszélgetés kiindulópontja, nem a végeredménye.
-Ha valaki ennél többet ígér Önnek egy számtól, azt érdemes gyanakvással fogadni.
+**Amit előre kimondok:** a teljesítmény-mutató két dolgot mér, képzettséget és
+fluktuációt. Nem méri az ügyfél-elégedettséget és a vezetői kvalitást. Ha valaki
+ennél többet ígér egy számtól, azt érdemes gyanakvással fogadni.
 
-Két dolog viszont mellette szól. Az egyik: **a képlet nyilvános**, minden vezetője le
-tudja vezetni, és pontosan tudja, mit kell tennie a javításért &ndash; képzést
-befejeztetni és embert megtartani. Mindkettő valódi vezetői munka, nem mutatókozmetika.
-A másik: **az adat nem külön bekérésből keletkezik**, hanem az operatív munkából, amit
-a kollégái amúgy is elvégeznek. Nincs riport-körlevél, nincs Excel-bekérés.
-
-**A javaslatom nem demó, hanem visszamenőleges teszt.** Adja meg két helyszín elmúlt
-hat havi belépési/kilépési és képzési adatát. Kiszámoljuk a pontszámot visszamenőleg,
-és megnézzük: **jelezte volna-e a mutató a problémát, mielőtt Ön értesült róla?**
-
-Ha jelezte, akkor tudjuk, mennyi reakcióidőt nyert volna &ndash; és ez az egyetlen érv,
-ami ebben a pozícióban valóban számít. Ha nem jelezte, azt is megmondom, és akkor arról
-kell beszélnünk, milyen mutatóra van valójában szüksége.
-
-Időigény: egy óra adategyeztetés, egy óra közös kiértékelés.
+**Javaslatom nem demó, hanem visszamenőleges teszt.** Adja meg két helyszín elmúlt
+hat havi belépési/kilépési és képzési adatát, és megnézzük: jelezte volna-e a mutató
+a problémát, mielőtt Ön értesült róla? Időigény két óra.
 
 Melyik két helyszínnel csináljuk?
 
 Üdvözlettel,
 [Név]
-
-**P.S.** A számszerű oldal röviden: 40 helyszín, 120 fős állomány, 50%-os iparági
-fluktuáció mellett a kilépések éves költsége nagyságrendileg 10,8 MFt (180 000 Ft/fő
-pótlási költséggel). Ha a korai észlelés ezt 42%-ra viszi, az önmagában 1,7 MFt/év,
-a visszanyert kontrolling-idővel együtt kb. 3,2 MFt/év &ndash; ez 2,2 helyszín teljes
-éves platformdíja. A teljes levezetést csatoltam.
 
 ---
 
@@ -1414,18 +1361,23 @@ P5 = {
     "accent_soft": "#ecfdf5",
     "accent_light": "#6ee7b7",
     "kicker": "Bérlői tájékoztató &middot; Szolgáltatási szint",
-    "title": "A kulcsaik, a talált tárgyak és a tűzriadó &ndash; mindegyikről aláírt dokumentum készül.",
+    "title": "A szolgálatot méri, nem az Önök munkatársait.",
     "subtitle": "Az épület biztonsági szolgálata digitális nyilvántartásra áll át. "
-                "Bérlőként ez azt jelenti, hogy a korábban szóban vagy füzetben "
-                "elintézett ügyekből visszakereshető, aláírt jegyzőkönyvek lesznek.",
+                "A rendszer a saját őreit követi és dokumentálja &ndash; a bérlők "
+                "munkatársairól nem gyűjt adatot. Amit Önök kapnak: bizonyíték "
+                "kulcs-, kár- és kiürítési ügyekben.",
     "meta": [
         ("Kinek szól", "Bérlői kapcsolattartó, irodavezető"),
         ("Amit tenni kell", "Semmit &ndash; az üzemeltető és a szolgálat vezeti be"),
-        ("Ami változik", "Bizonyíthatóság kulcs-, kár- és kiürítési ügyekben"),
+        ("Akiről adat keletkezik", "Kizárólag az őrszolgálat munkatársairól"),
     ],
     "pains_title": "Amit ma nem lehet visszakeresni",
     "pains_lead": "Nem gyakori helyzetek &ndash; de amikor előfordulnak, nagy a tét.",
     "pains": [
+        {"h": "&bdquo;Minket is figyelni fognak?&rdquo;",
+         "p": "Egy új biztonsági rendszer hírére ez az első kérdés. Jogos: egy bérlő "
+              "nem akar olyan rendszert az épületben, ami az ő munkatársairól, "
+              "azok mozgásáról vagy munkaidejéről gyűjt adatot."},
         {"h": "&bdquo;Kinél van a kulcsunk?&rdquo;",
          "p": "A tartalék irodakulcsot évekkel ezelőtt leadták a portán. Hogy azóta ki "
               "vette fel és mikor adta vissza, arról egy kézzel vezetett füzet szól &ndash; "
@@ -1441,6 +1393,12 @@ P5 = {
     ],
     "fix_title": "Amit ezután kap &ndash; kérés nélkül",
     "solutions": [
+        {"h": "A rendszer az őröket követi, nem Önöket", "tag": "Adatvédelem",
+         "p": "A GPS-helymeghatározás kizárólag a szolgálatban lévő őr telefonján fut, "
+              "és zóna-be- és kilépést rögzít, nem útvonalat. A rendszerben nincs "
+              "bérlői munkavállalói nyilvántartás, nincs beléptetés-figyelés és nincs "
+              "kamerakép. Az Önök munkatársairól adat csak akkor keletkezik, ha egy "
+              "konkrét jegyzőkönyvben félként szerepelnek."},
         {"h": "Kulcs- és kártyaátadás, aláírással", "tag": "Jegyzőkönyv-típus",
          "p": "Minden kiadás és visszavétel dokumentálva: azonosító, cég/munkahely, "
               "kiadás és visszavétel időpontja, a felvevő igazolványszáma. Három aláírás "
@@ -1533,28 +1491,21 @@ P5_EMAIL = """# Irodaházi bérlő &ndash; kommunikációs csomag
 Tisztelt [Név]!
 
 Az épület biztonsági szolgálata a következő hetekben digitális nyilvántartásra áll át.
-Ez az Önök oldaláról **nem jár teendővel**, de érdemes tudni, mi változik &ndash; mert
-néhány olyan helyzetben lesz jelentősége, ahol eddig nem volt mire hivatkozni.
+Ez az Önök oldaláról **nem jár teendővel**, de két dolgot érdemes tudni.
 
-**Ami eddig szóban vagy füzetben történt, ezután aláírt dokumentum lesz:**
+**Az első, mert ez szokott az első kérdés lenni: a rendszer az őrszolgálatot követi,
+nem a bérlőket.** A GPS kizárólag a szolgálatban lévő őr telefonján fut, és zóna-be- és
+kilépést rögzít, nem útvonalat. Nincs benne bérlői munkavállalói nyilvántartás, nincs
+beléptetés-figyelés és nincs kamerakép. Az Önök munkatársairól adat csak akkor
+keletkezik, ha egy konkrét jegyzőkönyvben félként szerepelnek.
 
-- **Kulcs- és kártyaátadás.** Minden kiadás és visszavétel rögzül: azonosító, cég,
-  időpont, a felvevő igazolványszáma, és három aláírás &ndash; felvevő, leadó,
-  visszavevő &ndash; a PDF-be ágyazva. A "kinél van a tartalék kulcsunk" kérdésre
-  ezután van válasz.
-- **Kiürítés és tűzriadó.** Az Önök cége külön tételként szerepel a kiürítési
-  nyilvántartásban: bent maradt-e valaki, és ki volt a tűzvédelmi felelős &ndash;
-  az ő aláírásával. Ez az a dokumentum, amit egy hatósági vizsgálat kér, és ami
-  az Önök tűzvédelmi dokumentációjának is része.
-- **Kárfelvétel.** Ha az Önök területén kár keletkezik, a jegyzőkönyv az esemény napján
-  elkészül: időintervallum, helyszín, a károkozó azonosító adatai, tanú, eseményleírás.
-  Biztosítói kárrendezéshez használható formában &ndash; nem napokkal később,
-  emlékezetből rekonstruálva.
-- **Talált tárgy.** Leírás, az észlelés helye és ideje, kiadáskor pedig az átvevő
-  adatlapja és aláírása.
-- **Bejárás-igazolás.** A szolgálat a folyosókon elhelyezett NFC-matricákat olvassa be.
-  Ha felmerül a kérdés, hogy hajnalban járt-e ott őr, időbélyeges listával tudunk
-  válaszolni.
+**A második: ami eddig szóban vagy füzetben történt, ezután aláírt dokumentum lesz.**
+Kulcs- és kártyaátadás azonosítóval, időponttal és három aláírással. Kiürítéskor az
+Önök cége külön tételként: bent maradt-e valaki, ki volt a tűzvédelmi felelős &ndash;
+ez az Önök tűzvédelmi dokumentációjának is része. Kárfelvétel az esemény napján,
+biztosítói kárrendezéshez használható formában. Talált tárgy átvételi aláírással.
+És ha felmerül a kérdés, hogy hajnalban járt-e ott őr, időbélyeges listával tudunk
+válaszolni.
 
 **Amit Önöktől kérnénk &ndash; összesen három adat:**
 
@@ -1663,8 +1614,8 @@ P6 = {
         {"h": "Digitális teljesítés-igazolás mint ajánlati elem", "tag": "Értékesítési eszköz",
          "p": "Tenderen nem az óradíjjal, hanem a bizonyíthatósággal versenyez: "
               "időbélyeges NFC-bejárás-lista, jóváhagyott napi jelentés, "
-              "aláírt PDF-jegyzőkönyv, teljes auditnapló. Ez az, amit egy "
-              "megbízó ma sehol nem kap meg &ndash; és amiért hajlandó fizetni."},
+              "aláírt PDF-jegyzőkönyv, teljes auditnapló &ndash; olyan mellékletek, "
+              "amelyeket az ajánlathoz csatolni lehet."},
         {"h": "Megnyerhető kárvita", "tag": "Kockázatcsökkentés",
          "p": "10 jogilag strukturált jegyzőkönyv-típus, digitális aláírással, "
               "az esemény napján elkészült PDF-ben. Az aláíráskép fájlként "
@@ -1691,7 +1642,7 @@ P6 = {
     "facts_title": "A három szám, ami a döntéshez kell",
     "facts": [
         ("6,8%", "a platformdíj egy 24/7-es őrposzt havi megbízói árbevételéhez képest"),
-        ("+41 600 Ft", "modellezett nettó havi eredmény helyszínenként a díj levonása után"),
+        ("kb. +40 e Ft", "modellezett nettó havi eredmény helyszínenként a díj levonása után"),
         ("1,7", "ennyi helyszín éves platformdíját fedezi egyetlen megtartott "
                 "ügyfél-helyszín éves fedezete"),
     ],
@@ -1741,10 +1692,10 @@ P6 = {
          "helyettesíti a szakmai felügyeletet. Ha az üzleti eset kizárólag "
          "létszám-megtakarításra épülne, az nem állná meg a helyét."),
     ],
-    "quote": "<strong>A döntés valódi kérdése nem az, hogy 120 000 Ft sok-e.</strong> "
-             "Az, hogy egy 1,75 millió forintos havi árbevételű helyszínen megéri-e "
-             "6,8%-ot arra fordítani, hogy a teljesítés bizonyítható legyen &ndash; "
-             "tenderen, kárvitában és SLA-egyeztetésen egyaránt.",
+    "quote": "<strong>Egy mondatban, amit érdemes mérlegelni:</strong> egy 1,75 millió "
+             "forintos havi árbevételű helyszínen a díj 6,8%. Ez akkor térül meg, ha a "
+             "teljesítés bizonyíthatósága évente legalább egyszer számít &ndash; tenderen, "
+             "kárvitában vagy SLA-egyeztetésen. Ha soha nem számít, ne vegye meg.",
     "cta": {
         "h": "Következő lépés &ndash; 3 helyszínes, 60 napos próbaüzem",
         "p": "Nem éves elköteleződés. Egy mérhető szakasz, előre rögzített kilépési ponttal.",
@@ -1794,71 +1745,36 @@ P6_EMAIL = """# Megbízó / épülettulajdonos / vagyonvédelmi cégtulajdonos &
 Kedves [Név]!
 
 A bemutatón végigmentünk a modulokon. Az Ön pozíciójából viszont nem a funkciók
-a kérdés, hanem az, hogy megéri-e. Ezért most nem funkciókról írok, hanem
-levezetem a számot &ndash; a gyenge pontjaival együtt.
+a kérdés, hanem az, hogy megéri-e. Ezért a számot vezetem le &ndash; a gyenge
+pontjával együtt.
 
-**A viszonyítási alap.** Egy 24/7-ben ellátott őrposzt havi 730 órát jelent. 2 400 Ft-os
-megbízói óradíjjal ez **1 752 000 Ft havi árbevétel helyszínenként**. A platform díja
-120 000 Ft, azaz **ennek 6,8%-a**. A kérdés innentől az, hogy ez a 6,8% megtérül-e.
+Egy 24/7-ben ellátott őrposzt havi 730 óra. 2 400 Ft-os megbízói óradíjjal ez
+**1 752 000 Ft havi árbevétel helyszínenként**; a 120 000 Ft ennek **6,8%-a**.
 
-**Ami ismétlődően megtakarítható (helyszínenként, havonta):**
+Ismétlődően megtakarítható helyszínenként: őri adminisztráció **45 000 Ft**,
+vezetői kapacitás **23 000 Ft**, papír és iktatás **6 000 Ft**. Összesen **74 000 Ft**.
 
-| Tétel | Havi érték | Alap |
-|---|---:|---|
-| Megszűnő őri adminisztráció | 45 000 Ft | 25 óra &times; 1 800 Ft önköltség |
-| Visszanyert vezetői kapacitás | 23 000 Ft | 5,2 óra &times; 4 500 Ft |
-| Papír, nyomtatás, iktatás, archiválás | 6 000 Ft | jegyzőkönyv- és jelentéskezelés |
-| **Összesen** | **74 000 Ft** | |
+**Ez önmagában nem fedezi a 120 000 Ft-ot** &ndash; ezt inkább én mondom ki, mint
+hogy Ön találja meg. A hiányzó rész két helyről jön. Egyrészt az árbevételi oldalról:
+a digitális teljesítés-igazolás tenderen és árfelülvizsgálatnál érvényesíthető,
+5%-os óradíj-emelés esetén kb. 88 000 Ft/hó. **Ezt Önnek kell érvényesítenie** &ndash;
+enélkül a modell mínuszban van. Másrészt a kockázati oldalról: egyetlen bizonyíték
+hiányában elvesztett ügyfél-helyszín éves fedezete (kb. 2,5 MFt) 1,7 helyszín teljes
+éves platformdíját fedezi.
 
-**Itt megállok, mert ez fontos: ez a 74 000 Ft önmagában nem fedezi a 120 000 Ft-ot.**
-Ha valaki azt állítja Önnek, hogy egy ilyen rendszer pusztán adminisztrációs
-megtakarításból megtérül, az nem számolt utána. A hiányzó 46 000 Ft két helyről jöhet.
+**Amit nem ígérek:** a rendszer nem csökkenti az őrzési létszámot. Ha az üzleti eset
+erre épülne, nem állná meg a helyét.
 
-**Az első: az árbevételi oldal.** A digitális teljesítés-igazolás &ndash; időbélyeges
-NFC-bejárás-lista, jóváhagyott napi jelentés, aláírt PDF-jegyzőkönyv, teljes auditnapló
-&ndash; olyan szolgáltatási elem, amit a piacon ma kevesen tudnak felmutatni. Ez tenderen
-és árfelülvizsgálatnál érvényesíthető. **Konzervatívan 5%-os óradíj-emelés = 87 600 Ft/hó
-helyszínenként.** Ezzel a modell nettó **+41 600 Ft/hó/helyszín**, 40 helyszínen
-kb. 20 MFt/év.
+**Javaslatom:** 3 helyszín, 60 nap, a 0. napon együtt rögzített sikerkritériumokkal és
+kilépési ponttal. A beállítást és az adatmigrációt mi hozzuk.
 
-Hangsúlyozom: **ez az a tétel, amit Önnek kell érvényesítenie.** Ha nem érvényesíti,
-a modell mínusz 46 000 Ft/hó/helyszín, és a megtérülés áttolódik a következő pontra.
-
-**A második: a kockázati oldal.** Ezek ritkábbak, de egyenként nagyobbak:
-
-- **Egy megnyert kárvita:** 800 000 &ndash; 5 000 000 Ft. Strukturált, aláírt,
-  az esemény napján kelt jegyzőkönyv nélkül a bizonyítási teher gyakorlatilag a
-  szolgáltatóra hárul.
-- **Egy megelőzött generálkulcs-vesztés:** 400 000 &ndash; 1 200 000 Ft zárcsere.
-  A napi tételes ellenőrzés a hiányt aznap jelzi, nem hetekkel később.
-- **Egy megtartott ügyfél-helyszín:** kb. 2 500 000 Ft éves fedezet (21 MFt árbevétel,
-  12%-os fedezeti hányad) &ndash; **ez 1,7 helyszín teljes éves platformdíja.**
-  Egyetlen bizonyíték nélkül elvesztett SLA-vita ennyibe kerül.
-
-**Amit nem ígérek:** a rendszer nem csökkenti az őrzési létszámot, és nem helyettesíti
-a szakmai felügyeletet. Ha az üzleti eset létszám-megtakarításra épülne, nem állná meg
-a helyét, és nem is így adom el.
-
-**A javaslatom: 3 helyszín, 60 nap, előre rögzített kilépési ponttal.** Teljes
-funkcionalitással, nem korlátozott próbaverzióval. A sikerkritériumokat a 0. napon
-együtt rögzítjük &ndash; bejárás-lefedettség, jegyzőkönyv-átfutási idő, vezetői
-időráfordítás &ndash;, a 60. napon pedig ugyanezeket újramérjük, és a számok alapján
-döntünk. Akár nemmel is.
-
-A beállítást, az adatmigrációt (Excel-beosztás, kulcs- és kártyaleltár), a munkatársi
-tájékoztató anyagot és az oktatási modult mi hozzuk. Öntől három helyszín kijelölését
-és egy operatív kapcsolattartót kérek.
-
-Melyik három helyszín lenne erre a legalkalmasabb? Ha megnevezi, a részletes
-pilot-tervet 48 órán belül átküldöm.
+Melyik három helyszín lenne erre a legalkalmasabb?
 
 Üdvözlettel,
 [Név]
 
-**P.S.** A teljes ROI-levezetést &ndash; a fenti táblázattal, a kockázati oldallal és
-minden feltételezéssel &ndash; egy A4-es adatlapon csatoltam. Az összes szám iparági
-becslés; ha átküldi a saját óradíjait és önköltségeit, egy nap alatt újraszámoljuk
-a valós adataira.
+**P.S.** A teljes levezetést minden feltételezéssel egy A4-es adatlapon csatoltam.
+Ha átküldi a saját óradíjait, egy nap alatt újraszámoljuk a valós adataira.
 
 ---
 
@@ -1933,11 +1849,18 @@ PERSONAS = [
 
 README = """# GTM Marketing Pack &ndash; KulcsNyilvántartó Platform
 
-Szerepkörönkénti értékesítési csomag. Minden mappa két fájlt tartalmaz:
+Szerepkörönkénti értékesítési csomag. Minden mappa három fájlt tartalmaz:
 
-- `email_es_outreach.md` &ndash; 3 tárgymező-variáció, fő e-mail, követő e-mail,
-  kifogáskezelési útmutató, beszélgetés-nyitók.
+- `email_es_outreach.md` &ndash; **ügyfélnek küldhető**: 3 tárgymező-variáció,
+  fő e-mail (150&ndash;250 szó), követő e-mail.
+- `BELSO_kifogaskezeles.md` &ndash; **ügyfélnek NEM továbbítható**: kifogáskezelési
+  útmutató és beszélgetés-nyitók. A másik fél feltételezett motivációit elemzi;
+  ha ügyfél kezébe kerül, a kapcsolatot rontja.
 - `adatlap_szorolap.html` &ndash; A4-es, nyomdakész adatlap (CSS Paged Media, 12 mm margó).
+
+A két markdown fájl szétválasztása a generátorban automatikus (`split_outreach`),
+a `## Kifogáskezelési útmutató` címsornál vág. Új szerepkör felvételekor ezt a
+címsort kell használni, különben a belső rész az ügyfélnek küldhető fájlban marad.
 
 ## Mappák
 
@@ -1983,6 +1906,29 @@ saját óradíjaival és önköltségeivel újraszámolandó.
 """
 
 
+INTERNAL_HEADER = """> # BELSŐ ANYAG &ndash; ÜGYFÉLNEK NEM TOVÁBBÍTHATÓ
+>
+> Ez a fájl a másik fél feltételezett motivációit és félelmeit elemzi. Ha ügyfél
+> kezébe kerül, az a kapcsolatot rontja. Az ügyfélnek küldhető tartalom az
+> `email_es_outreach.md` fájlban van &ndash; kizárólag azt szabad továbbítani.
+
+"""
+
+# Innen kezdődik a fájl belső használatra szánt része; a generátor itt vágja
+# ketté a szerepkör anyagát, hogy az értékesítő ne tudja véletlenül továbbküldeni.
+INTERNAL_MARKER = "\n## Kifogáskezelési útmutató"
+
+
+def split_outreach(md):
+    """Ügyfélnek küldhető és belső részre bontja a szerepkör anyagát."""
+    i = md.find(INTERNAL_MARKER)
+    if i == -1:
+        return md, None
+    outreach = md[:i].rstrip() + "\n"
+    internal = INTERNAL_HEADER + md[i:].lstrip("\n")
+    return outreach, internal
+
+
 def main():
     ap = argparse.ArgumentParser(description="GTM Marketing Pack generátor")
     ap.add_argument("--pdf", action="store_true", help="PDF is készüljön (WeasyPrint)")
@@ -1996,9 +1942,16 @@ def main():
         d = OUTPUT_ROOT / persona["dir"]
         d.mkdir(parents=True, exist_ok=True)
 
+        outreach_md, internal_md = split_outreach(email_md)
+
         md_path = d / "email_es_outreach.md"
-        md_path.write_text(email_md, encoding="utf-8")
+        md_path.write_text(outreach_md, encoding="utf-8")
         written.append(md_path)
+
+        if internal_md:
+            int_path = d / "BELSO_kifogaskezeles.md"
+            int_path.write_text(internal_md, encoding="utf-8")
+            written.append(int_path)
 
         html_path = d / "adatlap_szorolap.html"
         html_path.write_text(render_flyer(persona), encoding="utf-8")
