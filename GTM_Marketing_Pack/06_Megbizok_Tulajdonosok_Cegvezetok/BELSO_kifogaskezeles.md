@@ -22,7 +22,7 @@
 
 - "Az utóbbi két évben volt olyan szerződése, ahol díjkorrekciót kellett elfogadnia, mert nem tudta bizonyítani a teljesítést?"
 - "Amikor tenderen indul, mi az a három mondat, amivel az árán felül érvel? És ebből mennyi az, amit a versenytárs is elmond?"
-- "Ha holnap egy megbízója kárigénnyel áll elő egy három hete történt eseményre, mennyi idő alatt tud dokumentumot letenni az asztalra &ndash; és milyet?"
+- "Ha holnap egy megbízója kárigénnyel áll elő egy három hete történt eseményre, mennyi idő alatt tud dokumentumot letenni az asztalra, és milyet?"
 - "Hány helyszínt felügyel ma egy biztonsági vezetője? Mennyivel többet felügyelhetne, ha a beosztás és a riportgyűjtés nem vinné el a heti nyolc óráját?"
 
 ---

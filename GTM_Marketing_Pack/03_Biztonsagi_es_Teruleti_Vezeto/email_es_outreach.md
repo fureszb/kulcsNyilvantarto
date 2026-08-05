@@ -33,7 +33,7 @@ azért megbízható, mert nem az NFC-önbejelentésből dolgozik, hanem a Vezén
 beosztásából &ndash; akkor is helyes, ha valaki éppen nem olvasott be checkpontot.
 A **kritikus jegyzőkönyvről** (kárfelvétel, bombariadó, kiürítés) azonnal push-értesítést
 kapsz, nem a heti egyeztetésen. A **zónariasztás** akkor jön, amikor az őr elhagyja
-a területet &ndash; és csak 3 egymást követő GPS-jelzés után, hogy ne szokj le róla.
+a területet, méghozzá csak 3 egymást követő GPS-jelzés után, hogy ne szokj le róla.
 
 Mindhárom nézet automatikusan a te irodaházaidra szűkül.
 

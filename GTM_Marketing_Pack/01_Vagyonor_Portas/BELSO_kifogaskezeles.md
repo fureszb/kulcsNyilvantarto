@@ -19,6 +19,6 @@
 
 ## Beszélgetés-nyitók (műszakértekezletre)
 
-- "Volt olyan, hogy utólag kellett igazolnod, hogy megcsináltál valamit &ndash; és nem tudtad?"
+- "Volt olyan, hogy utólag kellett igazolnod, hogy megcsináltál valamit, és nem tudtad?"
 - "Mennyi időt viszel el egy hónapban a papírmunka? Nem azt kérdezem, hány jegyzőkönyv, hanem hogy hány óra."
-- "Ha holnap eltűnik egy kulcs, kinél kezdenék a keresést &ndash; és ki tudná bizonyítani, hogy nem nála van?"
+- "Ha holnap eltűnik egy kulcs, kinél kezdenék a keresést, és ki tudná bizonyítani, hogy nem nála van?"

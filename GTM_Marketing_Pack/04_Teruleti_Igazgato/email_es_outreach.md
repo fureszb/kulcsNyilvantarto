@@ -17,7 +17,7 @@
 
 ## E-mail &ndash; fő változat
 
-**Tárgy:** Hány helyszínt bír el ma egy biztonsági vezetője &ndash; és miért annyit?
+**Tárgy:** Hány helyszínt bír el ma egy biztonsági vezetője, és miért éppen annyit?
 
 Kedves [Név]!
 
@@ -26,7 +26,7 @@ A bemutatón sok modult láttunk. Az Ön pozíciójából viszont három tétel 
 
 **Egy.** Egy biztonsági vezető havi 25&ndash;30 órát tölt Excel-beosztással,
 pótlás-telefonálással és riportgyűjtéssel. Ez az idő nem a helyszínek felügyeletére
-megy &ndash; és ez szabja meg, hány helyszínt bír el. A rendszerrel ebből
+megy, és éppen ez szabja meg, hány helyszínt bír el. A rendszerrel ebből
 20&ndash;25 óra szabadul fel havonta, vezetőnként. Ez nem létszámleépítés,
 hanem nagyobb terület ugyanazzal a csapattal.
 

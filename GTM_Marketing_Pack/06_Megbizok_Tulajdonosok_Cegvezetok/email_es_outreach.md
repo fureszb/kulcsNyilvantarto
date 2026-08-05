@@ -14,7 +14,7 @@
 ## Tárgymező-variációk
 
 1. `120 000 Ft/helyszín &ndash; egy 1,75 milliós árbevételű posztra vetítve 6,8%`
-2. `Amit egyetlen elvesztett SLA-vita kerül &ndash; és mi az alternatíva ára`
+2. `Mennyibe kerül egyetlen elvesztett SLA-vita, és mennyibe az alternatíva?`
 3. `3 helyszín, 60 nap, előre rögzített kilépési pont &ndash; javaslat a demó után`
 
 ---
@@ -71,7 +71,7 @@ Nem küldök újabb anyagot. Egyetlen kérdésem van, mert erre a modell egésze
 árcsökkentést vagy díjkorrekciót kellett elfogadnia, mert nem tudta bizonyítani
 a teljesítést?**
 
-Ha igen, kérem mondja meg a nagyságrendjét &ndash; és a modellt arra az esetre
+Ha igen, kérem, mondja meg a nagyságrendjét, és a modellt arra az esetre
 számolom újra. Az általános ROI-tábla ilyenkor felesleges: egyetlen valós ügy
 konkrétabban dönt.
 
