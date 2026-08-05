@@ -1889,12 +1889,14 @@ címsort kell használni, különben a belső rész az ügyfélnek küldhető f�
 
 | Mappa | Szerepkör | Döntési pozíció |
 |---|---|---|
+| `00_Brand` | &ndash; | Arculati útmutató: színek, tipográfia, hangnem-szabályok |
 | `01_Vagyonor_Portas` | Vagyonőr / portás | Végfelhasználó &ndash; elfogadás-tesztelés a döntés előtt |
 | `02_Property_Manager` | Ingatlankezelő | Veto-jogú, nyomásgyakorló |
 | `03_Biztonsagi_es_Teruleti_Vezeto` | Biztonsági vezető | Operatív kulcsszereplő |
 | `04_Teruleti_Igazgato` | Területi igazgató | Stratégiai / részben költségvetési |
 | `05_Irodahazi_Berlok` | Irodaházi bérlő | Kereslet-igazoló, elfogadó |
 | `06_Megbizok_Tulajdonosok_Cegvezetok` | Megbízó / tulajdonos | **Fizető döntéshozó** |
+| `07_Kozos` | &ndash; | Szerepkör-független segédanyag: ROI-módszertan, GYIK, összehasonlító táblázat |
 
 ## PDF-generálás
 
@@ -1914,12 +1916,12 @@ weasyprint GTM_Marketing_Pack/06_Megbizok_Tulajdonosok_Cegvezetok/adatlap_szorol
 Böngészőből: a HTML megnyitása után Ctrl+P &rarr; A4 &rarr; margó: alapértelmezett,
 "Háttérgrafika" bekapcsolva.
 
-## Arculat
+## Arculat és hangnem
 
-A színek a projekt forráskódjából származnak (`tailwind.config.js`,
-`resources/css/app.css`): chrome `#0f172a`, accent `#3b82f6`, accent-light `#60a5fa`,
-valamint a safelist akcentek (teal `#0d9488`, emerald `#059669`, amber `#b45309`,
-indigo `#4f46e5`). Betűtípus: Inter, nyomtatási fallback system-ui / Helvetica / Arial.
+A teljes szín-, tipográfia- és hangnem-szabálykönyv a
+[`00_Brand/arculati_utmutato.md`](00_Brand/arculati_utmutato.md) fájlban van.
+Új szöveg vagy szerepkör felvétele előtt azt kell elolvasni, nem a meglévő
+lapokból visszafejteni a konvenciót.
 
 ## Fontos
 
@@ -1935,6 +1937,263 @@ Az anyagokban szereplő ROI-értékek **modellszámítások**, nem szerződéses
 saját óradíjaival és önköltségeivel újraszámolandó.
 """
 
+
+BRAND_GUIDE = """# Arculati és hangnem-útmutató &ndash; GTM Marketing Pack
+
+Ez a dokumentum a hat szerepkör-csomag közös alapja. Új anyag írásakor ide kell
+visszanyúlni, ne az egyes szerepkör-fájlokból másolgatva &ndash; azok gyakran
+egyedi kompromisszumot tartalmaznak, ez a dokumentum a szabályt.
+
+## 1. Színpaletta
+
+A forrás a projekt kódja (`tailwind.config.js`, `resources/css/app.css`), nem
+szabadon választott B2B-paletta.
+
+### Alap (minden lapon)
+
+| Szerep | Hex | Forrás |
+|---|---|---|
+| Sötét héj (fejléc, lábléc, kiemelt számsáv) | `#0f172a` | `--brand-chrome`, `bg-slate-900` |
+| Alap kék akcent | `#3b82f6` | `--brand-accent` |
+| Világos kék akcent | `#60a5fa` | `--brand-accent-light` |
+| Mély kék (hover, link) | `#1d4ed8` | app.css |
+| Főszöveg | `#0f172a` | |
+| Törzsszöveg | `#334155` | |
+| Másodlagos szöveg | `#64748b` | |
+| Szegély | `#e2e8f0` | |
+| Háttér-mosás | `#f8fafc` / `#f1f5f9` | |
+| Pozitív jelzés | `#059669` | Tailwind emerald, safelist |
+| Figyelmeztetés | `#b45309` | Tailwind amber, safelist |
+| Negatív jelzés | `#dc2626` | Tailwind red, safelist |
+
+### Szerepkörönkénti akcentszín
+
+Minden szerepkör saját akcentszínt kap, hogy a hat lap egy csomagban is
+megkülönböztethető legyen, de a fenti alapréteg (sötét héj, szövegszínek)
+mindegyiken azonos marad.
+
+| Szerepkör | Akcent | Miért ez |
+|---|---|---|
+| Vagyonőr / portás | `#0d9488` (teal) | Operatív, emberközeli &ndash; nem pénzügyi szín |
+| Ingatlankezelő | `#2563eb` (kék) | Bizalom, átláthatóság, semleges felügyelet |
+| Biztonsági vezető | `#4f46e5` (indigo) | Kontroll, döntési súly |
+| Területi igazgató | `#b45309` (amber) | Figyelmeztető/pénzügyi regiszter &ndash; kontrolling |
+| Irodaházi bérlő | `#059669` (emerald) | Nyugalom, biztonságérzet |
+| Megbízó / tulajdonos | `#3b82f6` (alap kék) | Visszatér az alaphoz &ndash; ő a márka "hivatalos" nézőpontja |
+
+Új szerepkör felvételekor ne ismételjünk már használt akcentet, és kerüljük
+a pirosat/`#dc2626`-ot akcentként &ndash; az a rendszerben negatív jelzés.
+
+## 2. Tipográfia
+
+- Képernyőn és nyomtatásban: **Inter**, nyomtatási fallback `system-ui,
+  -apple-system, Segoe UI, Helvetica, Arial, sans-serif`.
+- Alap törzsbetű A4 lapon: **9.2pt**. Kivétel: operatív, nem irodai olvasóknak
+  szánt lap (pl. vagyonőr) **10.2pt** &ndash; ő nem monitor előtt, hanem
+  faliújságon vagy telefonon olvassa.
+- Sorköz: 1.45&ndash;1.5.
+- Emberi olvasásra szánt gondolatjel: mindig `&ndash;` (en-dash), sosem `--`
+  vagy egyszerű kötőjel szóközzel.
+- Idézőjel: magyar &bdquo;&hellip;&rdquo;, sosem egyenes `"&hellip;"`.
+
+## 3. Hangnem-szabályok
+
+Ezek a szabályok több felülvizsgálati körből származnak, konkrét hibákra
+visszavezetve &ndash; ne térjünk el tőlük érv nélkül.
+
+1. **Ne másolj angol mondatszerkezetet.** A `gondolatjel + kötőszó` (&bdquo;X
+   &ndash; és Y&rdquo;) magyarul mindig vessző vagy önálló mondat. Az
+   elliptikus szembeállítás (&bdquo;Nem A &ndash; B&rdquo;) helyett mindig
+   &bdquo;nem A-t jelent, hanem B-t&rdquo;.
+2. **Minden mondatnak legyen igei állítmánya.** Angolban egy gondolatjel
+   után természetes a töredékmondat, magyarban nem.
+3. **A fő e-mail 150&ndash;250 szó.** Ha hosszabb, húzd &ndash; a B2B olvasó
+   nem olvassa végig a harmadik bekezdést.
+4. **Nincs öndicséret és alátámaszthatatlan felsőfok.** Töröld az olyan
+   fordulatokat, mint &bdquo;a legerősebb funkció&rdquo; vagy &bdquo;amit
+   senki nem kap meg&rdquo;. A vevő dönti el, mi erős neki.
+5. **Nincs hamis pontosság.** Modellszámításnál kerekíts (&bdquo;kb. +40 e
+   Ft&rdquo;, ne &bdquo;+41 600 Ft&rdquo;), és mindig tüntesd fel a
+   számítási alapot.
+6. **A rendszer még nincs bevezetve sehol.** A csomag célja az előfizetés
+   eladása, nem a bevezetés kommunikálása. A nem-vevő szereplőknek (pl.
+   dolgozó, bérlő) szánt szöveg feltételes módban fogalmaz, és
+   visszajelzést kér, nem tájékoztat. Ha egy szereplő úgy érzi, hogy a
+   döntés nélküle született meg, ellenérdekeltté válik.
+7. **Ne ígérj olyat, amit a termék nem tud.** Például: ez **nem**
+   kapu-/ajtóbeléptető rendszer, hanem bejárás-igazoló. A bérlőnek szánt
+   &bdquo;kényelmes beléptetés&rdquo; ígérete hazugság lenne.
+8. **A belső és az ügyfélnek küldhető tartalom szigorúan elválik.** A
+   kifogáskezelés és a beszélgetés-nyitók a másik fél feltételezett
+   motivációit elemzik &ndash; ez soha nem kerülhet ügyfél kezébe. A
+   generátor ezt automatikusan szétválasztja a
+   `## Kifogáskezelési útmutató` címsornál.
+
+## 4. CTA-stílus
+
+A CTA mindig konkrét, mérhető, időben behatárolt következő lépés, sosem
+&bdquo;vegye fel velünk a kapcsolatot&rdquo;. Példa a helyes mintára: &bdquo;3
+helyszín, 60 nap, előre rögzített sikerkritériumokkal.&rdquo; A CTA a
+dokumentumban mindig a számszerű levezetés (ROI-tábla) **előtt** áll, nem
+az utolsó oldal alján, adatsorok mögött.
+
+## 5. Dokumentumszerkezet (A4 adatlap)
+
+Minden szerepkör-adatlap ugyanazt a sorrendet követi: fejléc (kicker, cím,
+alcím) &rarr; meta-sáv (3 kulcsadat) &rarr; fájdalompontok &rarr; megoldások
+&rarr; számok &rarr; korlátok/GYIK &rarr; kiemelt idézet &rarr; CTA &rarr;
+ROI-tábla (ha releváns) &rarr; lábléc. Ezt a `render_flyer()` függvény
+kényszeríti ki a generátorban &ndash; szerkezeti eltérést csak ott, kódban
+érdemes bevezetni, nem egyedi HTML-szerkesztéssel.
+"""
+
+ROI_METHODOLOGY = """# ROI-módszertan &ndash; egységes számítási alap
+
+A 04-es (területi igazgató) és a 06-os (megbízó/tulajdonos) lapon külön-külön
+szerepel egy-egy ROI-levezetés. Ez a dokumentum a kettő közös alapja, hogy két
+külön beszélgetésben ne mondjunk egymásnak ellentmondó számot. Élő ajánlat
+előtt minden feltételezést az ügyfél saját adataival kell felülírni &ndash;
+az alábbi értékek iparági becslések, nem szerződéses vállalások.
+
+## 1. Alapegység: a helyszín
+
+Az elszámolás alapja a helyszín (lépcsőház/épület), nem a felhasználó. Ez
+azért fontos érv, mert a bővülés lineárisan tervezhető: az ötödik helyszín
+ugyanannyiba kerül, mint az első.
+
+## 2. Alapfeltevések (felülírandók)
+
+| Változó | Alapérték | Megjegyzés |
+|---|---|---|
+| 24/7-es poszt havi óraszáma | 730 óra | 365 &times; 24 / 12 |
+| Megbízói óradíj | 2 400 Ft | piaci átlag, régiófüggő |
+| Őrzési önköltség (adminisztrációra vetítve) | 1 800 Ft/óra | belső bér+járulék |
+| Vezetői önköltség (biztonsági vezető) | 4 500 Ft/óra | bér+járulék |
+| Igazgatói önköltség | 6 000 Ft/óra | bér+járulék |
+| Egy kilépő munkatárs pótlási költsége | 180 000 Ft | toborzás, oktatás, betanulási kiesés, túlóra-fedezés |
+| Iparági éves fluktuáció | 50% | tapasztalati érték biztonsági szolgáltatóknál |
+| Fedezeti hányad (megbízói szerződésen) | 12% | árbevétel-fedezet arány |
+
+## 3. Helyszín-szintű havi modell (06-os lap alapja)
+
+```
+Helyszín havi árbevétele  = 730 óra × megbízói óradíj
+Platformdíj                = 120 000 Ft (6,8% egy 2 400 Ft-os óradíjnál)
+Ismétlődő megtakarítás     = megszűnő őri adminisztráció
+                            + visszanyert vezetői kapacitás
+                            + papír/iktatás megtakarítás
+Érvényesíthető többlet      = árbevétel × 5% (óradíj-emelés, tenderen érvelhető)
+Nettó havi eredmény         = ismétlődő megtakarítás + érvényesíthető többlet
+                              &minus; platformdíj
+```
+
+**Fontos korlát, amit minden beszélgetésben ki kell mondani:** az ismétlődő
+megtakarítás önmagában jellemzően **nem** fedezi a díjat. A különbözetet az
+érvényesíthető óradíj-emelésnek vagy a kockázati oldalnak (lásd lent) kell
+fedeznie &ndash; ezt a vevőnek magának kell realizálnia, mi nem tehetjük meg
+helyette automatikusan.
+
+## 4. Vezetői szintű éves modell (04-es lap alapja)
+
+```
+Éves fluktuációs költség  = aktív állomány × fluktuációs ráta × pótlási költség
+Korai észleléssel elérhető
+javulás (konzervatív)      = 8 százalékpont
+Éves megtakarítás          = (aktív állomány × 0,08) × pótlási költség
+Visszanyert vezetői idő    = 20&ndash;25 óra/hó/vezető
+```
+
+## 5. Kockázati oldal (nem ismétlődő, de nagyobb tételek)
+
+| Esemény | Nagyságrend | Mikor releváns |
+|---|---|---|
+| Egyetlen megnyert kárvita | 800 000&ndash;5 000 000 Ft | ha van dokumentált, aláírt jegyzőkönyv |
+| Egy megelőzett generálkulcs-vesztés | 400 000&ndash;1 200 000 Ft | napi tételes ellenőrzéssel |
+| Egy megtartott ügyfél-helyszín | &asymp; 2 500 000 Ft/év | mérhető SLA-teljesítéssel |
+
+## 6. Amit sosem mondunk
+
+- Nem állítjuk, hogy a rendszer csökkenti az őrzési létszámot.
+- Nem ígérünk konkrét, garantált megtérülési időt &ndash; csak modellt,
+  feltételezésekkel.
+- Nem kerekítünk felfelé egyetlen tételt sem a végösszeg kedvéért.
+"""
+
+FAQ = """# Gyakori kérdések &ndash; szerepkör-független
+
+Ezek a kérdések bármelyik szerepkörnél felmerülhetnek, ezért nem kerültek be
+minden egyes lapba külön-külön. Itt egy helyen, egységes válasszal.
+
+**Ez beléptető (kapu-/ajtó-)rendszer?**
+Nem. A platform bejárás-igazoló (checkpoint) rendszer: azt rögzíti, hogy egy
+őr a helyszínen elhelyezett NFC-matricát beolvasta-e, nem azt, hogy ki
+léphet be egy ajtón. Ezt sosem szabad máshogy kommunikálni.
+
+**Mi történik az adatokkal, ha megszűnik az előfizetés?**
+Minden cég adata elkülönített, saját adatbázisban van. Az ellenőrzési
+előzmények CSV-be exportálhatók, a jegyzőkönyvek PDF-ként letölthetők. A
+kilépési feltételeket a szerződésben kell rögzíteni.
+
+**Mennyi ideig tart a bevezetés?**
+Helyszínenként 6&ndash;12 NFC-checkpont kihelyezése, a meglévő beosztás
+Excel-importtal egy lépésben betölthető, a kulcs-/kártyaleltár migrálása
+szükséges. Egy pilot helyszín tipikusan 45&ndash;60 perc közös beállítással
+indítható.
+
+**Mi történik, ha nincs térerő?**
+A natív mobilalkalmazás offline-szinkronizációs sorral rendelkezik: az
+NFC-bejárás és a GPS-jelentés a telefon belső tárolójában vár, egyedi
+azonosítóval (nincs duplikáció), és automatikusan újraküldésre kerül, amint
+helyreáll a kapcsolat.
+
+**Hogyan kezeli a rendszer a személyes adatokat (aláírás, GPS)?**
+Az aláírásképek fájlként kizárólag a PDF elkészültéig léteznek a szerveren,
+utána véglegesen törlődnek &ndash; csak a kész dokumentumba ágyazva maradnak
+meg. A GPS-helymeghatározás kizárólag szolgálati időben fut, és zóna-be- és
+kilépést rögzít, nem folyamatos útvonalat.
+
+**Van önkiszolgáló regisztráció vagy jelszó-visszaállítás?**
+Nincs, ez tudatos döntés. Fiókot kizárólag a cég adminisztrátora vagy a
+szoftver üzemeltetője hozhat létre, jelszót ők állíthatnak vissza.
+
+**Hogyan van elkülönítve két cég adata egymástól?**
+A rendszer több céget szolgál ki egyetlen szoftverpéldányból, de minden cég
+saját, teljesen elkülönített adatbázisban tárolja az adatait. Egy céghez
+tartozó felhasználó technikailag nem férhet hozzá másik cég oldalaihoz;
+ilyen próbálkozás esetén a rendszer automatikusan kilépteti.
+
+**Mi van, ha a natív push-értesítés (Android/iOS) nem működik?**
+A natív mobil push csatorna technikailag elő van készítve, de éles
+hitelesítő kulcsok hiányában jelenleg nem küld push-üzenetet. A böngésző
+alapú (Web Push) csatorna éles és minden bejelentkezett felhasználónál
+működik.
+
+**Mennyibe kerül, ha több helyszínünk van?**
+Az elszámolás helyszínenkénti (120 000 Ft/helyszín/hó), sávos kedvezmény
+tárgyalható 10+, 25+, 50+ helyszín felett.
+"""
+
+COMPARISON_TABLE = """# Excel/papír vs. platform &ndash; összehasonlító táblázat
+
+Ez a táblázat gyors referenciaként használható bármelyik szerepkör-
+beszélgetésben, amikor konkrét összevetés kell a jelenlegi és a jövőbeli
+munkafolyamat között. Nem helyettesíti a szerepkör-specifikus érvelést.
+
+| Funkció | Ma (papír/Excel/telefon) | A platformmal |
+|---|---|---|
+| Bejárás igazolása | Szóbeli állítás, utólag nem ellenőrizhető | NFC-checkpoint, névvel és időbélyeggel |
+| Kulcs-/kártyaellenőrzés | Kézzel vezetett füzet, könnyen elveszik | Tételes, digitális státusz minden elemre |
+| Jegyzőkönyv (kárfelvétel stb.) | 20&ndash;30 perc kézírás, iktatás | 6&ndash;8 perc űrlap, azonnali PDF |
+| Beosztás / vezénylés | Excel, telefonos egyeztetés | Havi rács, önkiszolgáló jelölés, Excel-import |
+| Pótlás kiesés esetén | 8&ndash;15 telefonhívás, esetleges | Sorrendbe állított jelöltek, egy kattintás |
+| &bdquo;Ki van bent&rdquo; | Két telefon és egy Excel-nézés | Élő nézet, a napi beosztásból |
+| Zónafigyelés | Nincs | GPS-alapú geofence, jitter-védelemmel |
+| Napi jelentés | Papír vagy e-mail-lánc | Strukturált, jóváhagyható, megosztható |
+| Teljesítménymérés | Vezetői benyomás | Nyílt képlet: oktatottság mínusz fluktuáció |
+| Belső tudásbázis | Mappák, papír szabályzat | AI-asszisztens, csak a cég dokumentumaiból |
+| Auditnapló | Nincs egységes forrás | Minden releváns esemény, időbélyeggel |
+| Több helyszín skálázása | Új tábla, új folyamat helyszínenként | Új helyszín = adminisztrációs művelet |
+"""
 
 INTERNAL_HEADER = """> # BELSŐ ANYAG &ndash; ÜGYFÉLNEK NEM TOVÁBBÍTHATÓ
 >
@@ -1968,6 +2227,24 @@ def main():
     (OUTPUT_ROOT / "00_README.md").write_text(README, encoding="utf-8")
 
     written = []
+
+    brand_dir = OUTPUT_ROOT / "00_Brand"
+    brand_dir.mkdir(parents=True, exist_ok=True)
+    brand_path = brand_dir / "arculati_utmutato.md"
+    brand_path.write_text(BRAND_GUIDE, encoding="utf-8")
+    written.append(brand_path)
+
+    common_dir = OUTPUT_ROOT / "07_Kozos"
+    common_dir.mkdir(parents=True, exist_ok=True)
+    for fname, content in (
+        ("ROI_Modszertan.md", ROI_METHODOLOGY),
+        ("GYIK.md", FAQ),
+        ("Osszehasonlito_Tablazat.md", COMPARISON_TABLE),
+    ):
+        p = common_dir / fname
+        p.write_text(content, encoding="utf-8")
+        written.append(p)
+
     for persona, email_md in PERSONAS:
         d = OUTPUT_ROOT / persona["dir"]
         d.mkdir(parents=True, exist_ok=True)

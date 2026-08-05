@@ -17,12 +17,14 @@ címsort kell használni, különben a belső rész az ügyfélnek küldhető f�
 
 | Mappa | Szerepkör | Döntési pozíció |
 |---|---|---|
+| `00_Brand` | &ndash; | Arculati útmutató: színek, tipográfia, hangnem-szabályok |
 | `01_Vagyonor_Portas` | Vagyonőr / portás | Végfelhasználó &ndash; elfogadás-tesztelés a döntés előtt |
 | `02_Property_Manager` | Ingatlankezelő | Veto-jogú, nyomásgyakorló |
 | `03_Biztonsagi_es_Teruleti_Vezeto` | Biztonsági vezető | Operatív kulcsszereplő |
 | `04_Teruleti_Igazgato` | Területi igazgató | Stratégiai / részben költségvetési |
 | `05_Irodahazi_Berlok` | Irodaházi bérlő | Kereslet-igazoló, elfogadó |
 | `06_Megbizok_Tulajdonosok_Cegvezetok` | Megbízó / tulajdonos | **Fizető döntéshozó** |
+| `07_Kozos` | &ndash; | Szerepkör-független segédanyag: ROI-módszertan, GYIK, összehasonlító táblázat |
 
 ## PDF-generálás
 
@@ -42,12 +44,12 @@ weasyprint GTM_Marketing_Pack/06_Megbizok_Tulajdonosok_Cegvezetok/adatlap_szorol
 Böngészőből: a HTML megnyitása után Ctrl+P &rarr; A4 &rarr; margó: alapértelmezett,
 "Háttérgrafika" bekapcsolva.
 
-## Arculat
+## Arculat és hangnem
 
-A színek a projekt forráskódjából származnak (`tailwind.config.js`,
-`resources/css/app.css`): chrome `#0f172a`, accent `#3b82f6`, accent-light `#60a5fa`,
-valamint a safelist akcentek (teal `#0d9488`, emerald `#059669`, amber `#b45309`,
-indigo `#4f46e5`). Betűtípus: Inter, nyomtatási fallback system-ui / Helvetica / Arial.
+A teljes szín-, tipográfia- és hangnem-szabálykönyv a
+[`00_Brand/arculati_utmutato.md`](00_Brand/arculati_utmutato.md) fájlban van.
+Új szöveg vagy szerepkör felvétele előtt azt kell elolvasni, nem a meglévő
+lapokból visszafejteni a konvenciót.
 
 ## Fontos
 
