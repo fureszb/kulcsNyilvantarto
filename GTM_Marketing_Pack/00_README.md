@@ -17,11 +17,11 @@ címsort kell használni, különben a belső rész az ügyfélnek küldhető f�
 
 | Mappa | Szerepkör | Döntési pozíció |
 |---|---|---|
-| `01_Vagyonor_Portas` | Vagyonőr / portás | Végfelhasználó &ndash; elfogadási kockázat |
+| `01_Vagyonor_Portas` | Vagyonőr / portás | Végfelhasználó &ndash; elfogadás-tesztelés a döntés előtt |
 | `02_Property_Manager` | Ingatlankezelő | Veto-jogú, nyomásgyakorló |
 | `03_Biztonsagi_es_Teruleti_Vezeto` | Biztonsági vezető | Operatív kulcsszereplő |
 | `04_Teruleti_Igazgato` | Területi igazgató | Stratégiai / részben költségvetési |
-| `05_Irodahazi_Berlok` | Irodaházi bérlő | Érték-igazoló, elfogadó |
+| `05_Irodahazi_Berlok` | Irodaházi bérlő | Kereslet-igazoló, elfogadó |
 | `06_Megbizok_Tulajdonosok_Cegvezetok` | Megbízó / tulajdonos | **Fizető döntéshozó** |
 
 ## PDF-generálás
@@ -50,6 +50,13 @@ valamint a safelist akcentek (teal `#0d9488`, emerald `#059669`, amber `#b45309`
 indigo `#4f46e5`). Betűtípus: Inter, nyomtatási fallback system-ui / Helvetica / Arial.
 
 ## Fontos
+
+**A rendszer még nincs bevezetve sehol.** Az anyagok célja kizárólag az, hogy a
+döntési láncban szereplő feleket meggyőzzék az előfizetésről. Egyetlen szöveg sem
+közölheti kész tényként a bevezetést &ndash; a 01-es (vagyonőr) és 05-ös (bérlő)
+anyag ezért feltételes módban fogalmaz, és visszajelzést kér, nem tájékoztat.
+Új szöveg írásakor ezt tartsuk meg: ha a nem-vevő szereplők úgy érzik, hogy a döntés
+nélkülük megszületett, ellenérdekeltté válnak, és épp az adoptációs kockázat nő.
 
 Az anyagokban szereplő ROI-értékek **modellszámítások**, nem szerződéses vállalások,
 és minden esetben fel van tüntetve a számítási alap. Éles ajánlat előtt az ügyfél

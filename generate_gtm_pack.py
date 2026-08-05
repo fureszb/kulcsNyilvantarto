@@ -470,16 +470,16 @@ P1 = {
     "accent_soft": "#f0fdfa",
     "accent_light": "#5eead4",
     "base": "10.2pt",
-    "kicker": "Munkatársi tájékoztató &middot; Operatív szint",
-    "title": "Ha utólag számon kérik rajtad, lesz mit felmutatnod.",
-    "subtitle": "Ez a rendszer nem több adminisztrációt jelent, hanem kevesebbet. "
-                "Amit eddig papíron vezettél, azt ezután másodpercek alatt elintézed, "
-                "és minden elvégzett munkád mellett ott marad a neved és a pontos "
-                "időpont. Elsősorban téged véd.",
+    "kicker": "Döntés-előkészítő &middot; Amit az őrszolgálat nyerne vele",
+    "title": "Ha utólag számon kérik rajtad, lenne mit felmutatnod.",
+    "subtitle": "A cég egy olyan rendszer bevezetését mérlegeli, amely nem több "
+                "adminisztrációt jelentene, hanem kevesebbet. Amit ma papíron vezetsz, "
+                "azt másodpercek alatt elintéznéd, és minden elvégzett munkád mellett "
+                "ott maradna a neved és a pontos időpont. Elsősorban téged védene.",
     "meta": [
         ("Kinek szól", "Vagyonőr, portás, recepciós"),
+        ("Állapot", "Döntés még nem született &ndash; a véleményetek számít"),
         ("Eszköz", "Saját okostelefon vagy szolgálati készülék"),
-        ("Betanulás", "Kb. 20 perc, oktatási modullal"),
     ],
     "pains_title": "Ahogy ma megy",
     "pains_lead": "Három helyzet a szolgálatból, amit ma papíron és telefonon intézel.",
@@ -496,7 +496,7 @@ P1 = {
          "p": "Végigmentél az épületen. Ezt utólag nem tudod igazolni. Ha panasz érkezik, "
               "a szavad áll szemben az ügyfél állításával."},
     ],
-    "fix_title": "Amit helyette csinálsz",
+    "fix_title": "Amit helyette csinálnál",
     "solutions": [
         {"h": "NFC-matrica beolvasása", "tag": "NFC bejárás-ellenőrzés",
          "p": "A telefonodat hozzáérinted a checkponton elhelyezett matricához. Kész. Az esemény "
@@ -520,14 +520,15 @@ P1 = {
               "információ ne szóban adódjon tovább. A vezetői körüzenetre pedig "
               "válaszolni tudsz a szálban."},
     ],
-    "facts_title": "Mennyi időt spórolsz vele",
+    "facts_title": "Mennyi időt spórolnál vele",
     "facts": [
         ("3 mp", "egy NFC-checkpoint beolvasása a papíralapú bejárási lap kitöltése helyett"),
         ("6&ndash;8 perc", "egy kárfelvételi jegyzőkönyv kitöltése a korábbi 20&ndash;30 perc helyett"),
         ("100", "a legutóbbi 100 beolvasásod visszakereshető az NFC-előzményekben"),
     ],
     "mods_title": "Amit fontos tudnod &ndash; őszintén",
-    "mods_lead": "A rendszer bevezetése kérdéseket vet fel. Ezek a valós válaszok.",
+    "mods_lead": "Egy ilyen rendszer kérdéseket vet fel. Ezek a valós válaszok, "
+                 "még a döntés előtt.",
     "mods": [
         ("GPS", "csak szolgálat alatt fut. A rendszer azt jelzi, ha elhagyod a zónát, "
                 "illetve ha visszatérsz oda; az útvonaladat nem követi. Téves riasztást "
@@ -546,20 +547,21 @@ P1 = {
              "mennyit dolgozol, hanem azt dokumentálja, hogy <strong>elvégezted</strong>, amit "
              "rád bíztak. Ez akkor számít, amikor egy vitatott ügyben rád mutatnak.",
     "cta": {
-        "h": "Mi történik a bevezetéskor",
-        "p": "Nem kell semmit előkészítened. A folyamat a szolgálat mellett fut.",
+        "h": "Amit most kérünk tőled",
+        "p": "A döntés még nem született meg, és nem is szeretnénk nélkületek meghozni. "
+             "Aki nap mint nap csinálja a munkát, jobban látja, hol akadna el a dolog.",
         "bullets": [
-            "<strong>1. nap:</strong> fiókot kapsz, a telefonodra felteszed az alkalmazást "
-            "(vagy a kezdőképernyőre a webes verziót).",
-            "<strong>1. hét:</strong> végigkattintod a helyismereti oktatási modult. "
-            "Körülbelül 20 perc, szolgálat közben, holtidőben is elvégezhető.",
-            "<strong>Átmenet:</strong> a papírfüzetet a bevezetés első hetében párhuzamosan "
-            "vezetjük, hogy senki ne maradjon adat nélkül.",
-            "<strong>Kérdés esetén:</strong> a vezetődnek vagy az AI-asszisztensnek is "
-            "felteheted; a válasz a cég saját szabályzatából jön.",
+            "<strong>Nézd meg élesben:</strong> a próba során kapsz egy fiókot, és "
+            "elvégzel vele egy valódi kulcsellenőrzést meg egy bejárást. Kb. 10 perc.",
+            "<strong>Mondd meg, mi lassabb:</strong> ha bármelyik művelet több időt vinne "
+            "el, mint ma papíron, azt tudnunk kell. Ez a legfontosabb visszajelzés.",
+            "<strong>Kérdezz rá arra, ami zavar:</strong> GPS, vizsga, felelősség &ndash; "
+            "amit fent leírtunk, azt szóban is átbeszéljük a műszakértekezleten.",
+            "<strong>Ha bevezetjük:</strong> az első héten a papírfüzet párhuzamosan menne, "
+            "hogy senki ne maradjon adat nélkül.",
         ],
     },
-    "footnote": "Belső bevezetési tájékoztató &ndash; nem árajánlat.",
+    "footnote": "Döntés-előkészítő tájékoztató &ndash; a bevezetésről még nem született döntés.",
 }
 P1["solutions"][1]["p"] = (
     "Feljegyzés, kárfelvétel, talált tárgy, kulcsátadás, gépjárműnapló, bombariadó "
@@ -567,71 +569,84 @@ P1["solutions"][1]["p"] = (
     "gyűjtöd be. A PDF azonnal elkészül, nyomtatás és iktatás nélkül."
 )
 
-P1_EMAIL = """# Vagyonőr / Portás &ndash; belső bevezetési kommunikáció
+P1_EMAIL = """# Vagyonőr / portás &ndash; elfogadás-tesztelő kommunikáció
 
-> **Fontos megkülönböztetés:** ez a szerepkör nem vásárlói döntéshozó. Nem meggyőzni kell,
-> hanem **elfogadtatni** &ndash; a bevezetés legnagyobb kockázata az operatív ellenállás.
-> Az alábbi levél a megbízó/szolgáltató cég belső csatornáján megy ki (csoportvezető,
-> objektumvezető vagy diszpécser aláírásával), nem értékesítői e-mailként.
+> **Fontos megkülönböztetés:** ez a szerepkör nem vásárlói döntéshozó, és a rendszer
+> **még nincs bevezetve** &ndash; a cég most mérlegeli az előfizetést. Ennek az anyagnak
+> két célja van: (1) kiderítsük, hogy az operatív állomány elfogadná-e, mert a
+> bevezetés legnagyobb kockázata az ő ellenállásuk; (2) a döntéshozó felé bizonyítható
+> legyen, hogy nem fog megbukni a használaton. A levél a cég belső csatornáján megy ki
+> (csoportvezető, objektumvezető vagy diszpécser aláírásával), nem értékesítői levélként.
+>
+> **Kritikus:** semmit nem szabad kész tényként közölni. Ha az őrök úgy érzik, hogy
+> a döntés már megszületett és csak tájékoztatják őket, a visszajelzés értéktelen lesz.
 
 ---
 
 ## Tárgymező-variációk
 
-1. `Változás a szolgálati adminisztrációban &ndash; ami neked kevesebb papírt jelent`
-2. `A jövő héttől: átadás-átvétel, jegyzőkönyv és beosztás egy helyen, telefonon`
-3. `Bejárás-igazolás NFC-vel &ndash; mit jelent ez a napi munkádban?`
+1. `Egy rendszert nézünk &ndash; előbb ti mondjátok meg, hogy jó lenne-e`
+2. `Kevesebb papír a szolgálatban? Mielőtt döntenénk, a véleményetek kell`
+3. `Bejárás-igazolás NFC-vel &ndash; mit jelentene ez a napi munkátokban?`
 
 ---
 
 ## E-mail &ndash; fő változat
 
-**Tárgy:** Változás a szolgálati adminisztrációban &ndash; ami neked kevesebb papírt jelent
+**Tárgy:** Egy rendszert nézünk &ndash; előbb ti mondjátok meg, hogy jó lenne-e
 
 Kedves Kollégák!
 
-A következő hetekben bevezetünk egy rendszert, amivel az eddigi papírmunka nagy része
-a telefonotokon fog elkészülni. Mielőtt bárki azt gondolná, hogy ez plusz feladat:
-**pont az ellenkezője a cél.**
+Egy olyan rendszert vizsgálunk, amivel a mostani papírmunka nagy része a telefonon
+készülne el. **Döntés még nincs**, és nem is szeretnénk nélkületek meghozni:
+aki nap mint nap csinálja, jobban látja, hol akadna el a dolog.
 
-Egy kárfelvételi jegyzőkönyv ma 20&ndash;30 perc kézírás, aláírásokkal és iktatással.
-Ezután űrlapon töltitek ki, az aláírásokat a képernyőn gyűjtitek be, a PDF magától
-elkészül: 6&ndash;8 perc. A bejárást a checkpontra tett NFC-matricához érintett
-telefonnal igazoljátok &ndash; három másodperc. A beosztásban a saját sorotokba
-beírhatjátok, hogy nem értek rá vagy hogy vállaltok túlórát; nem kell telefonálni.
+Röviden, mit jelentene. Egy kárfelvételi jegyzőkönyv ma 20&ndash;30 perc kézírás,
+aláírásokkal és iktatással; a rendszerben űrlapon töltenétek ki, az aláírásokat a
+képernyőn gyűjtenétek be, a PDF magától elkészülne: 6&ndash;8 perc. A bejárást a
+checkpontra tett NFC-matricához érintett telefonnal igazolnátok, ami három másodperc.
+A beosztásban a saját sorotokba beírhatnátok, hogy nem értek rá vagy hogy vállaltok
+túlórát, tehát nem kellene telefonálni.
 
 **Amit előre tisztázok, mert tudom, hogy felmerül:**
 
-- A **GPS csak szolgálat alatt** fut, és a zóna elhagyását jelzi &ndash; nem az
-  útvonalatokat követi. Téves riasztás ellen csak három egymást követő jelzés után lép.
-- Az **aláírásképetek** a szerveren kizárólag a PDF elkészültéig létezik, utána
-  véglegesen törlődik.
-- **Térerő nélkül is működik:** a beolvasás eltárolódik és magától elmegy, duplikáció nélkül.
+- A **GPS csak szolgálat alatt** futna, és a zóna elhagyását jelezné, nem az
+  útvonalatokat követné. Téves riasztást csak három egymást követő jelzés után adna.
+- Az **aláírásképetek** a szerveren kizárólag a PDF elkészültéig létezne, utána
+  véglegesen törlődne.
+- **Térerő nélkül is működne:** a beolvasás eltárolódik és magától elmegy, duplikáció nélkül.
 
-A lényeg, amiért csináljuk: **minden elvégzett munkátok névvel és időbélyeggel rögzül.**
-Ha egy vitatott ügyben rátok mutatnak, ez a rendszer mellettetek szól.
+Amiért egyáltalán foglalkozunk vele: **minden elvégzett munkátok névvel és időponttal
+rögzülne.** Ha egy vitatott ügyben rátok mutatnak, ez mellettetek szólna.
 
-Az első héten a papírfüzet párhuzamosan megy. Betanulás: egy kb. 20 perces oktatási modul.
+**Amit kérek:** a jövő héten lesz egy próba. Aki vállalja, kap egy fiókot, és elvégez
+vele egy valódi kulcsellenőrzést meg egy bejárást &ndash; körülbelül 10 perc. Utána
+egyetlen kérdésre kérek választ: **volt-e olyan művelet, ami több időt vitt el, mint
+ma papíron?** Ha igen, az nekem fontosabb, mintha minden simán ment volna.
+
+Ha az derül ki, hogy ez nektek több munka, nem vezetjük be. Ezért kérdezlek titeket előbb.
 
 Üdvözlettel,
 [Név] &ndash; [Beosztás]
 
 ---
 
-## Követő üzenet (+7 nap, bevezetés után)
+## Követő üzenet (+7 nap, a próba után)
 
-**Tárgy:** Első hét a rendszerrel &ndash; mi az, ami nem működik jól?
+**Tárgy:** A próba után &ndash; két kérdés, egymondatos válasz elég
 
 Kedves Kollégák!
 
-Egy hete megy az új adminisztráció. Két konkrét kérdésem van, és mindkettőre
-egymondatos választ kérek:
+Köszönöm mindenkinek, aki kipróbálta. Két kérdésem van, és mindkettőre elég
+egy mondat:
 
-1. Melyik művelet tart még mindig hosszabb ideig, mint papíron?
-2. Van olyan helyszín vagy checkpont, ahol a beolvasás rendszeresen nem megy?
+1. Melyik művelet tartott hosszabb ideig, mint papíron?
+2. Volt olyan checkpont vagy helyszín, ahol a beolvasás nem ment?
 
-Az elsőt beállítás-kérdésként kezeljük, a másodikat matrica-cserével javítjuk.
-Nem kell hosszan indokolni, elég egy mondat válaszban.
+Az elsőre azért van szükségem, mert ez dönti el, hogy javasoljuk-e a bevezetést.
+A másodikat, ha bevezetjük, matricacserével javítjuk.
+
+Aki azt mondja, hogy nem kér belőle, azt is írja meg &ndash; azt is beleszámítom.
 
 [Név]
 
@@ -1361,16 +1376,16 @@ P5 = {
     "accent_dark": "#047857",
     "accent_soft": "#ecfdf5",
     "accent_light": "#6ee7b7",
-    "kicker": "Bérlői tájékoztató &middot; Szolgáltatási szint",
-    "title": "A szolgálatot méri, nem az Önök munkatársait.",
-    "subtitle": "Az épület biztonsági szolgálata digitális nyilvántartásra áll át. "
-                "A rendszer a saját őreit követi és dokumentálja &ndash; a bérlők "
-                "munkatársairól nem gyűjt adatot. Amit Önök kapnak: bizonyíték "
-                "kulcs-, kár- és kiürítési ügyekben.",
+    "kicker": "Bérlői tájékoztató &middot; Elvárható szolgáltatási szint",
+    "title": "A szolgálatot mérné, nem az Önök munkatársait.",
+    "subtitle": "Az épület üzemeltetője egy olyan rendszer bevezetését mérlegeli, amely "
+                "az őrszolgálat munkáját dokumentálja &ndash; a bérlők munkatársairól nem "
+                "gyűjtene adatot. Ez a lap azt foglalja össze, mit várhatna el tőle "
+                "bérlőként, és mit érdemes emiatt kérnie az üzemeltetőtől.",
     "meta": [
         ("Kinek szól", "Bérlői kapcsolattartó, irodavezető"),
-        ("Amit tenni kell", "Semmit &ndash; az üzemeltető és a szolgálat vezeti be"),
-        ("Akiről adat keletkezik", "Kizárólag az őrszolgálat munkatársairól"),
+        ("Állapot", "Az üzemeltető mérlegeli &ndash; döntés még nincs"),
+        ("Akiről adat keletkezne", "Kizárólag az őrszolgálat munkatársairól"),
     ],
     "pains_title": "Amit ma nem lehet visszakeresni",
     "pains_lead": "Ezek nem gyakori helyzetek, de amikor előfordulnak, nagy a tét.",
@@ -1392,7 +1407,7 @@ P5 = {
               "kárrendezéshez jegyzőkönyv kell, tanúval, aláírással, pontos "
               "időintervallummal &ndash; napokkal később már nem rekonstruálható."},
     ],
-    "fix_title": "Amit ezután kap &ndash; kérés nélkül",
+    "fix_title": "Amit bevezetés esetén kapna",
     "solutions": [
         {"h": "A rendszer az őröket követi, nem Önöket", "tag": "Adatvédelem",
          "p": "A GPS-helymeghatározás kizárólag a szolgálatban lévő őr telefonján fut, "
@@ -1446,78 +1461,83 @@ P5 = {
         ("Amit NEM kérhet", "az őrszolgálat beosztását, GPS-pozícióit vagy belső "
          "teljesítménymutatóit &ndash; ezek a szolgáltató munkajogi és üzleti adatai."),
     ],
-    "quote": "<strong>A lényeg röviden:</strong> Önöknek ebből nem lesz többletfeladata. "
-             "Az egyetlen változás az, hogy ami eddig szóban vagy egy füzetben történt, "
-             "az ezután aláírt PDF-ként keletkezik, és fél év múlva is előkereshető, "
+    "quote": "<strong>A lényeg röviden:</strong> Önöknek ebből nem lenne többletfeladata. "
+             "Az egyetlen változás az, hogy ami ma szóban vagy egy füzetben történik, "
+             "az aláírt PDF-ként keletkezne, és fél év múlva is előkereshető lenne, "
              "amikor a biztosító vagy egy hatóság kérdez.",
     "cta": {
-        "h": "Amit a bérlői kapcsolattartótól kérünk",
-        "p": "A bevezetéshez az Önök oldaláról összesen három adat kell:",
+        "h": "Amit most tehet, ha ezt szeretné",
+        "p": "A rendszert nem Ön rendeli meg, de a döntés még nyitott, és a bérlői "
+             "igény a legerősebb érv az üzemeltető felé. Egyetlen levél elég:",
         "bullets": [
-            "<strong>A tűzvédelmi felelősük neve és elérhetősége</strong> &ndash; hogy a "
-            "kiürítési nyilvántartásban az Önök sora előre kitöltve, a megfelelő "
-            "aláíróval jelenjen meg.",
-            "<strong>A jelenleg a portán tárolt kulcsaik és kártyáik listája</strong> &ndash; "
-            "az induló leltár összevetéséhez. Ha eltérés van, azt most a legolcsóbb tisztázni.",
-            "<strong>Egy e-mail-cím</strong>, ahová az Önöket érintő jegyzőkönyvek "
-            "másolata automatikusan megy.",
-            "Ezt az üzemeltetőnek vagy a biztonsági szolgálat vezetőjének küldje &ndash; "
-            "a beállítást ők végzik el.",
+            "<strong>Jelezze az üzemeltetőnek, hogy támogatná.</strong> A szolgáltatói "
+            "díjról szóló vitában az számít, hogy a bérlők kérik-e a dokumentált "
+            "őrzési teljesítést, vagy közömbösek iránta.",
+            "<strong>Kérje, hogy a szerződés térjen ki rá:</strong> aláírt jegyzőkönyv "
+            "minden Önöket érintő kulcs-, kár- és talált tárgy ügyről, az esemény napján.",
+            "<strong>Kérje a bérlőnkénti kiürítési nyilvántartást</strong> a tűzvédelmi "
+            "felelősük aláírásával &ndash; ez az Önök tűzvédelmi dokumentációjának is része lenne.",
+            "<strong>Ha bevezetik:</strong> Önöktől mindössze három adat kell majd &ndash; "
+            "a tűzvédelmi felelős neve, a portán tárolt kulcsaik listája és egy e-mail-cím "
+            "a jegyzőkönyv-másolatoknak.",
         ],
     },
-    "footnote": "Bérlői tájékoztató &ndash; a rendszert az épület üzemeltetője vezeti be.",
+    "footnote": "Bérlői tájékoztató &ndash; a bevezetésről az épület üzemeltetője dönt.",
 }
 
 P5_EMAIL = """# Irodaházi bérlő &ndash; kommunikációs csomag
 
-> **Pozicionálás:** a bérlő nem vevő. Két szerepe van: (1) **érték-igazoló** &ndash; ha ő
-> kéri a dokumentációt, az üzemeltetőnek indoka lesz megrendelni; (2) **elfogadó** &ndash;
-> a bevezetés nem ütközhet bérlői ellenállásba. A hangnem ezért nem eladás, hanem
-> szolgáltatási szint-tájékoztatás. Az árazás csak arányában jelenik meg.
+> **Pozicionálás:** a bérlő nem vevő, és a rendszer **még nincs bevezetve**. Két
+> szerepe van a döntésben: (1) **kereslet-igazoló** &ndash; ha a bérlők kérik a
+> dokumentált őrzési teljesítést, az üzemeltetőnek indoka lesz megrendelni, és a
+> díjat is könnyebben hárítja tovább; (2) **elfogadó** &ndash; a bevezetés nem ütközhet
+> bérlői ellenállásba. A hangnem ezért nem eladás, hanem igényfelmérés.
+>
+> **Kritikus:** a levél nem közölheti kész tényként az átállást. Ha a bérlő úgy érti,
+> hogy a döntés megvan és csak a költséget kapja, ellenérdekeltté válik. A cél épp
+> az ellenkezője: hogy ő kérje.
 
 ---
 
 ## Tárgymező-variációk
 
-1. `[Épület neve]: változás a kulcs- és jegyzőkönyv-kezelésben &ndash; amit Önöknek jelent`
-2. `Kiürítési nyilvántartás bérlőnként &ndash; egy adatot kérnénk Önöktől`
-3. `Aláírt jegyzőkönyv minden kulcsátadásról &ndash; a portaszolgálat digitális átállása`
+1. `[Épület neve]: mérlegeljük a kulcs- és jegyzőkönyv-kezelés digitalizálását`
+2. `Kérdés a bérlőkhöz: érne-e Önöknek valamit a dokumentált őrzési teljesítés?`
+3. `Aláírt jegyzőkönyv minden kulcsátadásról &ndash; kérnék egy visszajelzést`
 
 ---
 
 ## E-mail &ndash; fő változat (üzemeltető / PM aláírásával megy ki)
 
-**Tárgy:** [Épület neve]: változás a kulcs- és jegyzőkönyv-kezelésben &ndash; amit Önöknek jelent
+**Tárgy:** [Épület neve]: mérlegeljük a kulcs- és jegyzőkönyv-kezelés digitalizálását
 
 Tisztelt [Név]!
 
-Az épület biztonsági szolgálata a következő hetekben digitális nyilvántartásra áll át.
-Ez az Önök oldaláról **nem jár teendővel**, de két dolgot érdemes tudni.
+Az épület biztonsági szolgálatához egy digitális nyilvántartó rendszer bevezetését
+mérlegeljük. **A döntés még nem született meg**, és mielőtt meghoznánk, szeretném
+tudni, hogy a bérlőink hasznosnak tartanák-e. Két dolgot érdemes tudni róla.
 
-**Az első, mert ez szokott az első kérdés lenni: a rendszer az őrszolgálatot követi,
-nem a bérlőket.** A GPS kizárólag a szolgálatban lévő őr telefonján fut, és zóna-be- és
-kilépést rögzít, nem útvonalat. Nincs benne bérlői munkavállalói nyilvántartás, nincs
+**Az első, mert ez szokott az első kérdés lenni: a rendszer az őrszolgálatot követné,
+nem a bérlőket.** A GPS kizárólag a szolgálatban lévő őr telefonján futna, és zóna-be- és
+kilépést rögzítene, nem útvonalat. Nincs benne bérlői munkavállalói nyilvántartás, nincs
 beléptetés-figyelés és nincs kamerakép. Az Önök munkatársairól adat csak akkor
-keletkezik, ha egy konkrét jegyzőkönyvben félként szerepelnek.
+keletkezne, ha egy konkrét jegyzőkönyvben félként szerepelnek.
 
-**A második: ami eddig szóban vagy füzetben történt, ezután aláírt dokumentum lesz.**
+**A második: ami ma szóban vagy füzetben történik, aláírt dokumentum lenne.**
 Kulcs- és kártyaátadás azonosítóval, időponttal és három aláírással. Kiürítéskor az
 Önök cége külön tételként: bent maradt-e valaki, ki volt a tűzvédelmi felelős &ndash;
-ez az Önök tűzvédelmi dokumentációjának is része. Kárfelvétel az esemény napján,
+ez az Önök tűzvédelmi dokumentációjának is része lenne. Kárfelvétel az esemény napján,
 biztosítói kárrendezéshez használható formában. Talált tárgy átvételi aláírással.
-És ha felmerül a kérdés, hogy hajnalban járt-e ott őr, időbélyeges listával tudunk
+És ha felmerülne a kérdés, hogy hajnalban járt-e ott őr, időbélyeges listával tudnánk
 válaszolni.
 
-**Amit Önöktől kérnénk &ndash; összesen három adat:**
+**Amit kérek:** egyetlen mondat válaszban arról, hogy ez Önöknek érték lenne-e,
+és ha igen, melyik része a legfontosabb. A díj a szolgáltatási költségben jelenne meg,
+ezért a bérlői visszajelzés érdemben befolyásolja a döntést.
 
-1. A **tűzvédelmi felelősük neve és elérhetősége**, hogy a kiürítési nyilvántartásban
-   az Önök sora előre kitöltve, a megfelelő aláíróval jelenjen meg.
-2. A **jelenleg a portán tárolt kulcsaik és kártyáik listája** &ndash; az induló leltár
-   összevetéséhez. Ha eltérés van a nyilvántartásunkhoz képest, azt most a legegyszerűbb
-   tisztázni.
-3. Egy **e-mail-cím**, ahová az Önöket érintő jegyzőkönyvek másolata automatikusan megy.
-
-Ezt a hármat elég egy válaszlevélben visszaküldeni. A beállítást mi végezzük el.
+Ha volt az elmúlt évben olyan kulcs-, kár- vagy talált tárgy ügyük, ahol a
+dokumentáció hiánya gondot okozott, azt külön is megköszönöm &ndash; az ilyen konkrét
+eset többet nyom a latban, mint bármelyik érvem.
 
 Üdvözlettel,
 [Név] &ndash; [Üzemeltető / Ingatlankezelő]
@@ -1530,24 +1550,26 @@ Ezt a hármat elég egy válaszlevélben visszaküldeni. A beállítást mi vég
 
 Tisztelt [Név]!
 
-Az épület biztonsági szolgálatának digitális nyilvántartására áttérünk. Mivel a
-közös költség terhére valósul meg, leírom az arányokat is, hogy megítélhető legyen.
+Az épület biztonsági szolgálatához digitális nyilvántartó rendszer bevezetését
+mérlegeljük. Mivel a költség a szolgáltatási díjban jelenne meg, az arányokat is
+leírom, hogy megítélhető legyen.
 
 **A rendszer díja 120 000 Ft/hó az épületre.** Ez [18] bérlő között megosztva
 nagyságrendileg **6 700 Ft/hó bérlőnként**, ami egy 400 m&sup2;-es iroda havi bérleti
 díjának kevesebb mint 0,3%-a.
 
-**Amit ezért kap:** aláírt, azonnal letölthető jegyzőkönyvet minden kulcsátadásról,
+**Amit ezért kapna:** aláírt, azonnal letölthető jegyzőkönyvet minden kulcsátadásról,
 kárfelvételről, talált tárgyról és kiürítésről; bérlőnkénti kiürítési nyilvántartást
 a tűzvédelmi felelősük aláírásával; és időbélyeges bejárás-igazolást, ha vitás kérdés
 merül fel.
 
-**Amit ezért nem kap:** hozzáférést az őrszolgálat beosztásához, GPS-adataihoz vagy
-belső teljesítménymutatóihoz &ndash; ezek a szolgáltató munkajogi és üzleti adatai,
-és ez így is helyes.
+**Amit ezért nem kapna:** hozzáférést az őrszolgálat beosztásához, GPS-adataihoz vagy
+belső teljesítménymutatóihoz. Ezek a szolgáltató munkajogi és üzleti adatai, és ez
+így is helyes.
 
-Ha az arányokat vagy a dokumentum-típusokat részletesebben látná, szívesen átküldöm
-a bérlői adatlapot.
+**Amit kérek:** jelezze vissza, hogy ezt az összeget arányosnak tartja-e a felsorolt
+tartalomért. A döntést a bérlői visszajelzések alapján hozzuk meg; ha a többség nem
+tartja indokoltnak, nem vezetjük be.
 
 Üdvözlettel,
 [Név]
@@ -1867,11 +1889,11 @@ címsort kell használni, különben a belső rész az ügyfélnek küldhető f�
 
 | Mappa | Szerepkör | Döntési pozíció |
 |---|---|---|
-| `01_Vagyonor_Portas` | Vagyonőr / portás | Végfelhasználó &ndash; elfogadási kockázat |
+| `01_Vagyonor_Portas` | Vagyonőr / portás | Végfelhasználó &ndash; elfogadás-tesztelés a döntés előtt |
 | `02_Property_Manager` | Ingatlankezelő | Veto-jogú, nyomásgyakorló |
 | `03_Biztonsagi_es_Teruleti_Vezeto` | Biztonsági vezető | Operatív kulcsszereplő |
 | `04_Teruleti_Igazgato` | Területi igazgató | Stratégiai / részben költségvetési |
-| `05_Irodahazi_Berlok` | Irodaházi bérlő | Érték-igazoló, elfogadó |
+| `05_Irodahazi_Berlok` | Irodaházi bérlő | Kereslet-igazoló, elfogadó |
 | `06_Megbizok_Tulajdonosok_Cegvezetok` | Megbízó / tulajdonos | **Fizető döntéshozó** |
 
 ## PDF-generálás
@@ -1900,6 +1922,13 @@ valamint a safelist akcentek (teal `#0d9488`, emerald `#059669`, amber `#b45309`
 indigo `#4f46e5`). Betűtípus: Inter, nyomtatási fallback system-ui / Helvetica / Arial.
 
 ## Fontos
+
+**A rendszer még nincs bevezetve sehol.** Az anyagok célja kizárólag az, hogy a
+döntési láncban szereplő feleket meggyőzzék az előfizetésről. Egyetlen szöveg sem
+közölheti kész tényként a bevezetést &ndash; a 01-es (vagyonőr) és 05-ös (bérlő)
+anyag ezért feltételes módban fogalmaz, és visszajelzést kér, nem tájékoztat.
+Új szöveg írásakor ezt tartsuk meg: ha a nem-vevő szereplők úgy érzik, hogy a döntés
+nélkülük megszületett, ellenérdekeltté válnak, és épp az adoptációs kockázat nő.
 
 Az anyagokban szereplő ROI-értékek **modellszámítások**, nem szerződéses vállalások,
 és minden esetben fel van tüntetve a számítási alap. Éles ajánlat előtt az ügyfél
